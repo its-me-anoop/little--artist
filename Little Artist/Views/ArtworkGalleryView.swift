@@ -175,25 +175,6 @@ struct ArtworkGalleryView: View {
     }
 }
 
-private struct YearChipView: View {
-    let label: String
-    let isSelected: Bool
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            Text(label)
-                .font(.subheadline.weight(isSelected ? .semibold : .regular))
-                .padding(.horizontal, 14)
-                .padding(.vertical, 7)
-                .foregroundStyle(isSelected ? .white : .primary)
-                .background(isSelected ? Color.orange : Color(.tertiarySystemFill))
-                .clipShape(Capsule())
-        }
-        .buttonStyle(.plain)
-    }
-}
-
 // MARK: - Preview
 
 #Preview {

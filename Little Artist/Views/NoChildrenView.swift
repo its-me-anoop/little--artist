@@ -1,20 +1,19 @@
 //
-//  EmptyStateViews.swift
+//  NoChildrenView.swift
 //  Little Artist
 //
-//  Placeholder views shown when there are no children or no artworks yet.
+//  A full-screen placeholder shown when no child profiles exist.
 //
 //  Created by Anoop Jose on 13/02/2026.
 //
 
 import SwiftUI
 
-// MARK: - No Children Empty State
-
 /// A full-screen placeholder shown when no child profiles exist.
 ///
 /// Displays a friendly prompt and a button to add the first child.
 struct NoChildrenView: View {
+    /// Closure invoked when the user taps the "Add Child" button.
     var onAddChild: () -> Void
 
     var body: some View {
@@ -52,36 +51,8 @@ struct NoChildrenView: View {
     }
 }
 
-// MARK: - No Artwork Empty State
+// MARK: - Preview
 
-/// A full-screen placeholder shown when the selected child has no artworks.
-struct NoArtworkView: View {
-    var body: some View {
-        VStack(spacing: 16) {
-            Spacer()
-
-            Image(systemName: "paintpalette")
-                .font(.system(size: 60))
-                .foregroundStyle(.orange.opacity(0.6))
-
-            Text("No artwork yet")
-                .font(.title3.weight(.semibold))
-
-            Text("Capture your first masterpiece\nby tapping the camera button.")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-
-            Spacer()
-        }
-        .padding(.horizontal, 32)
-    }
-}
-
-#Preview("No Children") {
+#Preview {
     NoChildrenView(onAddChild: {})
-}
-
-#Preview("No Artwork") {
-    NoArtworkView()
 }

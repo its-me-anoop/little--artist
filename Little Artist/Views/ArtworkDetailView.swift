@@ -234,21 +234,6 @@ struct ArtworkDetailView: View {
     }
 }
 
-private struct ActivityView: UIViewControllerRepresentable {
-    let activityItems: [Any]
-
-    func makeUIViewController(context: Context) -> UIActivityViewController {
-        UIActivityViewController(activityItems: activityItems, applicationActivities: nil)
-    }
-
-    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
-}
-
-private struct SharePayload: Identifiable {
-    let id = UUID()
-    let items: [Any]
-}
-
 // MARK: - Preview
 
 #Preview {
