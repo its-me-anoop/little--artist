@@ -58,3 +58,13 @@ struct PulseCardsView: View {
         }))
     }
 }
+
+#Preview {
+    PulseCardsView(
+        icons: ["brain.head.profile.fill", "text.bubble.fill", "lightbulb.fill"],
+        accentColor: .green,
+        isActive: true
+    )
+    .frame(height: 340)
+    .background(Color.green.opacity(0.08))
+}

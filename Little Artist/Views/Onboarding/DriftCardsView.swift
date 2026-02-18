@@ -52,3 +52,14 @@ struct DriftCardsView: View {
         }))
     }
 }
+
+#Preview {
+    DriftCardsView(
+        icons: ["paintpalette.fill", "photo.artframe", "paintbrush.pointed.fill"],
+        accentColor: .orange,
+        isActive: true
+    )
+    .frame(height: 340)
+    .background(Color.orange.opacity(0.08))
+}
+

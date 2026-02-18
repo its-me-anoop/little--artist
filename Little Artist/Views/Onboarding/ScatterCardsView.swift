@@ -58,3 +58,13 @@ struct ScatterCardsView: View {
         }))
     }
 }
+
+#Preview {
+    ScatterCardsView(
+        icons: ["heart.fill", "star.fill", "hand.thumbsup.fill"],
+        accentColor: .pink,
+        isActive: true
+    )
+    .frame(height: 340)
+    .background(Color.pink.opacity(0.08))
+}

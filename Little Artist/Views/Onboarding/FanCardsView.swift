@@ -52,3 +52,13 @@ struct FanCardsView: View {
         }))
     }
 }
+
+#Preview {
+    FanCardsView(
+        icons: ["camera.fill", "wand.and.stars", "sparkles"],
+        accentColor: .purple,
+        isActive: true
+    )
+    .frame(height: 340)
+    .background(Color.purple.opacity(0.08))
+}

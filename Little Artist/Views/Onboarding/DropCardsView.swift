@@ -49,3 +49,13 @@ struct DropCardsView: View {
         }))
     }
 }
+
+#Preview {
+    DropCardsView(
+        icons: ["doc.text.fill", "calendar", "clock.fill"],
+        accentColor: .blue,
+        isActive: true
+    )
+    .frame(height: 340)
+    .background(Color.blue.opacity(0.08))
+}

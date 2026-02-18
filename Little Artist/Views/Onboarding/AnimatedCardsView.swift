@@ -36,3 +36,25 @@ struct AnimatedCardsView: View {
         }
     }
 }
+
+#Preview("Drift") {
+    AnimatedCardsView(
+        icons: ["paintpalette.fill", "photo.artframe", "paintbrush.pointed.fill"],
+        accentColor: .orange,
+        style: .drift,
+        isActive: true
+    )
+    .frame(height: 340)
+    .background(Color.orange.opacity(0.08))
+}
+
+#Preview("Fan") {
+    AnimatedCardsView(
+        icons: ["camera.fill", "wand.and.stars", "sparkles"],
+        accentColor: .purple,
+        style: .fan,
+        isActive: true
+    )
+    .frame(height: 340)
+    .background(Color.purple.opacity(0.08))
+}
