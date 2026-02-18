@@ -2,6 +2,9 @@
 //  AddChildView.swift
 //  Little Artist
 //
+//  A sheet for creating a new child profile with name, avatar colour,
+//  and optional custom photo (camera, gallery, or Image Playground).
+//
 //  Created by Anoop Jose on 13/02/2026.
 //
 
@@ -10,6 +13,11 @@ import SwiftData
 import PhotosUI
 import ImagePlayground
 
+/// A modal form for adding a new child profile.
+///
+/// The user can enter a name, pick an avatar colour from seven presets,
+/// and optionally choose a custom avatar image via camera, photo library,
+/// or Apple's Image Playground.
 struct AddChildView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
@@ -234,43 +242,7 @@ struct AddChildView: View {
     }
 }
 
-// MARK: - Camera Picker (UIViewControllerRepresentable)
-
-private struct CameraPicker: UIViewControllerRepresentable {
-    let onImageCaptured: (UIImage) -> Void
-
-    func makeUIViewController(context: Context) -> UIImagePickerController {
-        let picker = UIImagePickerController()
-        picker.sourceType = .camera
-        picker.delegate = context.coordinator
-        return picker
-    }
-
-    func updateUIViewController(_ uiViewController: UIImagePickerController, context: Context) {}
-
-    func makeCoordinator() -> Coordinator {
-        Coordinator(onImageCaptured: onImageCaptured)
-    }
-
-    class Coordinator: NSObject, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
-        let onImageCaptured: (UIImage) -> Void
-
-        init(onImageCaptured: @escaping (UIImage) -> Void) {
-            self.onImageCaptured = onImageCaptured
-        }
-
-        func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]) {
-            if let image = info[.originalImage] as? UIImage {
-                onImageCaptured(image)
-            }
-            picker.dismiss(animated: true)
-        }
-
-        func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
-            picker.dismiss(animated: true)
-        }
-    }
-}
+// MARK: - Preview
 
 #Preview {
     AddChildView()

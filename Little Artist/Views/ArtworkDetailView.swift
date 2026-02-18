@@ -2,15 +2,14 @@
 //  ArtworkDetailView.swift
 //  Little Artist
 //
+//  Full-screen artwork viewer with edit, share, and delete actions.
+//  Supports AI-powered caption improvement via AISuggestionService.
+//
 //  Created by Codex on 15/02/2026.
 //
 
 import SwiftUI
 import SwiftData
-import Vision
-#if canImport(FoundationModels)
-import FoundationModels
-#endif
 
 struct ArtworkDetailView: View {
     @Environment(\.modelContext) private var modelContext
@@ -187,15 +186,12 @@ struct ArtworkDetailView: View {
         dismiss()
     }
 
+    /// Whether AI suggestions can be offered on this device.
     private var aiSuggestionsEnabled: Bool {
-        #if canImport(FoundationModels)
-        if #available(iOS 26.0, *) {
-            return SystemLanguageModel.default.isAvailable
-        }
-        #endif
-        return false
+        AISuggestionService.isAvailable
     }
 
+    /// Uses the shared AI service to improve the current title and caption.
     private func generateAISuggestionsForEdits() {
         guard !isGeneratingSuggestions else { return }
         suggestionErrorMessage = nil
@@ -203,15 +199,13 @@ struct ArtworkDetailView: View {
 
         let currentTitle = editTitle
         let currentCaption = editCaption
-        let extractedText = artwork.imageData.map(extractText(from:)) ?? ""
         let childName = artwork.child?.name ?? "the child"
 
         Task {
-            #if canImport(FoundationModels)
-            if #available(iOS 26.0, *) {
+            if #available(iOS 26.0, *), AISuggestionService.isAvailable {
                 do {
-                    let suggestions = try await generateSuggestionsForEdits(
-                        extractedText: extractedText,
+                    let suggestions = try await AISuggestionService.improveSuggestions(
+                        imageData: artwork.imageData,
                         existingTitle: currentTitle,
                         existingCaption: currentCaption,
                         childName: childName
@@ -231,115 +225,12 @@ struct ArtworkDetailView: View {
                     return
                 }
             }
-            #endif
 
             await MainActor.run {
                 suggestionErrorMessage = "On-device AI is only available on supported devices."
                 isGeneratingSuggestions = false
             }
         }
-    }
-
-    private func extractText(from imageData: Data) -> String {
-        guard let image = UIImage(data: imageData), let cgImage = image.cgImage else {
-            return ""
-        }
-
-        let request = VNRecognizeTextRequest()
-        request.recognitionLevel = .accurate
-        request.usesLanguageCorrection = true
-
-        let handler = VNImageRequestHandler(cgImage: cgImage)
-        do {
-            try handler.perform([request])
-        } catch {
-            return ""
-        }
-
-        let lines = (request.results ?? [])
-            .compactMap { $0.topCandidates(1).first?.string }
-            .prefix(6)
-
-        return lines.joined(separator: ", ")
-    }
-
-    #if canImport(FoundationModels)
-    @available(iOS 26.0, *)
-    private func generateSuggestionsForEdits(
-        extractedText: String,
-        existingTitle: String,
-        existingCaption: String,
-        childName: String
-    ) async throws -> AISuggestions {
-        let session = LanguageModelSession(
-            instructions: """
-            You improve title and caption text for a child's artwork.
-            Keep language warm, family-friendly, and concise.
-            Return ONLY valid JSON in this exact shape:
-            {"title":"...","caption":"..."}
-            Do not return markdown or extra keys.
-            """
-        )
-
-        let prompt = """
-        Child name: \(childName)
-        Existing title: \(existingTitle.isEmpty ? "None" : existingTitle)
-        Existing caption: \(existingCaption.isEmpty ? "None" : existingCaption)
-        OCR text found in image: \(extractedText.isEmpty ? "None" : extractedText)
-        Provide one improved title (max 5 words) and one improved caption (1 sentence, max 18 words).
-        """
-
-        do {
-            let response = try await session.respond(to: prompt)
-            return parseSuggestions(from: response.content)
-        } catch {
-            try await Task.sleep(for: .milliseconds(350))
-            let retryResponse = try await session.respond(to: prompt)
-            return parseSuggestions(from: retryResponse.content)
-        }
-    }
-    #endif
-
-    private func parseSuggestions(from content: String) -> AISuggestions {
-        if let jsonRange = content.range(of: #"\{[\s\S]*\}"#, options: .regularExpression) {
-            let jsonString = String(content[jsonRange])
-            if let data = jsonString.data(using: .utf8),
-               let decoded = try? JSONDecoder().decode(AISuggestions.self, from: data) {
-                let cleanTitle = sanitizeSuggestionText(decoded.title)
-                let cleanCaption = sanitizeSuggestionText(decoded.caption)
-                if !cleanTitle.isEmpty || !cleanCaption.isEmpty {
-                    return AISuggestions(
-                        title: cleanTitle.isEmpty ? "My Artwork" : cleanTitle,
-                        caption: cleanCaption.isEmpty ? "A colorful creation full of imagination." : cleanCaption
-                    )
-                }
-            }
-        }
-
-        var parsedTitle = ""
-        var parsedCaption = ""
-        for line in content.split(separator: "\n") {
-            let trimmed = line.trimmingCharacters(in: .whitespacesAndNewlines)
-            if trimmed.lowercased().hasPrefix("title:") {
-                parsedTitle = String(trimmed.dropFirst("title:".count))
-            } else if trimmed.lowercased().hasPrefix("caption:") {
-                parsedCaption = String(trimmed.dropFirst("caption:".count))
-            }
-        }
-
-        let cleanTitle = sanitizeSuggestionText(parsedTitle)
-        let cleanCaption = sanitizeSuggestionText(parsedCaption)
-
-        return AISuggestions(
-            title: cleanTitle.isEmpty ? "My Artwork" : cleanTitle,
-            caption: cleanCaption.isEmpty ? "A colorful creation full of imagination." : cleanCaption
-        )
-    }
-
-    private func sanitizeSuggestionText(_ text: String) -> String {
-        text
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-            .trimmingCharacters(in: CharacterSet(charactersIn: "\"'"))
     }
 }
 
@@ -358,14 +249,11 @@ private struct SharePayload: Identifiable {
     let items: [Any]
 }
 
-private struct AISuggestions: Decodable {
-    let title: String
-    let caption: String
-}
+// MARK: - Preview
 
 #Preview {
     NavigationStack {
-        ArtworkDetailView(artwork: Artwork(title: "Rainbow House"))
+        ArtworkDetailView(artwork: PreviewSampleData.singleArtwork)
             .modelContainer(for: [Child.self, Artwork.self], inMemory: true)
     }
 }

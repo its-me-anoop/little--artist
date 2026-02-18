@@ -2,12 +2,20 @@
 //  Color+Hex.swift
 //  Little Artist
 //
+//  Convenience initialiser for creating SwiftUI Colors from hex strings.
+//
 //  Created by Anoop Jose on 13/02/2026.
 //
 
 import SwiftUI
 
 extension Color {
+    /// Creates a `Color` from a 6-digit hexadecimal RGB string.
+    ///
+    /// - Parameter hex: A string such as `"FF8C00"`. Leading `#` or other
+    ///   non-alphanumeric characters are stripped automatically. If the
+    ///   string does not contain exactly 6 hex digits, the colour falls
+    ///   back to white.
     init(hex: String) {
         let hex = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
         var int: UInt64 = 0

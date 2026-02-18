@@ -2,6 +2,8 @@
 //  Little_ArtistTests.swift
 //  Little ArtistTests
 //
+//  Unit tests for the Little Artist data models and utilities.
+//
 //  Created by Anoop Jose on 13/02/2026.
 //
 
@@ -13,6 +15,7 @@ import UIKit
 #endif
 @testable import Little_Artist
 
+/// Unit tests covering model initialisation and the `Color(hex:)` utility.
 struct Little_ArtistTests {
 
     @Test("Artwork initializer stores provided values")

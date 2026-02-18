@@ -2,19 +2,33 @@
 //  OnboardingView.swift
 //  Little Artist
 //
+//  A five-page onboarding carousel introducing the app's key features.
+//  Each page uses a unique card entrance animation for visual delight.
+//
 //  Created by Anoop Jose on 13/02/2026.
 //
 
 import SwiftUI
 
+// MARK: - Card Animation Styles
+
+/// The entrance animation style applied to icon cards on each onboarding page.
 enum CardAnimation {
-    case drift      // Cards drift up from below, staggered
-    case fan        // Cards fan out from a central stack
-    case drop       // Cards drop in from above with slight bounce
-    case pulse      // Cards scale up from the center
-    case scatter    // Cards fly in from different edges
+    /// Cards drift up from below with staggered delays.
+    case drift
+    /// Cards fan outward from a central stack.
+    case fan
+    /// Cards drop in from above with a soft bounce.
+    case drop
+    /// Cards scale up from the centre like a heartbeat.
+    case pulse
+    /// Cards fly in from different screen edges.
+    case scatter
 }
 
+// MARK: - Onboarding Page Data
+
+/// Data describing a single page of the onboarding carousel.
 struct OnboardingPage: Identifiable {
     let id = UUID()
     let icons: [String]
@@ -24,6 +38,11 @@ struct OnboardingPage: Identifiable {
     let animation: CardAnimation
 }
 
+/// A five-page onboarding carousel presented on first launch.
+///
+/// Each page highlights a key feature of the app (artwork capture, AI captions,
+/// voice notes, sharing) with a unique card entrance animation. The user can
+/// swipe between pages, skip onboarding, or tap "Get Started" on the last page.
 struct OnboardingView: View {
     @Binding var hasCompletedOnboarding: Bool
     @State private var currentPage = 0
@@ -184,7 +203,7 @@ struct OnboardingView: View {
 
 // MARK: - Animation Dispatcher
 
-/// Routes each page to its unique card entrance animation
+/// Routes each onboarding page to its corresponding card entrance animation view.
 struct AnimatedCardsView: View {
     let icons: [String]
     let accentColor: Color
@@ -207,9 +226,10 @@ struct AnimatedCardsView: View {
     }
 }
 
-// MARK: - Shared animation trigger helper
+// MARK: - Shared Animation Trigger
 
-/// Resets state instantly, then replays the entrance animation when `isActive` becomes true
+/// A view modifier that resets animation state instantly and replays
+/// the entrance animation when `isActive` becomes `true`.
 private struct AnimationTrigger: ViewModifier {
     let isActive: Bool
     let onPlay: () -> Void
@@ -472,7 +492,8 @@ struct ScatterCardsView: View {
     }
 }
 
-/// A single floating card with an SF Symbol icon
+/// A single rounded card displaying an SF Symbol icon.
+/// Used as the animated illustration element on each onboarding page.
 struct IconCard: View {
     let icon: String
     let size: CGFloat

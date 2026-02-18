@@ -2,12 +2,19 @@
 //  HomeView.swift
 //  Little Artist
 //
+//  The main screen showing the child profile slider and their artwork gallery.
+//
 //  Created by Anoop Jose on 13/02/2026.
 //
 
 import SwiftUI
 import SwiftData
 
+/// The primary view displayed after onboarding.
+///
+/// Shows a horizontal ``ChildSliderView`` for selecting a child profile,
+/// the child's ``ArtworkGalleryView`` (or an appropriate empty state),
+/// and a floating action button for capturing new artwork.
 struct HomeView: View {
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \Child.createdAt) private var children: [Child]
@@ -71,7 +78,14 @@ struct HomeView: View {
     }
 }
 
-#Preview {
+// MARK: - Previews
+
+#Preview("Empty State") {
     HomeView()
         .modelContainer(for: [Child.self, Artwork.self], inMemory: true)
+}
+
+#Preview("With Data") {
+    HomeView()
+        .modelContainer(PreviewSampleData.container)
 }

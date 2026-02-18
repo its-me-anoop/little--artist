@@ -2,6 +2,10 @@
 //  AddArtworkView.swift
 //  Little Artist
 //
+//  A sheet view for capturing new artwork via camera, photo library,
+//  or document scanner. Supports optional AI-generated title and caption
+//  suggestions powered by on-device models.
+//
 //  Created by Anoop Jose on 13/02/2026.
 //
 
@@ -9,10 +13,6 @@ import SwiftUI
 import SwiftData
 import PhotosUI
 import VisionKit
-import Vision
-#if canImport(FoundationModels)
-import FoundationModels
-#endif
 
 struct AddArtworkView: View {
     @Environment(\.modelContext) private var modelContext
@@ -130,7 +130,7 @@ struct AddArtworkView: View {
                 }
             }
             .fullScreenCover(isPresented: $showCamera) {
-                ArtworkCameraPicker { image in
+                CameraPicker { image in
                     if let data = image.jpegData(compressionQuality: 0.85) {
                         capturedImageData = data
                         suggestionErrorMessage = nil
@@ -266,29 +266,23 @@ struct AddArtworkView: View {
         dismiss()
     }
 
+    /// Whether AI suggestions can be offered on this device.
     private var aiSuggestionsEnabled: Bool {
         guard capturedImageData != nil else { return false }
-        #if canImport(FoundationModels)
-        if #available(iOS 26.0, *) {
-            return SystemLanguageModel.default.isAvailable
-        }
-        #endif
-        return false
+        return AISuggestionService.isAvailable
     }
 
+    /// Generates AI-powered title and caption suggestions for the captured artwork.
     private func generateAISuggestions() {
         guard let capturedImageData, !isGeneratingSuggestions else { return }
         suggestionErrorMessage = nil
         isGeneratingSuggestions = true
 
         Task {
-            let extractedText = extractText(from: capturedImageData)
-
-            #if canImport(FoundationModels)
-            if #available(iOS 26.0, *) {
+            if #available(iOS 26.0, *), AISuggestionService.isAvailable {
                 do {
-                    let suggestions = try await generateSuggestions(
-                        extractedText: extractedText,
+                    let suggestions = try await AISuggestionService.generateSuggestions(
+                        imageData: capturedImageData,
                         childName: child.name
                     )
                     await MainActor.run {
@@ -309,7 +303,6 @@ struct AddArtworkView: View {
                     return
                 }
             }
-            #endif
 
             await MainActor.run {
                 suggestionErrorMessage = "AI suggestions are only available on supported devices."
@@ -317,188 +310,9 @@ struct AddArtworkView: View {
             }
         }
     }
-
-    private func extractText(from imageData: Data) -> String {
-        guard let image = UIImage(data: imageData), let cgImage = image.cgImage else {
-            return ""
-        }
-
-        let request = VNRecognizeTextRequest()
-        request.recognitionLevel = .accurate
-        request.usesLanguageCorrection = true
-
-        let handler = VNImageRequestHandler(cgImage: cgImage)
-        do {
-            try handler.perform([request])
-        } catch {
-            return ""
-        }
-
-        let lines = (request.results ?? [])
-            .compactMap { $0.topCandidates(1).first?.string }
-            .prefix(6)
-
-        return lines.joined(separator: ", ")
-    }
-
-    #if canImport(FoundationModels)
-    @available(iOS 26.0, *)
-    private func generateSuggestions(extractedText: String, childName: String) async throws -> AISuggestions {
-        let session = LanguageModelSession(
-            instructions: """
-            You create short, joyful title and caption suggestions for a child's artwork.
-            Keep language family-friendly and specific.
-            Return ONLY valid JSON in this exact shape:
-            {"title":"...","caption":"..."}
-            Do not return markdown or extra keys.
-            """
-        )
-
-        let prompt = """
-        Child name: \(childName)
-        OCR text found in image: \(extractedText.isEmpty ? "None" : extractedText)
-        Generate one unique title (max 5 words) and one unique caption (1 sentence, max 18 words).
-        """
-        do {
-            let response = try await session.respond(to: prompt)
-            return parseSuggestions(from: response.content)
-        } catch {
-            // Retry once because the first call can fail while the model is warming up.
-            try await Task.sleep(for: .milliseconds(350))
-            let retryResponse = try await session.respond(to: prompt)
-            return parseSuggestions(from: retryResponse.content)
-        }
-    }
-    #endif
-
-    private func parseSuggestions(from content: String) -> AISuggestions {
-        if let jsonRange = content.range(of: #"\{[\s\S]*\}"#, options: .regularExpression) {
-            let jsonString = String(content[jsonRange])
-            if let data = jsonString.data(using: .utf8),
-               let decoded = try? JSONDecoder().decode(AISuggestions.self, from: data) {
-                let cleanTitle = sanitizeSuggestionText(decoded.title)
-                let cleanCaption = sanitizeSuggestionText(decoded.caption)
-                if !cleanTitle.isEmpty || !cleanCaption.isEmpty {
-                    return AISuggestions(
-                        title: cleanTitle.isEmpty ? "My Artwork" : cleanTitle,
-                        caption: cleanCaption.isEmpty ? "A colorful creation full of imagination." : cleanCaption
-                    )
-                }
-            }
-        }
-
-        var parsedTitle = ""
-        var parsedCaption = ""
-        for line in content.split(separator: "\n") {
-            let trimmed = line.trimmingCharacters(in: .whitespacesAndNewlines)
-            if trimmed.lowercased().hasPrefix("title:") {
-                parsedTitle = String(trimmed.dropFirst("title:".count))
-            } else if trimmed.lowercased().hasPrefix("caption:") {
-                parsedCaption = String(trimmed.dropFirst("caption:".count))
-            }
-        }
-
-        let cleanTitle = sanitizeSuggestionText(parsedTitle)
-        let cleanCaption = sanitizeSuggestionText(parsedCaption)
-
-        return AISuggestions(
-            title: cleanTitle.isEmpty ? "My Artwork" : cleanTitle,
-            caption: cleanCaption.isEmpty ? "A colorful creation full of imagination." : cleanCaption
-        )
-    }
-
-    private func sanitizeSuggestionText(_ text: String) -> String {
-        text
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-            .trimmingCharacters(in: CharacterSet(charactersIn: "\"'"))
-    }
 }
 
-private struct AISuggestions: Decodable {
-    let title: String
-    let caption: String
-}
-
-// MARK: - Camera Picker (UIViewControllerRepresentable)
-
-private struct ArtworkCameraPicker: UIViewControllerRepresentable {
-    let onImageCaptured: (UIImage) -> Void
-
-    func makeUIViewController(context: Context) -> UIImagePickerController {
-        let picker = UIImagePickerController()
-        picker.sourceType = .camera
-        picker.delegate = context.coordinator
-        return picker
-    }
-
-    func updateUIViewController(_ uiViewController: UIImagePickerController, context: Context) {}
-
-    func makeCoordinator() -> Coordinator {
-        Coordinator(onImageCaptured: onImageCaptured)
-    }
-
-    class Coordinator: NSObject, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
-        let onImageCaptured: (UIImage) -> Void
-
-        init(onImageCaptured: @escaping (UIImage) -> Void) {
-            self.onImageCaptured = onImageCaptured
-        }
-
-        func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]) {
-            if let image = info[.originalImage] as? UIImage {
-                onImageCaptured(image)
-            }
-            picker.dismiss(animated: true)
-        }
-
-        func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
-            picker.dismiss(animated: true)
-        }
-    }
-}
-
-// MARK: - Document Scanner (UIViewControllerRepresentable)
-
-private struct DocumentScannerPicker: UIViewControllerRepresentable {
-    let onImageCaptured: (UIImage) -> Void
-
-    func makeUIViewController(context: Context) -> VNDocumentCameraViewController {
-        let scanner = VNDocumentCameraViewController()
-        scanner.delegate = context.coordinator
-        return scanner
-    }
-
-    func updateUIViewController(_ uiViewController: VNDocumentCameraViewController, context: Context) {}
-
-    func makeCoordinator() -> Coordinator {
-        Coordinator(onImageCaptured: onImageCaptured)
-    }
-
-    class Coordinator: NSObject, VNDocumentCameraViewControllerDelegate {
-        let onImageCaptured: (UIImage) -> Void
-
-        init(onImageCaptured: @escaping (UIImage) -> Void) {
-            self.onImageCaptured = onImageCaptured
-        }
-
-        func documentCameraViewController(_ controller: VNDocumentCameraViewController, didFinishWith scan: VNDocumentCameraScan) {
-            // Use the first scanned page as the artwork image
-            if scan.pageCount > 0 {
-                let image = scan.imageOfPage(at: 0)
-                onImageCaptured(image)
-            }
-            controller.dismiss(animated: true)
-        }
-
-        func documentCameraViewControllerDidCancel(_ controller: VNDocumentCameraViewController) {
-            controller.dismiss(animated: true)
-        }
-
-        func documentCameraViewController(_ controller: VNDocumentCameraViewController, didFailWithError error: any Error) {
-            controller.dismiss(animated: true)
-        }
-    }
-}
+// MARK: - Preview
 
 #Preview {
     AddArtworkView(child: Child(name: "Test", avatarColor: "FF8C00"))
