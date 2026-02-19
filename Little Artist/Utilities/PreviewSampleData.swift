@@ -69,6 +69,7 @@ enum PreviewSampleData {
             Artwork(
                 title: "Rainbow House",
                 caption: "My dream house with a rainbow on top",
+                isFavorited: true,
                 createdAt: date(year: 2026, month: 2, day: 14)
             ),
             Artwork(
@@ -98,6 +99,7 @@ enum PreviewSampleData {
             Artwork(
                 title: "Christmas Tree",
                 caption: "With ornaments and a golden star",
+                isFavorited: true,
                 createdAt: date(year: 2025, month: 12, day: 25)
             ),
             Artwork(
@@ -122,6 +124,7 @@ enum PreviewSampleData {
             Artwork(
                 title: "Beach Day",
                 caption: "Sun, sand, and waves",
+                isFavorited: true,
                 createdAt: date(year: 2025, month: 6, day: 15)
             ),
             Artwork(

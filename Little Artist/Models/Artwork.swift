@@ -29,6 +29,9 @@ final class Artwork {
     /// File path or URL to an associated voice-note recording (future feature).
     var voiceNoteURL: String?
 
+    /// Whether this artwork has been starred/favourited by the user.
+    var isFavorited: Bool
+
     /// The date this artwork was captured.
     var createdAt: Date
 
@@ -40,6 +43,7 @@ final class Artwork {
         caption: String = "",
         imageData: Data? = nil,
         voiceNoteURL: String? = nil,
+        isFavorited: Bool = false,
         createdAt: Date = .now,
         child: Child? = nil
     ) {
@@ -47,6 +51,7 @@ final class Artwork {
         self.caption = caption
         self.imageData = imageData
         self.voiceNoteURL = voiceNoteURL
+        self.isFavorited = isFavorited
         self.createdAt = createdAt
         self.child = child
     }
