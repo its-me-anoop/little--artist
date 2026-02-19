@@ -305,6 +305,1098 @@
     },
     {
       "type": "frame",
+      "id": "20317",
+      "x": 3725,
+      "y": 0,
+      "name": "Onboarding 2",
+      "width": 375,
+      "height": 812,
+      "fill": "#FFFFFF",
+      "layout": "none",
+      "children": [
+        {
+          "type": "frame",
+          "id": "nHmYE",
+          "x": 16,
+          "y": 0,
+          "name": "Illustration Area",
+          "width": 343,
+          "height": 340,
+          "cornerRadius": 40,
+          "fill": {
+            "type": "gradient",
+            "gradientType": "linear",
+            "enabled": true,
+            "rotation": 180,
+            "size": {
+              "height": 1
+            },
+            "colors": [
+              {
+                "color": "#FF8C0014",
+                "position": 0
+              },
+              {
+                "color": "#FF8C0042",
+                "position": 1
+              }
+            ]
+          }
+        },
+        {
+          "type": "text",
+          "id": "zbnH0",
+          "x": 281,
+          "y": 16,
+          "name": "Skip",
+          "content": "Skip",
+          "fill": "#FF8C00",
+          "fontFamily": "Outfit",
+          "fontSize": 15,
+          "fontWeight": "500"
+        },
+        {
+          "type": "frame",
+          "id": "ZfJCy",
+          "x": 55,
+          "y": 100,
+          "name": "Card 1",
+          "width": 100,
+          "height": 100,
+          "fill": "#FFFFFF",
+          "cornerRadius": 20,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon_font",
+              "id": "ddjnL",
+              "x": 30,
+              "y": 30,
+              "name": "PaintPalette",
+              "width": 40,
+              "height": 40,
+              "iconFontName": "camera",
+              "iconFontFamily": "Material Symbols Rounded",
+              "fill": "#FF8C00"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "IGYNz",
+          "x": 130,
+          "y": 80,
+          "name": "Card 2",
+          "width": 100,
+          "height": 100,
+          "fill": "#FFFFFF",
+          "cornerRadius": 20,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon_font",
+              "id": "CAMjU",
+              "x": 30,
+              "y": 30,
+              "name": "FigureChild",
+              "width": 40,
+              "height": 40,
+              "iconFontName": "photo_library",
+              "iconFontFamily": "Material Symbols Rounded",
+              "fill": "#FF8C00"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "9oxTH",
+          "x": 205,
+          "y": 60,
+          "name": "Card 3",
+          "width": 100,
+          "height": 100,
+          "fill": "#FFFFFF",
+          "cornerRadius": 20,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon_font",
+              "id": "ckgFZ",
+              "x": 30,
+              "y": 30,
+              "name": "Scribble",
+              "width": 40,
+              "height": 40,
+              "iconFontName": "crop_portrait",
+              "iconFontFamily": "Material Symbols Rounded",
+              "fill": "#FF8C00"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "ONC40",
+          "x": 16,
+          "y": 360,
+          "name": "Title Block",
+          "width": 343,
+          "height": 96,
+          "fill": "transparent",
+          "layout": "vertical",
+          "gap": 4,
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "aNf5e",
+              "name": "Title Line 1",
+              "fill": "#1C1C1E",
+              "content": "Capture Every",
+              "textAlign": "center",
+              "fontFamily": "Outfit",
+              "fontSize": 32,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "991Q7",
+              "name": "Title Line 2",
+              "fill": "#FF8C00",
+              "content": "Creation",
+              "textAlign": "center",
+              "fontFamily": "Outfit",
+              "fontSize": 32,
+              "fontWeight": "700"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "l0W0c",
+          "x": 16,
+          "y": 472,
+          "name": "Desc Block",
+          "width": 343,
+          "height": 88,
+          "fill": "transparent",
+          "layout": "vertical",
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "EvyTg",
+              "name": "Description",
+              "fill": "#8A8A8E",
+              "textGrowth": "fixed-width",
+              "width": 295,
+              "content": "Snap photos of drawings, paintings, and crafts. Build a beautiful gallery of your child's creativity over time.",
+              "textAlign": "center",
+              "fontFamily": "Outfit",
+              "fontSize": 15,
+              "fontWeight": "normal"
+            }
+          ]
+        },
+        {
+          "type": "ellipse",
+          "id": "nTNqF",
+          "x": 148,
+          "y": 628,
+          "name": "Dot 1",
+          "fill": "#8A8A8E4D",
+          "width": 8,
+          "height": 8
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 4,
+          "id": "cACoL",
+          "x": 164,
+          "y": 628,
+          "name": "Dot Active",
+          "fill": "#FF8C00",
+          "width": 24,
+          "height": 8
+        },
+        {
+          "type": "ellipse",
+          "id": "4RwXp",
+          "x": 192,
+          "y": 628,
+          "name": "Dot 3",
+          "fill": "#8A8A8E4D",
+          "width": 8,
+          "height": 8
+        },
+        {
+          "type": "ellipse",
+          "id": "vAfYl",
+          "x": 206,
+          "y": 628,
+          "name": "Dot 4",
+          "fill": "#8A8A8E4D",
+          "width": 8,
+          "height": 8
+        },
+        {
+          "type": "ellipse",
+          "id": "gfp4q",
+          "x": 220,
+          "y": 628,
+          "name": "Dot 5",
+          "fill": "#8A8A8E4D",
+          "width": 8,
+          "height": 8
+        },
+        {
+          "type": "frame",
+          "id": "F6Lb7",
+          "x": 32,
+          "y": 660,
+          "name": "CTA Button",
+          "width": 311,
+          "height": 56,
+          "fill": "#FF8C00",
+          "cornerRadius": 28,
+          "layout": "vertical",
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "E5GXW",
+              "name": "CTA Label",
+              "fill": "#FFFFFF",
+              "content": "Next  →",
+              "textAlign": "center",
+              "fontFamily": "Outfit",
+              "fontSize": 17,
+              "fontWeight": "600"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "OCtJE",
+      "x": 4160,
+      "y": 0,
+      "name": "Onboarding 3",
+      "width": 375,
+      "height": 812,
+      "fill": "#FFFFFF",
+      "layout": "none",
+      "children": [
+        {
+          "type": "frame",
+          "id": "WCTe4",
+          "x": 16,
+          "y": 0,
+          "name": "Illustration Area",
+          "width": 343,
+          "height": 340,
+          "cornerRadius": 40,
+          "fill": {
+            "type": "gradient",
+            "gradientType": "linear",
+            "enabled": true,
+            "rotation": 180,
+            "size": {
+              "height": 1
+            },
+            "colors": [
+              {
+                "color": "#FF8C0014",
+                "position": 0
+              },
+              {
+                "color": "#FF8C0042",
+                "position": 1
+              }
+            ]
+          }
+        },
+        {
+          "type": "text",
+          "id": "War2s",
+          "x": 281,
+          "y": 16,
+          "name": "Skip",
+          "content": "Skip",
+          "fill": "#FF8C00",
+          "fontFamily": "Outfit",
+          "fontSize": 15,
+          "fontWeight": "500"
+        },
+        {
+          "type": "frame",
+          "id": "1jIFK",
+          "x": 55,
+          "y": 100,
+          "name": "Card 1",
+          "width": 100,
+          "height": 100,
+          "fill": "#FFFFFF",
+          "cornerRadius": 20,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon_font",
+              "id": "UYBZk",
+              "x": 30,
+              "y": 30,
+              "name": "PaintPalette",
+              "width": 40,
+              "height": 40,
+              "iconFontName": "stars",
+              "iconFontFamily": "Material Symbols Rounded",
+              "fill": "#FF8C00"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "7mWfw",
+          "x": 130,
+          "y": 80,
+          "name": "Card 2",
+          "width": 100,
+          "height": 100,
+          "fill": "#FFFFFF",
+          "cornerRadius": 20,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon_font",
+              "id": "sInp5",
+              "x": 30,
+              "y": 30,
+              "name": "FigureChild",
+              "width": 40,
+              "height": 40,
+              "iconFontName": "format_quote",
+              "iconFontFamily": "Material Symbols Rounded",
+              "fill": "#FF8C00"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "kbHUl",
+          "x": 205,
+          "y": 60,
+          "name": "Card 3",
+          "width": 100,
+          "height": 100,
+          "fill": "#FFFFFF",
+          "cornerRadius": 20,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon_font",
+              "id": "IVGs6",
+              "x": 30,
+              "y": 30,
+              "name": "Scribble",
+              "width": 40,
+              "height": 40,
+              "iconFontName": "wand_stars",
+              "iconFontFamily": "Material Symbols Rounded",
+              "fill": "#FF8C00"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "xFors",
+          "x": 16,
+          "y": 360,
+          "name": "Title Block",
+          "width": 343,
+          "height": 96,
+          "fill": "transparent",
+          "layout": "vertical",
+          "gap": 4,
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "XygHe",
+              "name": "Title Line 1",
+              "fill": "#1C1C1E",
+              "content": "AI-Powered",
+              "textAlign": "center",
+              "fontFamily": "Outfit",
+              "fontSize": 32,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "Z2afl",
+              "name": "Title Line 2",
+              "fill": "#FF8C00",
+              "content": "Captions",
+              "textAlign": "center",
+              "fontFamily": "Outfit",
+              "fontSize": 32,
+              "fontWeight": "700"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "DGR0f",
+          "x": 16,
+          "y": 472,
+          "name": "Desc Block",
+          "width": 343,
+          "height": 88,
+          "fill": "transparent",
+          "layout": "vertical",
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "SZ4mO",
+              "name": "Description",
+              "fill": "#8A8A8E",
+              "textGrowth": "fixed-width",
+              "width": 295,
+              "content": "Let AI generate fun titles and captions for each artwork, capturing the magic and story behind every creation.",
+              "textAlign": "center",
+              "fontFamily": "Outfit",
+              "fontSize": 15,
+              "fontWeight": "normal"
+            }
+          ]
+        },
+        {
+          "type": "ellipse",
+          "id": "vbCx9",
+          "x": 148,
+          "y": 628,
+          "name": "Dot 1",
+          "fill": "#8A8A8E4D",
+          "width": 8,
+          "height": 8
+        },
+        {
+          "type": "ellipse",
+          "id": "Voc0m",
+          "x": 178,
+          "y": 628,
+          "name": "Dot 2",
+          "fill": "#8A8A8E4D",
+          "width": 8,
+          "height": 8
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 4,
+          "id": "SWoga",
+          "x": 184,
+          "y": 628,
+          "name": "Dot Active",
+          "fill": "#FF8C00",
+          "width": 24,
+          "height": 8
+        },
+        {
+          "type": "ellipse",
+          "id": "RUbs3",
+          "x": 206,
+          "y": 628,
+          "name": "Dot 4",
+          "fill": "#8A8A8E4D",
+          "width": 8,
+          "height": 8
+        },
+        {
+          "type": "ellipse",
+          "id": "xoOJf",
+          "x": 220,
+          "y": 628,
+          "name": "Dot 5",
+          "fill": "#8A8A8E4D",
+          "width": 8,
+          "height": 8
+        },
+        {
+          "type": "frame",
+          "id": "aodfF",
+          "x": 32,
+          "y": 660,
+          "name": "CTA Button",
+          "width": 311,
+          "height": 56,
+          "fill": "#FF8C00",
+          "cornerRadius": 28,
+          "layout": "vertical",
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "syebA",
+              "name": "CTA Label",
+              "fill": "#FFFFFF",
+              "content": "Next  →",
+              "textAlign": "center",
+              "fontFamily": "Outfit",
+              "fontSize": 17,
+              "fontWeight": "600"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "DrNnF",
+      "x": 4595,
+      "y": 0,
+      "name": "Onboarding 4",
+      "width": 375,
+      "height": 812,
+      "fill": "#FFFFFF",
+      "layout": "none",
+      "children": [
+        {
+          "type": "frame",
+          "id": "B66OW",
+          "x": 16,
+          "y": 0,
+          "name": "Illustration Area",
+          "width": 343,
+          "height": 340,
+          "cornerRadius": 40,
+          "fill": {
+            "type": "gradient",
+            "gradientType": "linear",
+            "enabled": true,
+            "rotation": 180,
+            "size": {
+              "height": 1
+            },
+            "colors": [
+              {
+                "color": "#FF8C0014",
+                "position": 0
+              },
+              {
+                "color": "#FF8C0042",
+                "position": 1
+              }
+            ]
+          }
+        },
+        {
+          "type": "text",
+          "id": "jmy9m",
+          "x": 281,
+          "y": 16,
+          "name": "Skip",
+          "content": "Skip",
+          "fill": "#FF8C00",
+          "fontFamily": "Outfit",
+          "fontSize": 15,
+          "fontWeight": "500"
+        },
+        {
+          "type": "frame",
+          "id": "ZJXrx",
+          "x": 55,
+          "y": 100,
+          "name": "Card 1",
+          "width": 100,
+          "height": 100,
+          "fill": "#FFFFFF",
+          "cornerRadius": 20,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon_font",
+              "id": "lNfEh",
+              "x": 30,
+              "y": 30,
+              "name": "PaintPalette",
+              "width": 40,
+              "height": 40,
+              "iconFontName": "mic",
+              "iconFontFamily": "Material Symbols Rounded",
+              "fill": "#FF8C00"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "oR6i1",
+          "x": 130,
+          "y": 80,
+          "name": "Card 2",
+          "width": 100,
+          "height": 100,
+          "fill": "#FFFFFF",
+          "cornerRadius": 20,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon_font",
+              "id": "K10Wg",
+              "x": 30,
+              "y": 30,
+              "name": "FigureChild",
+              "width": 40,
+              "height": 40,
+              "iconFontName": "graphic_eq",
+              "iconFontFamily": "Material Symbols Rounded",
+              "fill": "#FF8C00"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "FLLJ3",
+          "x": 205,
+          "y": 60,
+          "name": "Card 3",
+          "width": 100,
+          "height": 100,
+          "fill": "#FFFFFF",
+          "cornerRadius": 20,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon_font",
+              "id": "1ksf0",
+              "x": 30,
+              "y": 30,
+              "name": "Scribble",
+              "width": 40,
+              "height": 40,
+              "iconFontName": "play_circle",
+              "iconFontFamily": "Material Symbols Rounded",
+              "fill": "#FF8C00"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "N6C1V",
+          "x": 16,
+          "y": 360,
+          "name": "Title Block",
+          "width": 343,
+          "height": 96,
+          "fill": "transparent",
+          "layout": "vertical",
+          "gap": 4,
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "X204L",
+              "name": "Title Line 1",
+              "fill": "#1C1C1E",
+              "content": "Add Voice",
+              "textAlign": "center",
+              "fontFamily": "Outfit",
+              "fontSize": 32,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "AmQno",
+              "name": "Title Line 2",
+              "fill": "#FF8C00",
+              "content": "Notes",
+              "textAlign": "center",
+              "fontFamily": "Outfit",
+              "fontSize": 32,
+              "fontWeight": "700"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "GdoNX",
+          "x": 16,
+          "y": 472,
+          "name": "Desc Block",
+          "width": 343,
+          "height": 88,
+          "fill": "transparent",
+          "layout": "vertical",
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "q30r7",
+              "name": "Description",
+              "fill": "#8A8A8E",
+              "textGrowth": "fixed-width",
+              "width": 295,
+              "content": "Let your child record a voice note describing their artwork. Preserve their words and imagination forever.",
+              "textAlign": "center",
+              "fontFamily": "Outfit",
+              "fontSize": 15,
+              "fontWeight": "normal"
+            }
+          ]
+        },
+        {
+          "type": "ellipse",
+          "id": "H7tOU",
+          "x": 148,
+          "y": 628,
+          "name": "Dot 1",
+          "fill": "#8A8A8E4D",
+          "width": 8,
+          "height": 8
+        },
+        {
+          "type": "ellipse",
+          "id": "vnmDd",
+          "x": 178,
+          "y": 628,
+          "name": "Dot 2",
+          "fill": "#8A8A8E4D",
+          "width": 8,
+          "height": 8
+        },
+        {
+          "type": "ellipse",
+          "id": "wSDTt",
+          "x": 192,
+          "y": 628,
+          "name": "Dot 3",
+          "fill": "#8A8A8E4D",
+          "width": 8,
+          "height": 8
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 4,
+          "id": "MBfzj",
+          "x": 198,
+          "y": 628,
+          "name": "Dot Active",
+          "fill": "#FF8C00",
+          "width": 24,
+          "height": 8
+        },
+        {
+          "type": "ellipse",
+          "id": "M6ldY",
+          "x": 220,
+          "y": 628,
+          "name": "Dot 5",
+          "fill": "#8A8A8E4D",
+          "width": 8,
+          "height": 8
+        },
+        {
+          "type": "frame",
+          "id": "UP9Lm",
+          "x": 32,
+          "y": 660,
+          "name": "CTA Button",
+          "width": 311,
+          "height": 56,
+          "fill": "#FF8C00",
+          "cornerRadius": 28,
+          "layout": "vertical",
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "dDtfG",
+              "name": "CTA Label",
+              "fill": "#FFFFFF",
+              "content": "Next  →",
+              "textAlign": "center",
+              "fontFamily": "Outfit",
+              "fontSize": 17,
+              "fontWeight": "600"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "4tF1D",
+      "x": 5030,
+      "y": 0,
+      "name": "Onboarding 5",
+      "width": 375,
+      "height": 812,
+      "fill": "#FFFFFF",
+      "layout": "none",
+      "children": [
+        {
+          "type": "frame",
+          "id": "IawaR",
+          "x": 16,
+          "y": 0,
+          "name": "Illustration Area",
+          "width": 343,
+          "height": 340,
+          "cornerRadius": 40,
+          "fill": {
+            "type": "gradient",
+            "gradientType": "linear",
+            "enabled": true,
+            "rotation": 180,
+            "size": {
+              "height": 1
+            },
+            "colors": [
+              {
+                "color": "#FF8C0014",
+                "position": 0
+              },
+              {
+                "color": "#FF8C0042",
+                "position": 1
+              }
+            ]
+          }
+        },
+        {
+          "type": "frame",
+          "id": "7N2X4",
+          "x": 55,
+          "y": 100,
+          "name": "Card 1",
+          "width": 100,
+          "height": 100,
+          "fill": "#FFFFFF",
+          "cornerRadius": 20,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon_font",
+              "id": "w4VEU",
+              "x": 30,
+              "y": 30,
+              "name": "PaintPalette",
+              "width": 40,
+              "height": 40,
+              "iconFontName": "share",
+              "iconFontFamily": "Material Symbols Rounded",
+              "fill": "#FF8C00"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "r7S8B",
+          "x": 130,
+          "y": 80,
+          "name": "Card 2",
+          "width": 100,
+          "height": 100,
+          "fill": "#FFFFFF",
+          "cornerRadius": 20,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon_font",
+              "id": "y7yeF",
+              "x": 30,
+              "y": 30,
+              "name": "FigureChild",
+              "width": 40,
+              "height": 40,
+              "iconFontName": "favorite",
+              "iconFontFamily": "Material Symbols Rounded",
+              "fill": "#FF8C00"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "fHYwS",
+          "x": 205,
+          "y": 60,
+          "name": "Card 3",
+          "width": 100,
+          "height": 100,
+          "fill": "#FFFFFF",
+          "cornerRadius": 20,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon_font",
+              "id": "F3gxr",
+              "x": 30,
+              "y": 30,
+              "name": "Scribble",
+              "width": 40,
+              "height": 40,
+              "iconFontName": "group",
+              "iconFontFamily": "Material Symbols Rounded",
+              "fill": "#FF8C00"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "g1f6O",
+          "x": 16,
+          "y": 360,
+          "name": "Title Block",
+          "width": 343,
+          "height": 96,
+          "fill": "transparent",
+          "layout": "vertical",
+          "gap": 4,
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "sHstw",
+              "name": "Title Line 1",
+              "fill": "#1C1C1E",
+              "content": "Share &",
+              "textAlign": "center",
+              "fontFamily": "Outfit",
+              "fontSize": 32,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "mQKn2",
+              "name": "Title Line 2",
+              "fill": "#FF8C00",
+              "content": "Celebrate",
+              "textAlign": "center",
+              "fontFamily": "Outfit",
+              "fontSize": 32,
+              "fontWeight": "700"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "tDL3m",
+          "x": 16,
+          "y": 472,
+          "name": "Desc Block",
+          "width": 343,
+          "height": 88,
+          "fill": "transparent",
+          "layout": "vertical",
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "rGpYh",
+              "name": "Description",
+              "fill": "#8A8A8E",
+              "textGrowth": "fixed-width",
+              "width": 295,
+              "content": "Share artwork with family and friends. Let everyone celebrate your little artist's wonderful creations.",
+              "textAlign": "center",
+              "fontFamily": "Outfit",
+              "fontSize": 15,
+              "fontWeight": "normal"
+            }
+          ]
+        },
+        {
+          "type": "ellipse",
+          "id": "MVDSi",
+          "x": 148,
+          "y": 628,
+          "name": "Dot 1",
+          "fill": "#8A8A8E4D",
+          "width": 8,
+          "height": 8
+        },
+        {
+          "type": "ellipse",
+          "id": "Yy4et",
+          "x": 178,
+          "y": 628,
+          "name": "Dot 2",
+          "fill": "#8A8A8E4D",
+          "width": 8,
+          "height": 8
+        },
+        {
+          "type": "ellipse",
+          "id": "Tz3lI",
+          "x": 192,
+          "y": 628,
+          "name": "Dot 3",
+          "fill": "#8A8A8E4D",
+          "width": 8,
+          "height": 8
+        },
+        {
+          "type": "ellipse",
+          "id": "1b1zf",
+          "x": 206,
+          "y": 628,
+          "name": "Dot 4",
+          "fill": "#8A8A8E4D",
+          "width": 8,
+          "height": 8
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 4,
+          "id": "9AQhf",
+          "x": 212,
+          "y": 628,
+          "name": "Dot Active",
+          "fill": "#FF8C00",
+          "width": 24,
+          "height": 8
+        },
+        {
+          "type": "frame",
+          "id": "B5ZD5",
+          "x": 32,
+          "y": 660,
+          "name": "CTA Button",
+          "width": 311,
+          "height": 56,
+          "fill": "#FF8C00",
+          "cornerRadius": 28,
+          "layout": "vertical",
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "UFrNw",
+              "name": "CTA Label",
+              "fill": "#FFFFFF",
+              "content": "Get Started",
+              "textAlign": "center",
+              "fontFamily": "Outfit",
+              "fontSize": 17,
+              "fontWeight": "600"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
       "id": "XlbuS",
       "x": 0,
       "y": 0,
