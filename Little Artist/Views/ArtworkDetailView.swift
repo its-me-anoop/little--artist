@@ -2,7 +2,8 @@
 //  ArtworkDetailView.swift
 //  Little Artist
 //
-//  Full-screen artwork viewer with edit, share, and delete actions.
+//  Full-screen artwork viewer with pinch-to-zoom, attribution,
+//  favorite toggle, edit, share, and delete actions.
 //  Supports AI-powered caption improvement via AISuggestionService.
 //
 //  Created by Codex on 15/02/2026.
@@ -23,6 +24,7 @@ struct ArtworkDetailView: View {
     @State private var editCaption = ""
     @State private var isGeneratingSuggestions = false
     @State private var suggestionErrorMessage: String?
+    @State private var imageScale: CGFloat = 1.0
 
     private var displayTitle: String {
         let trimmed = artwork.title.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -37,54 +39,129 @@ struct ArtworkDetailView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                if let imageData = artwork.imageData, let uiImage = UIImage(data: imageData) {
-                    Image(uiImage: uiImage)
-                        .resizable()
-                        .scaledToFit()
-                        .frame(maxWidth: .infinity)
-                        .clipShape(RoundedRectangle(cornerRadius: 20))
-                } else {
-                    RoundedRectangle(cornerRadius: 20)
-                        .fill(Color(.tertiarySystemBackground))
-                        .frame(maxWidth: .infinity, minHeight: 320)
-                        .overlay {
-                            Image(systemName: "paintpalette")
-                                .font(.system(size: 52, design: .rounded))
-                                .foregroundStyle(Brand.primary.opacity(0.35))
-                        }
+                // Hero image with pinch-to-zoom and favorite overlay
+                ZStack(alignment: .topTrailing) {
+                    if let imageData = artwork.imageData, let uiImage = UIImage(data: imageData) {
+                        Image(uiImage: uiImage)
+                            .resizable()
+                            .scaledToFit()
+                            .scaleEffect(imageScale)
+                            .frame(maxWidth: .infinity)
+                            .clipShape(RoundedRectangle(cornerRadius: 20))
+                            .gesture(
+                                MagnifyGesture()
+                                    .onChanged { value in
+                                        imageScale = min(max(value.magnification, 1.0), 5.0)
+                                    }
+                                    .onEnded { _ in
+                                        withAnimation(.spring(duration: 0.3)) {
+                                            if imageScale < 1.2 {
+                                                imageScale = 1.0
+                                            }
+                                        }
+                                    }
+                            )
+                            .onTapGesture(count: 2) {
+                                withAnimation(.spring(duration: 0.3)) {
+                                    imageScale = imageScale > 1.5 ? 1.0 : 2.0
+                                }
+                            }
+                    } else {
+                        RoundedRectangle(cornerRadius: 20)
+                            .fill(Color(.tertiarySystemBackground))
+                            .frame(maxWidth: .infinity, minHeight: 320)
+                            .overlay {
+                                Image(systemName: "paintpalette")
+                                    .font(.system(size: 52, design: .rounded))
+                                    .foregroundStyle(Brand.primary.opacity(0.35))
+                            }
+                    }
+
+                    // Favorite toggle
+                    Button {
+                        artwork.isFavorited.toggle()
+                    } label: {
+                        Image(systemName: artwork.isFavorited ? "heart.fill" : "heart")
+                            .font(.title3)
+                            .foregroundStyle(artwork.isFavorited ? Brand.dustyRose : .white)
+                            .padding(10)
+                            .background(.ultraThinMaterial)
+                            .clipShape(Circle())
+                    }
+                    .padding(12)
                 }
 
+                // Title
                 Text(displayTitle)
-                    .font(.system(.title2, design: .rounded).bold())
+                    .font(Brand.title2Font)
                     .frame(maxWidth: .infinity, alignment: .leading)
 
+                // Attribution line
+                if let childName = artwork.child?.name {
+                    HStack(spacing: 4) {
+                        Text("by \(childName)")
+                        Text("·")
+                        Text(artwork.createdAt, format: .dateTime.month(.abbreviated).day().year())
+                    }
+                    .font(Brand.captionFont)
+                    .foregroundStyle(.secondary)
+                }
+
+                // Caption
                 if let displayCaption {
                     Text(displayCaption)
-                        .font(.body)
+                        .font(Brand.bodyFont)
                         .foregroundStyle(.secondary)
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
+
+                Spacer().frame(height: 8)
+
+                // Action buttons row
+                HStack(spacing: 16) {
+                    Button { prepareShareItems() } label: {
+                        Label("Share", systemImage: "square.and.arrow.up")
+                            .font(Brand.subheadlineFont)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 12)
+                            .background(Brand.primaryTint)
+                            .foregroundStyle(Brand.primary)
+                            .clipShape(RoundedRectangle(cornerRadius: Brand.radiusButton))
+                    }
+
+                    Button { startEditing() } label: {
+                        Label("Edit", systemImage: "pencil")
+                            .font(Brand.subheadlineFont)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 12)
+                            .background(Brand.primaryTint)
+                            .foregroundStyle(Brand.primary)
+                            .clipShape(RoundedRectangle(cornerRadius: Brand.radiusButton))
+                    }
+
+                    Button { showDeleteConfirmation = true } label: {
+                        Label("Delete", systemImage: "trash")
+                            .font(Brand.subheadlineFont)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 12)
+                            .background(Brand.dustyRose.opacity(0.12))
+                            .foregroundStyle(Brand.dustyRose)
+                            .clipShape(RoundedRectangle(cornerRadius: Brand.radiusButton))
+                    }
+                }
+                .buttonStyle(.plain)
             }
-            .padding(20)
+            .padding(Brand.screenPadding)
         }
         .navigationTitle("Artwork")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
-                Menu {
-                    Button("Share Artwork", systemImage: "square.and.arrow.up") {
-                        prepareShareItems()
-                    }
-
-                    Button("Edit Artwork", systemImage: "pencil") {
-                        startEditing()
-                    }
-
-                    Button("Delete Artwork", systemImage: "trash", role: .destructive) {
-                        showDeleteConfirmation = true
-                    }
+                Button {
+                    artwork.isFavorited.toggle()
                 } label: {
-                    Image(systemName: "ellipsis.circle")
+                    Image(systemName: artwork.isFavorited ? "heart.fill" : "heart")
+                        .foregroundStyle(artwork.isFavorited ? Brand.dustyRose : .secondary)
                 }
             }
         }
