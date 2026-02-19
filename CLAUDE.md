@@ -30,78 +30,98 @@ Little Artist/
 
 ## Design Tokens
 
-IMPORTANT: Never hardcode colors or spacing. Use these tokens consistently.
+IMPORTANT: All design tokens are centralized in `Utilities/BrandTokens.swift`. Always use `Brand.*` tokens — never hardcode color, font, shadow, or spacing values.
 
 ### Colors
 
-| Token | Value | Usage |
-|-------|-------|-------|
-| Accent | `#FF8C00` / `Color.orange` | Primary buttons, selected states, highlights, FAB |
-| Accent Light | `#FF8C00` at 12% opacity | Subtle fills, badge backgrounds, tinted buttons |
-| Text Primary | `.primary` (system) | Headings, main text |
-| Text Secondary | `.secondary` (system) | Subtitles, dates, hints |
-| Background | `.white` / system white | Main screen background |
-| Background Secondary | `Color(.secondarySystemBackground)` | Input fields, cards |
-| Background Grouped | `Color(.systemGroupedBackground)` | Detail view backgrounds |
-| Shadow | `.black.opacity(0.08)` | Card shadows |
+| Token | Code | Hex | Usage |
+|-------|------|-----|-------|
+| Primary | `Brand.primary` | `#F2784B` | CTAs, selected states, FAB, highlights |
+| Primary Tint | `Brand.primaryTint` | `#F2784B` at 12% | Badge backgrounds, tinted fills |
+| Cream | `Brand.cream` | `#FFF8F0` | Main app background |
+| Surface | `Brand.surface` | `#FFFBF7` | Cards, sheets, input fields |
+| Charcoal | `Brand.charcoal` | `#3D3D3D` | Headings, body text |
+| Warm Gray | `Brand.warmGray` | `#8A8680` | Subtitles, dates, hints |
+| Soft Tan | `Brand.softTan` | `#E8E0D8` | Dividers, borders |
+| Sage | `Brand.sage` | `#A8C5A0` | Success states |
+| Sky | `Brand.sky` | `#7EB8DA` | Informational |
+| Lavender | `Brand.lavender` | `#B8A9D4` | Tertiary accent |
+| Dusty Rose | `Brand.dustyRose` | `#D4736C` | Destructive actions |
+| Disabled | `Brand.disabled` | `#8A8680` | Disabled states |
 
-### Avatar Palette (7 preset colors)
+### Avatar Palette
 
 ```swift
-["#FF6B6B", "#FF8C00", "#FFD93D", "#6BCB77", "#4D96FF", "#9B59B6", "#FF6B9D"]
+Brand.avatarColors  // ["F2784B", "A8C5A0", "7EB8DA", "B8A9D4", "E8C94A", "D4928A", "7BC8B5"]
+Brand.defaultAvatarColor  // "F2784B"
 ```
 
-### Corner Radii
+### Typography (SF Rounded headings, SF Pro body)
 
-| Element | Radius |
-|---------|--------|
-| Cards | 18pt |
-| Images | 12pt |
-| Sheets | 20pt |
-| Buttons | Capsule (fully rounded) |
-| Onboarding gradient | 40pt |
+| Token | Code | Usage |
+|-------|------|-------|
+| Display | `Brand.displayFont` | Onboarding headlines |
+| Title 1 | `Brand.title1Font` | Screen titles |
+| Title 2 | `Brand.title2Font` | Section headings, year labels |
+| Title 3 | `Brand.title3Font` | Sheet titles |
+| Headline | `Brand.headlineFont` | Month names, card titles |
+| Body | `Brand.bodyFont` | Descriptions, input text |
+| Subheadline | `Brand.subheadlineFont` | Thumbnail titles |
+| Caption | `Brand.captionFont` | Dates, labels |
+| Caption 2 | `Brand.caption2Font` | Metadata |
 
 ### Shadows
 
 ```swift
-.shadow(color: .black.opacity(0.08), radius: 12, x: 0, y: 6)   // cards
-.shadow(color: .black.opacity(0.06), radius: 6, x: 0, y: 3)    // avatars
+.brandCardShadow()    // charcoal 8%, 12pt blur, 6pt y
+.brandAvatarShadow()  // charcoal 6%, 6pt blur, 3pt y
+.brandFABShadow()     // primary 40%, 10pt blur, 4pt y
 ```
 
-### Typography
+### Corner Radii
 
-| Style | Font | Usage |
+| Token | Code | Value |
 |-------|------|-------|
-| Onboarding title | `.system(size: 32, weight: .bold)` | Onboarding headlines |
-| Section heading | `.title2.bold()` | Year labels, detail titles |
-| Body | `.body` | Descriptions, captions |
-| Subheadline | `.subheadline` | Card titles |
-| Caption | `.caption` / `.caption2` | Dates, labels, counts |
+| Onboarding | `Brand.radiusOnboarding` | 40pt |
+| Sheets | `Brand.radiusSheet` | 20pt |
+| Cards | `Brand.radiusCard` | 18pt |
+| Buttons | `Brand.radiusButton` | 16pt |
+| Fields | `Brand.radiusField` | 14pt |
+| Images | `Brand.radiusImage` | 12pt |
+| Pills | `Capsule()` | fully rounded |
 
 ### Spacing
 
-- Screen horizontal padding: 20pt
-- Section vertical spacing: 24pt
-- Component internal spacing: 8–16pt
-- Divider top padding: 12pt
+| Token | Code | Value |
+|-------|------|-------|
+| Screen padding | `Brand.screenPadding` | 20pt |
+| Form padding | `Brand.formPadding` | 32pt |
+| Section spacing | `Brand.sectionSpacing` | 28pt |
+| Gallery spacing | `Brand.gallerySpacing` | 24pt |
+| Button padding | `Brand.buttonPadding` | 18pt |
+| Field padding | `Brand.fieldPadding` | 14pt |
 
 ### Component Sizes
 
-| Component | Size |
-|-----------|------|
-| Child avatar | 60x60pt |
-| Avatar selected ring | 68x68pt, 3pt stroke |
-| Photo source buttons | 56x56pt |
-| Avatar preview (sheets) | 110x110pt |
-| Artwork thumbnail image | 164x180pt |
-| Onboarding gradient area | height 340pt |
+| Token | Code | Value |
+|-------|------|-------|
+| Avatar | `Brand.avatarSize` | 60pt |
+| Avatar ring | `Brand.avatarRingSize` | 68pt |
+| Ring stroke | `Brand.avatarRingStroke` | 3pt |
+| Avatar preview | `Brand.avatarPreviewSize` | 110pt |
+| Source buttons | `Brand.sourceButtonSize` | 56pt |
+| Thumbnail | `Brand.thumbnailWidth` / `.thumbnailHeight` | 164x180pt |
+| FAB | `Brand.fabSize` | 60pt |
+| Onboarding cards | `Brand.onboardingCardHeight` | 340pt |
+| Color circles | `Brand.colorCircleSize` | 40pt |
 
 ---
 
 ## Styling Approach
 
 - IMPORTANT: Use native SwiftUI modifiers exclusively — no CSS, Tailwind, or external styling libraries
-- Colors via `Color(hex:)` extension (defined in `Utilities/Color+Hex.swift`) or system colors
+- IMPORTANT: Always use `Brand.*` tokens from `Utilities/BrandTokens.swift` for colors, fonts, shadows, spacing
+- Colors via `Brand.primary`, `Brand.cream`, etc. — or `Color(hex:)` for dynamic values only
 - Shapes: `Circle()`, `Capsule()`, `RoundedRectangle(cornerRadius:)`
 - Layout: `VStack`, `HStack`, `ZStack`, `LazyVStack`, `LazyHStack`
 - Scrolling: `ScrollView(.horizontal)` for sliders, `ScrollView` for galleries
@@ -204,8 +224,8 @@ These rules define how to translate Figma inputs into code for this project.
 
 - Figma MCP returns React + Tailwind code — this is a **design reference**, not final code
 - Convert all HTML/JSX elements to SwiftUI equivalents (`div` → `VStack`/`HStack`, `img` → `Image`, `span` → `Text`)
-- Replace Tailwind classes with SwiftUI modifiers (e.g., `rounded-full` → `.clipShape(Circle())`, `text-lg font-bold` → `.font(.title2.bold())`)
-- Map Figma colors to the design tokens above — never use raw hex from Figma output without checking the token table
+- Replace Tailwind classes with SwiftUI modifiers (e.g., `rounded-full` → `.clipShape(Circle())`, `text-lg font-bold` → `.font(Brand.title2Font)`)
+- Map Figma colors to `Brand.*` tokens — never use raw hex from Figma output without checking BrandTokens.swift
 - Reuse existing components from `Little Artist/Components/` before creating new ones
 - Place new reusable components in `Little Artist/Components/`
 - Place new full-screen views in `Little Artist/Views/`
@@ -223,6 +243,6 @@ These rules define how to translate Figma inputs into code for this project.
 
 ## Design Spec Reference
 
-Detailed design specifications are in `docs/plans/2026-02-19-pencil-design.md` — consult this for screen-by-screen layout details, spacing, and component specs.
-
-User flow diagram is in `docs/userflow.md`.
+- Brand identity design: `docs/plans/2026-02-19-brand-identity-design.md`
+- Screen-by-screen layout specs: `docs/plans/2026-02-19-pencil-design.md`
+- User flow diagram: `docs/userflow.md`
