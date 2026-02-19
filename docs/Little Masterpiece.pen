@@ -213,7 +213,7 @@
               "type": "text",
               "id": "5OqZ0",
               "name": "Description",
-              "content": "Never lose a precious drawing again. Digitally archive and share your child’s masterpieces in one safe place.",
+              "content": "Never lose a precious drawing again. Digitally archive and share your child\u2019s masterpieces in one safe place.",
               "fill": "#8A8A8E",
               "fontFamily": "Outfit",
               "fontSize": 15,
@@ -292,7 +292,7 @@
               "type": "text",
               "id": "jq6Ub",
               "name": "CTA Label",
-              "content": "Next  →",
+              "content": "Next  \u2192",
               "fill": "#FFFFFF",
               "fontFamily": "Outfit",
               "fontSize": 17,
@@ -569,7 +569,7 @@
               "id": "E5GXW",
               "name": "CTA Label",
               "fill": "#FFFFFF",
-              "content": "Next  →",
+              "content": "Next  \u2192",
               "textAlign": "center",
               "fontFamily": "Outfit",
               "fontSize": 17,
@@ -845,7 +845,7 @@
               "id": "syebA",
               "name": "CTA Label",
               "fill": "#FFFFFF",
-              "content": "Next  →",
+              "content": "Next  \u2192",
               "textAlign": "center",
               "fontFamily": "Outfit",
               "fontSize": 17,
@@ -1121,7 +1121,7 @@
               "id": "dDtfG",
               "name": "CTA Label",
               "fill": "#FFFFFF",
-              "content": "Next  →",
+              "content": "Next  \u2192",
               "textAlign": "center",
               "fontFamily": "Outfit",
               "fontSize": 17,
@@ -2025,7 +2025,7 @@
                       "fill": "#5C4033",
                       "textGrowth": "fixed-width",
                       "width": "fill_container",
-                      "content": "Share with grandparents, aunts & uncles — they get notified instantly",
+                      "content": "Share with grandparents, aunts & uncles \u2014 they get notified instantly",
                       "lineHeight": 1.4,
                       "fontFamily": "Lora",
                       "fontSize": 14,
@@ -2496,7 +2496,7 @@
                   "id": "S7Iu7",
                   "name": "greeting",
                   "fill": "#8B7355",
-                  "content": "Good morning ☀️",
+                  "content": "Good morning \u2600\ufe0f",
                   "fontFamily": "Lora",
                   "fontSize": 14,
                   "fontWeight": "500"
@@ -4392,7 +4392,7 @@
                   "id": "WIZhv",
                   "name": "artPrevMeta",
                   "fill": "#8B7355",
-                  "content": "By Emma  ·  Dec 15, 2024",
+                  "content": "By Emma  \u00b7  Dec 15, 2024",
                   "fontFamily": "Lora",
                   "fontSize": 13,
                   "fontWeight": "normal"
@@ -4814,7 +4814,7 @@
                   "id": "VAqxN",
                   "name": "msgPlaceholder",
                   "fill": "#5C4033",
-                  "content": "Look what our little artist created today! 🎨",
+                  "content": "Look what our little artist created today! \ud83c\udfa8",
                   "fontFamily": "Lora",
                   "fontSize": 15,
                   "fontWeight": "normal"
@@ -4869,7 +4869,7 @@
                       "type": "text",
                       "id": "BxkZg",
                       "name": "s1t",
-                      "content": "⭐",
+                      "content": "\u2b50",
                       "fontFamily": "Inter",
                       "fontSize": 22,
                       "fontWeight": "normal"
@@ -4897,7 +4897,7 @@
                       "type": "text",
                       "id": "nZDCB",
                       "name": "s2t",
-                      "content": "❤️",
+                      "content": "\u2764\ufe0f",
                       "fontFamily": "Inter",
                       "fontSize": 22,
                       "fontWeight": "normal"
@@ -4925,7 +4925,7 @@
                       "type": "text",
                       "id": "hsnRb",
                       "name": "s3t",
-                      "content": "🎨",
+                      "content": "\ud83c\udfa8",
                       "fontFamily": "Inter",
                       "fontSize": 22,
                       "fontWeight": "normal"
@@ -4953,7 +4953,7 @@
                       "type": "text",
                       "id": "WJ4tC",
                       "name": "s4t",
-                      "content": "🌈",
+                      "content": "\ud83c\udf08",
                       "fontFamily": "Inter",
                       "fontSize": 22,
                       "fontWeight": "normal"
@@ -4981,7 +4981,7 @@
                       "type": "text",
                       "id": "q35k5",
                       "name": "s5t",
-                      "content": "🦕",
+                      "content": "\ud83e\udd95",
                       "fontFamily": "Inter",
                       "fontSize": 22,
                       "fontWeight": "normal"
@@ -5179,7 +5179,7 @@
               "id": "FDCM3",
               "name": "profSub",
               "fill": "#8B7355",
-              "content": "Little artist since Sep 2024  ·  Age 5y 2m",
+              "content": "Little artist since Sep 2024  \u00b7  Age 5y 2m",
               "fontFamily": "Lora",
               "fontSize": 14,
               "fontWeight": "normal",
@@ -5630,7 +5630,7 @@
                   "id": "8SWCN",
                   "name": "promoBtnTxt",
                   "fill": "#E8674A",
-                  "content": "Create Book  ·  From $29.99",
+                  "content": "Create Book  \u00b7  From $29.99",
                   "fontFamily": "Lora",
                   "fontSize": 14,
                   "fontWeight": "700"
@@ -7419,7 +7419,7 @@
               "id": "Myr6s",
               "name": "renewTxt",
               "fill": "#8B7355",
-              "content": "Renews Jan 15, 2025  ·  $4.99/month",
+              "content": "Renews Jan 15, 2025  \u00b7  $4.99/month",
               "fontFamily": "Lora",
               "fontSize": 12,
               "fontWeight": "normal",
@@ -9004,7 +9004,7 @@
               "fill": "#5C4033",
               "textGrowth": "fixed-width",
               "width": "fill_container",
-              "content": "Warm, earthy tones inspired by craft paper and crayons. The palette evokes the feeling of a child's art room — cozy, inviting, and full of creative energy.",
+              "content": "Warm, earthy tones inspired by craft paper and crayons. The palette evokes the feeling of a child's art room \u2014 cozy, inviting, and full of creative energy.",
               "lineHeight": 1.6,
               "fontFamily": "Lora",
               "fontSize": 16,
@@ -9435,7 +9435,7 @@
                           "id": "8jsZf",
                           "name": "bg1h",
                           "fill": "#8B7355",
-                          "content": "#FAF6F0  ·  Screen bg",
+                          "content": "#FAF6F0  \u00b7  Screen bg",
                           "fontFamily": "DM Sans",
                           "fontSize": 11,
                           "fontWeight": "500"
@@ -9493,7 +9493,7 @@
                           "id": "0Tref",
                           "name": "bg2h",
                           "fill": "#8B7355",
-                          "content": "#FFFDF8  ·  Cards, tab bar",
+                          "content": "#FFFDF8  \u00b7  Cards, tab bar",
                           "fontFamily": "DM Sans",
                           "fontSize": 11,
                           "fontWeight": "500"
@@ -9551,7 +9551,7 @@
                           "id": "HCq1I",
                           "name": "bg3h",
                           "fill": "#8B7355",
-                          "content": "#FEF7ED  ·  Inputs, list items",
+                          "content": "#FEF7ED  \u00b7  Inputs, list items",
                           "fontFamily": "DM Sans",
                           "fontSize": 11,
                           "fontWeight": "500"
@@ -9609,7 +9609,7 @@
                           "id": "wanOw",
                           "name": "bg4h",
                           "fill": "#8B7355",
-                          "content": "#FEF1E0  ·  Feature badges",
+                          "content": "#FEF1E0  \u00b7  Feature badges",
                           "fontFamily": "DM Sans",
                           "fontSize": 11,
                           "fontWeight": "500"
@@ -9667,7 +9667,7 @@
                           "id": "lda2p",
                           "name": "bg5h",
                           "fill": "#8B7355",
-                          "content": "#F5F0FF  ·  Voice memo cards",
+                          "content": "#F5F0FF  \u00b7  Voice memo cards",
                           "fontFamily": "DM Sans",
                           "fontSize": 11,
                           "fontWeight": "500"
@@ -9728,7 +9728,7 @@
                           "id": "VWhCI",
                           "name": "t1n",
                           "fill": "#3D2C1E",
-                          "content": "Ink  ·  #3D2C1E",
+                          "content": "Ink  \u00b7  #3D2C1E",
                           "fontFamily": "DM Sans",
                           "fontSize": 13,
                           "fontWeight": "600"
@@ -9780,7 +9780,7 @@
                           "id": "jUdKm",
                           "name": "t2n",
                           "fill": "#3D2C1E",
-                          "content": "Crayon Dark  ·  #5C4033",
+                          "content": "Crayon Dark  \u00b7  #5C4033",
                           "fontFamily": "DM Sans",
                           "fontSize": 13,
                           "fontWeight": "600"
@@ -9832,7 +9832,7 @@
                           "id": "xtz6H",
                           "name": "t3n",
                           "fill": "#3D2C1E",
-                          "content": "Pencil  ·  #8B7355",
+                          "content": "Pencil  \u00b7  #8B7355",
                           "fontFamily": "DM Sans",
                           "fontSize": 13,
                           "fontWeight": "600"
@@ -9884,7 +9884,7 @@
                           "id": "SFsiQ",
                           "name": "t4n",
                           "fill": "#3D2C1E",
-                          "content": "Border  ·  #E8DFD0",
+                          "content": "Border  \u00b7  #E8DFD0",
                           "fontFamily": "DM Sans",
                           "fontSize": 13,
                           "fontWeight": "600"
@@ -10830,7 +10830,7 @@
                               "id": "5pxhi",
                               "name": "sp1txt",
                               "fill": "#5C4033",
-                              "content": "4px  —  Tight (icon + text pairs)",
+                              "content": "4px  \u2014  Tight (icon + text pairs)",
                               "fontFamily": "DM Sans",
                               "fontSize": 12,
                               "fontWeight": "normal"
@@ -10859,7 +10859,7 @@
                               "id": "9PmhH",
                               "name": "sp2txt",
                               "fill": "#5C4033",
-                              "content": "8px  —  Small (badge padding, tab gap)",
+                              "content": "8px  \u2014  Small (badge padding, tab gap)",
                               "fontFamily": "DM Sans",
                               "fontSize": 12,
                               "fontWeight": "normal"
@@ -10888,7 +10888,7 @@
                               "id": "WcnaM",
                               "name": "sp3txt",
                               "fill": "#5C4033",
-                              "content": "12px  —  Base (card gaps, inner padding)",
+                              "content": "12px  \u2014  Base (card gaps, inner padding)",
                               "fontFamily": "DM Sans",
                               "fontSize": 12,
                               "fontWeight": "normal"
@@ -10917,7 +10917,7 @@
                               "id": "yfTPb",
                               "name": "sp4txt",
                               "fill": "#5C4033",
-                              "content": "16px  —  Medium (section gaps, card padding)",
+                              "content": "16px  \u2014  Medium (section gaps, card padding)",
                               "fontFamily": "DM Sans",
                               "fontSize": 12,
                               "fontWeight": "normal"
@@ -10946,7 +10946,7 @@
                               "id": "PCtnH",
                               "name": "sp5txt",
                               "fill": "#5C4033",
-                              "content": "20px  —  Large (content padding, card body)",
+                              "content": "20px  \u2014  Large (content padding, card body)",
                               "fontFamily": "DM Sans",
                               "fontSize": 12,
                               "fontWeight": "normal"
@@ -10975,7 +10975,7 @@
                               "id": "FCj8A",
                               "name": "sp6txt",
                               "fill": "#5C4033",
-                              "content": "24px  —  XL (screen padding, section spacing)",
+                              "content": "24px  \u2014  XL (screen padding, section spacing)",
                               "fontFamily": "DM Sans",
                               "fontSize": 12,
                               "fontWeight": "normal"
@@ -11004,7 +11004,7 @@
                               "id": "LGCKi",
                               "name": "sp7txt",
                               "fill": "#5C4033",
-                              "content": "32px  —  2XL (major section dividers)",
+                              "content": "32px  \u2014  2XL (major section dividers)",
                               "fontFamily": "DM Sans",
                               "fontSize": 12,
                               "fontWeight": "normal"
@@ -11033,7 +11033,7 @@
                               "id": "UyGls",
                               "name": "sp8txt",
                               "fill": "#5C4033",
-                              "content": "40px  —  3XL (onboarding screen padding)",
+                              "content": "40px  \u2014  3XL (onboarding screen padding)",
                               "fontFamily": "DM Sans",
                               "fontSize": 12,
                               "fontWeight": "normal"
@@ -11174,7 +11174,7 @@
                           "id": "ke6aZ",
                           "name": "g1hex",
                           "fill": "#8B7355",
-                          "content": "Coral → Mustard → Terracotta → Lavender",
+                          "content": "Coral \u2192 Mustard \u2192 Terracotta \u2192 Lavender",
                           "fontFamily": "DM Sans",
                           "fontSize": 11,
                           "fontWeight": "500"
@@ -11261,7 +11261,7 @@
                           "id": "uW2WN",
                           "name": "g2hex",
                           "fill": "#8B7355",
-                          "content": "Coral → Terracotta (90°)",
+                          "content": "Coral \u2192 Terracotta (90\u00b0)",
                           "fontFamily": "DM Sans",
                           "fontSize": 11,
                           "fontWeight": "500"
@@ -11352,7 +11352,7 @@
                           "id": "tvq86",
                           "name": "g3hex",
                           "fill": "#8B7355",
-                          "content": "Coral → Terracotta → Lavender",
+                          "content": "Coral \u2192 Terracotta \u2192 Lavender",
                           "fontFamily": "DM Sans",
                           "fontSize": 11,
                           "fontWeight": "500"
@@ -11437,7 +11437,7 @@
           "id": "kRPfH",
           "name": "headerSub",
           "fill": "#8B7355",
-          "content": "Design Guidelines  ·  Color Palette  ·  Typography  ·  Spacing",
+          "content": "Design Guidelines  \u00b7  Color Palette  \u00b7  Typography  \u00b7  Spacing",
           "fontFamily": "Lora",
           "fontSize": 18,
           "fontWeight": "normal"
@@ -12814,7 +12814,7 @@
               "type": "text",
               "id": "ZDei5",
               "name": "react1emoji",
-              "content": "❤️",
+              "content": "\u2764\ufe0f",
               "fontFamily": "Inter",
               "fontSize": 14,
               "fontWeight": "normal"
@@ -12860,7 +12860,7 @@
               "type": "text",
               "id": "2iXgV",
               "name": "react2emoji",
-              "content": "⭐",
+              "content": "\u2b50",
               "fontFamily": "Inter",
               "fontSize": 14,
               "fontWeight": "normal"
@@ -12879,7 +12879,7 @@
             "url": "./images/generated-1770701509354.png",
             "mode": "fill"
           },
-          "content": "🌟",
+          "content": "\ud83c\udf1f",
           "fontFamily": "Inter",
           "fontSize": 28,
           "fontWeight": "normal"
@@ -12890,7 +12890,7 @@
           "x": 10,
           "y": 500,
           "name": "sticker2",
-          "content": "🦕",
+          "content": "\ud83e\udd95",
           "fontFamily": "Inter",
           "fontSize": 24,
           "fontWeight": "normal"
@@ -13555,7 +13555,7 @@
                   "id": "lFhqD",
                   "name": "slValue",
                   "fill": "#E8674A",
-                  "content": "2.5°",
+                  "content": "2.5\u00b0",
                   "fontFamily": "Lora",
                   "fontSize": 13,
                   "fontWeight": "700"
@@ -13828,7 +13828,7 @@
                       "id": "07iVd",
                       "name": "artDate",
                       "fill": "#8B7355",
-                      "content": "Dec 15, 2024 · By Emma, age 5",
+                      "content": "Dec 15, 2024 \u00b7 By Emma, age 5",
                       "fontFamily": "Lora",
                       "fontSize": 12,
                       "fontWeight": "normal"
@@ -14267,7 +14267,7 @@
                   "id": "aZbYr",
                   "name": "heroTagTxt",
                   "fill": "#FFFFFF",
-                  "content": "✨ Holiday Special",
+                  "content": "\u2728 Holiday Special",
                   "fontFamily": "Lora",
                   "fontSize": 12,
                   "fontWeight": "600"
@@ -14314,7 +14314,7 @@
                   "id": "YuvL5",
                   "name": "heroPriceTxt",
                   "fill": "#E8674A",
-                  "content": "Create Book · From $29.99",
+                  "content": "Create Book \u00b7 From $29.99",
                   "fontFamily": "Lora",
                   "fontSize": 14,
                   "fontWeight": "700"
@@ -16381,7 +16381,7 @@
                       "fill": "#3D2C1E",
                       "textGrowth": "fixed-width",
                       "width": "fill_container",
-                      "content": "Grandma Rose reacted ❤️ to Rainbow World",
+                      "content": "Grandma Rose reacted \u2764\ufe0f to Rainbow World",
                       "fontFamily": "Lora",
                       "fontSize": 14,
                       "fontWeight": "500"
@@ -16656,7 +16656,7 @@
                       "fill": "#3D2C1E",
                       "textGrowth": "fixed-width",
                       "width": "fill_container",
-                      "content": "Milestone! 50 artworks captured 🎉",
+                      "content": "Milestone! 50 artworks captured \ud83c\udf89",
                       "fontFamily": "Lora",
                       "fontSize": 14,
                       "fontWeight": "500"
@@ -16924,6 +16924,1017 @@
         "path": "hd3RY",
         "anchor": "left"
       }
+    },
+    {
+      "type": "frame",
+      "id": "K3pTd",
+      "x": 5455,
+      "y": 0,
+      "name": "Home - With Data",
+      "clip": true,
+      "width": 375,
+      "height": 812,
+      "fill": "#FFFFFF",
+      "layout": "none",
+      "children": [
+        {
+          "type": "frame",
+          "id": "M3nlS",
+          "x": 0,
+          "y": 0,
+          "name": "navBar",
+          "width": 375,
+          "height": 88,
+          "fill": "#FFFFFF",
+          "layout": "none",
+          "children": [
+            {
+              "type": "text",
+              "id": "kDX0k",
+              "x": 138,
+              "y": 54,
+              "name": "navTitle",
+              "content": "Little Artist",
+              "fill": "#1C1C1E",
+              "fontFamily": "Outfit",
+              "fontSize": 17,
+              "fontWeight": "600"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "zvj1w",
+          "x": 0,
+          "y": 88,
+          "name": "avatarRow",
+          "width": 375,
+          "height": 100,
+          "fill": "#FFFFFF",
+          "layout": "none",
+          "children": [
+            {
+              "type": "ellipse",
+              "id": "Ez1TD",
+              "x": 20,
+              "y": 20,
+              "name": "emmaCircle",
+              "fill": "#FF8C00",
+              "width": 60,
+              "height": 60
+            },
+            {
+              "type": "text",
+              "id": "1xlrG",
+              "x": 41,
+              "y": 29,
+              "name": "emmaLetter",
+              "content": "E",
+              "fill": "#FFFFFF",
+              "fontFamily": "Outfit",
+              "fontSize": 24,
+              "fontWeight": "700"
+            },
+            {
+              "type": "ellipse",
+              "id": "bDgHR",
+              "x": 17,
+              "y": 17,
+              "name": "emmaRing",
+              "fill": "transparent",
+              "width": 66,
+              "height": 66,
+              "stroke": {
+                "align": "center",
+                "thickness": 3,
+                "fill": "#FF8C00"
+              }
+            },
+            {
+              "type": "text",
+              "id": "r4LSw",
+              "x": 26,
+              "y": 84,
+              "name": "emmaLabel",
+              "content": "Emma",
+              "fill": "#8A8A8E",
+              "fontFamily": "Outfit",
+              "fontSize": 11
+            },
+            {
+              "type": "ellipse",
+              "id": "OGxYr",
+              "x": 104,
+              "y": 20,
+              "name": "liamCircle",
+              "fill": "#6BCB77",
+              "width": 60,
+              "height": 60
+            },
+            {
+              "type": "text",
+              "id": "vT5Yv",
+              "x": 126,
+              "y": 29,
+              "name": "liamLetter",
+              "content": "L",
+              "fill": "#FFFFFF",
+              "fontFamily": "Outfit",
+              "fontSize": 24,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "L7DqW",
+              "x": 111,
+              "y": 84,
+              "name": "liamLabel",
+              "content": "Liam",
+              "fill": "#8A8A8E",
+              "fontFamily": "Outfit",
+              "fontSize": 11
+            },
+            {
+              "type": "ellipse",
+              "id": "04LzC",
+              "x": 188,
+              "y": 20,
+              "name": "ninaCircle",
+              "fill": "#4D96FF",
+              "width": 60,
+              "height": 60
+            },
+            {
+              "type": "text",
+              "id": "yYAkC",
+              "x": 209,
+              "y": 29,
+              "name": "ninaLetter",
+              "content": "N",
+              "fill": "#FFFFFF",
+              "fontFamily": "Outfit",
+              "fontSize": 24,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "C8chu",
+              "x": 196,
+              "y": 84,
+              "name": "ninaLabel",
+              "content": "Nina",
+              "fill": "#8A8A8E",
+              "fontFamily": "Outfit",
+              "fontSize": 11
+            },
+            {
+              "type": "ellipse",
+              "id": "VVkkq",
+              "x": 272,
+              "y": 20,
+              "name": "addCircle",
+              "fill": "#F2F2F7",
+              "width": 60,
+              "height": 60
+            },
+            {
+              "type": "text",
+              "id": "f4DrF",
+              "x": 293,
+              "y": 29,
+              "name": "addPlus",
+              "content": "+",
+              "fill": "#8A8A8E",
+              "fontFamily": "Outfit",
+              "fontSize": 24
+            },
+            {
+              "type": "text",
+              "id": "ejLmI",
+              "x": 282,
+              "y": 84,
+              "name": "addLabel",
+              "content": "Add",
+              "fill": "#8A8A8E",
+              "fontFamily": "Outfit",
+              "fontSize": 11
+            }
+          ]
+        },
+        {
+          "type": "rectangle",
+          "id": "n7P15",
+          "x": 0,
+          "y": 190,
+          "name": "divider",
+          "fill": "#E5E5EA",
+          "width": 375,
+          "height": 1
+        },
+        {
+          "type": "frame",
+          "id": "voHeQ",
+          "x": 20,
+          "y": 203,
+          "name": "yearChipsRow",
+          "width": 335,
+          "height": 36,
+          "fill": "transparent",
+          "layout": "horizontal",
+          "gap": 8,
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "cOTTC",
+              "name": "chip2025",
+              "height": 36,
+              "fill": "#FF8C00",
+              "cornerRadius": 18,
+              "layout": "horizontal",
+              "alignItems": "center",
+              "justifyContent": "center",
+              "padding": [
+                8,
+                16
+              ],
+              "children": [
+                {
+                  "type": "text",
+                  "id": "0Tqp8",
+                  "name": "chip2025Label",
+                  "content": "2025",
+                  "fill": "#FFFFFF",
+                  "fontFamily": "Outfit",
+                  "fontSize": 14,
+                  "fontWeight": "500"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "fKQH9",
+              "name": "chip2024",
+              "height": 36,
+              "fill": "#F2F2F7",
+              "cornerRadius": 18,
+              "layout": "horizontal",
+              "alignItems": "center",
+              "justifyContent": "center",
+              "padding": [
+                8,
+                16
+              ],
+              "children": [
+                {
+                  "type": "text",
+                  "id": "yVYuy",
+                  "name": "chip2024Label",
+                  "content": "2024",
+                  "fill": "#1C1C1E",
+                  "fontFamily": "Outfit",
+                  "fontSize": 14,
+                  "fontWeight": "500"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "id": "edYil",
+          "x": 20,
+          "y": 247,
+          "name": "yearLabel",
+          "content": "2025",
+          "fill": "#1C1C1E",
+          "fontFamily": "Outfit",
+          "fontSize": 22,
+          "fontWeight": "700"
+        },
+        {
+          "type": "frame",
+          "id": "31qlQ",
+          "x": 20,
+          "y": 277,
+          "name": "febHeader",
+          "width": 335,
+          "height": 28,
+          "fill": "transparent",
+          "layout": "horizontal",
+          "alignItems": "center",
+          "justifyContent": "space_between",
+          "children": [
+            {
+              "type": "text",
+              "id": "SpAC0",
+              "name": "febTitle",
+              "content": "February",
+              "fill": "#1C1C1E",
+              "fontFamily": "Outfit",
+              "fontSize": 16,
+              "fontWeight": "600"
+            },
+            {
+              "type": "frame",
+              "id": "7D3Ah",
+              "name": "febBadge",
+              "fill": "#FF8C001F",
+              "cornerRadius": 10,
+              "layout": "horizontal",
+              "alignItems": "center",
+              "justifyContent": "center",
+              "padding": [
+                2,
+                8
+              ],
+              "children": [
+                {
+                  "type": "text",
+                  "id": "SmuCl",
+                  "name": "febBadgeText",
+                  "content": "3",
+                  "fill": "#FF8C00",
+                  "fontFamily": "Outfit",
+                  "fontSize": 12,
+                  "fontWeight": "500"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "iHaeT",
+          "x": 0,
+          "y": 305,
+          "name": "febStrip",
+          "width": 375,
+          "height": 240,
+          "fill": "transparent",
+          "layout": "horizontal",
+          "gap": 16,
+          "padding": [
+            0,
+            20
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "mqahV",
+              "name": "artCard1",
+              "width": 180,
+              "height": 240,
+              "fill": "#FFFFFF",
+              "cornerRadius": 18,
+              "layout": "none",
+              "effect": {
+                "type": "shadow",
+                "shadowType": "outer",
+                "color": "#0000001F",
+                "blur": 14,
+                "offset": {
+                  "x": 0,
+                  "y": 6
+                }
+              },
+              "children": [
+                {
+                  "type": "rectangle",
+                  "id": "yZo0d",
+                  "x": 8,
+                  "y": 8,
+                  "name": "card1Img",
+                  "fill": "#E5E5EA",
+                  "width": 164,
+                  "height": 180,
+                  "cornerRadius": 12
+                },
+                {
+                  "type": "icon_font",
+                  "id": "JPZRE",
+                  "x": 80,
+                  "y": 80,
+                  "name": "card1Icon",
+                  "iconFontFamily": "Material Symbols Rounded",
+                  "iconFontName": "palette",
+                  "width": 36,
+                  "height": 36,
+                  "fill": "#FF8C00",
+                  "opacity": 0.3
+                },
+                {
+                  "type": "text",
+                  "id": "m2zhl",
+                  "x": 12,
+                  "y": 198,
+                  "name": "card1Title",
+                  "content": "Butterfly Garden",
+                  "fill": "#1C1C1E",
+                  "fontFamily": "Outfit",
+                  "fontSize": 14,
+                  "fontWeight": "600"
+                },
+                {
+                  "type": "frame",
+                  "id": "X6boi",
+                  "x": 12,
+                  "y": 216,
+                  "name": "card1DateRow",
+                  "width": 160,
+                  "height": 16,
+                  "fill": "transparent",
+                  "layout": "horizontal",
+                  "gap": 4,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon_font",
+                      "id": "4RxBc",
+                      "name": "card1CalIcon",
+                      "iconFontFamily": "Material Symbols Rounded",
+                      "iconFontName": "calendar_today",
+                      "width": 10,
+                      "height": 10,
+                      "fill": "#8A8A8E"
+                    },
+                    {
+                      "type": "text",
+                      "id": "LKslc",
+                      "name": "card1Date",
+                      "content": "Feb 3",
+                      "fill": "#8A8A8E",
+                      "fontFamily": "Outfit",
+                      "fontSize": 11
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "PUl6D",
+              "name": "artCard2",
+              "width": 180,
+              "height": 240,
+              "fill": "#FFFFFF",
+              "cornerRadius": 18,
+              "layout": "none",
+              "effect": {
+                "type": "shadow",
+                "shadowType": "outer",
+                "color": "#0000001F",
+                "blur": 14,
+                "offset": {
+                  "x": 0,
+                  "y": 6
+                }
+              },
+              "children": [
+                {
+                  "type": "rectangle",
+                  "id": "SmXRV",
+                  "x": 8,
+                  "y": 8,
+                  "name": "card2Img",
+                  "fill": "#E5E5EA",
+                  "width": 164,
+                  "height": 180,
+                  "cornerRadius": 12
+                },
+                {
+                  "type": "icon_font",
+                  "id": "m5LLv",
+                  "x": 80,
+                  "y": 80,
+                  "name": "card2Icon",
+                  "iconFontFamily": "Material Symbols Rounded",
+                  "iconFontName": "palette",
+                  "width": 36,
+                  "height": 36,
+                  "fill": "#FF8C00",
+                  "opacity": 0.3
+                },
+                {
+                  "type": "text",
+                  "id": "oImSX",
+                  "x": 12,
+                  "y": 198,
+                  "name": "card2Title",
+                  "content": "Rainbow Fish",
+                  "fill": "#1C1C1E",
+                  "fontFamily": "Outfit",
+                  "fontSize": 14,
+                  "fontWeight": "600"
+                },
+                {
+                  "type": "frame",
+                  "id": "iiV17",
+                  "x": 12,
+                  "y": 216,
+                  "name": "card2DateRow",
+                  "width": 160,
+                  "height": 16,
+                  "fill": "transparent",
+                  "layout": "horizontal",
+                  "gap": 4,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon_font",
+                      "id": "YS6bH",
+                      "name": "card2CalIcon",
+                      "iconFontFamily": "Material Symbols Rounded",
+                      "iconFontName": "calendar_today",
+                      "width": 10,
+                      "height": 10,
+                      "fill": "#8A8A8E"
+                    },
+                    {
+                      "type": "text",
+                      "id": "TLfUZ",
+                      "name": "card2Date",
+                      "content": "Feb 14",
+                      "fill": "#8A8A8E",
+                      "fontFamily": "Outfit",
+                      "fontSize": 11
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "yXAje",
+              "name": "artCard3",
+              "width": 180,
+              "height": 240,
+              "fill": "#FFFFFF",
+              "cornerRadius": 18,
+              "layout": "none",
+              "effect": {
+                "type": "shadow",
+                "shadowType": "outer",
+                "color": "#0000001F",
+                "blur": 14,
+                "offset": {
+                  "x": 0,
+                  "y": 6
+                }
+              },
+              "children": [
+                {
+                  "type": "rectangle",
+                  "id": "jFRI2",
+                  "x": 8,
+                  "y": 8,
+                  "name": "card3Img",
+                  "fill": "#E5E5EA",
+                  "width": 164,
+                  "height": 180,
+                  "cornerRadius": 12
+                },
+                {
+                  "type": "icon_font",
+                  "id": "pO2ud",
+                  "x": 80,
+                  "y": 80,
+                  "name": "card3Icon",
+                  "iconFontFamily": "Material Symbols Rounded",
+                  "iconFontName": "palette",
+                  "width": 36,
+                  "height": 36,
+                  "fill": "#FF8C00",
+                  "opacity": 0.3
+                },
+                {
+                  "type": "text",
+                  "id": "dZZfo",
+                  "x": 12,
+                  "y": 198,
+                  "name": "card3Title",
+                  "content": "Sunny Day",
+                  "fill": "#1C1C1E",
+                  "fontFamily": "Outfit",
+                  "fontSize": 14,
+                  "fontWeight": "600"
+                },
+                {
+                  "type": "frame",
+                  "id": "OikYC",
+                  "x": 12,
+                  "y": 216,
+                  "name": "card3DateRow",
+                  "width": 160,
+                  "height": 16,
+                  "fill": "transparent",
+                  "layout": "horizontal",
+                  "gap": 4,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon_font",
+                      "id": "6iC1K",
+                      "name": "card3CalIcon",
+                      "iconFontFamily": "Material Symbols Rounded",
+                      "iconFontName": "calendar_today",
+                      "width": 10,
+                      "height": 10,
+                      "fill": "#8A8A8E"
+                    },
+                    {
+                      "type": "text",
+                      "id": "TNTz9",
+                      "name": "card3Date",
+                      "content": "Feb 20",
+                      "fill": "#8A8A8E",
+                      "fontFamily": "Outfit",
+                      "fontSize": 11
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "ZeRKt",
+          "x": 20,
+          "y": 553,
+          "name": "janHeader",
+          "width": 335,
+          "height": 28,
+          "fill": "transparent",
+          "layout": "horizontal",
+          "alignItems": "center",
+          "justifyContent": "space_between",
+          "children": [
+            {
+              "type": "text",
+              "id": "3bplO",
+              "name": "janTitle",
+              "content": "January",
+              "fill": "#1C1C1E",
+              "fontFamily": "Outfit",
+              "fontSize": 16,
+              "fontWeight": "600"
+            },
+            {
+              "type": "frame",
+              "id": "xTgKl",
+              "name": "janBadge",
+              "fill": "#FF8C001F",
+              "cornerRadius": 10,
+              "layout": "horizontal",
+              "alignItems": "center",
+              "justifyContent": "center",
+              "padding": [
+                2,
+                8
+              ],
+              "children": [
+                {
+                  "type": "text",
+                  "id": "08pdi",
+                  "name": "janBadgeText",
+                  "content": "5",
+                  "fill": "#FF8C00",
+                  "fontFamily": "Outfit",
+                  "fontSize": 12,
+                  "fontWeight": "500"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "QV5qF",
+          "x": 0,
+          "y": 589,
+          "name": "janStrip",
+          "width": 375,
+          "height": 240,
+          "fill": "transparent",
+          "layout": "horizontal",
+          "gap": 16,
+          "padding": [
+            0,
+            20
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "JyuLz",
+              "name": "janCard1",
+              "width": 180,
+              "height": 240,
+              "fill": "#FFFFFF",
+              "cornerRadius": 18,
+              "layout": "none",
+              "effect": {
+                "type": "shadow",
+                "shadowType": "outer",
+                "color": "#0000001F",
+                "blur": 14,
+                "offset": {
+                  "x": 0,
+                  "y": 6
+                }
+              },
+              "children": [
+                {
+                  "type": "rectangle",
+                  "id": "glSPW",
+                  "x": 8,
+                  "y": 8,
+                  "name": "jan1Img",
+                  "fill": "#E5E5EA",
+                  "width": 164,
+                  "height": 180,
+                  "cornerRadius": 12
+                },
+                {
+                  "type": "icon_font",
+                  "id": "KahCZ",
+                  "x": 80,
+                  "y": 80,
+                  "name": "jan1Icon",
+                  "iconFontFamily": "Material Symbols Rounded",
+                  "iconFontName": "palette",
+                  "width": 36,
+                  "height": 36,
+                  "fill": "#FF8C00",
+                  "opacity": 0.3
+                },
+                {
+                  "type": "text",
+                  "id": "tRbiL",
+                  "x": 12,
+                  "y": 198,
+                  "name": "jan1Title",
+                  "content": "Dragon Castle",
+                  "fill": "#1C1C1E",
+                  "fontFamily": "Outfit",
+                  "fontSize": 14,
+                  "fontWeight": "600"
+                },
+                {
+                  "type": "frame",
+                  "id": "u1f20",
+                  "x": 12,
+                  "y": 216,
+                  "name": "jan1DateRow",
+                  "width": 160,
+                  "height": 16,
+                  "fill": "transparent",
+                  "layout": "horizontal",
+                  "gap": 4,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon_font",
+                      "id": "A30vW",
+                      "name": "jan1CalIcon",
+                      "iconFontFamily": "Material Symbols Rounded",
+                      "iconFontName": "calendar_today",
+                      "width": 10,
+                      "height": 10,
+                      "fill": "#8A8A8E"
+                    },
+                    {
+                      "type": "text",
+                      "id": "3DrKG",
+                      "name": "jan1Date",
+                      "content": "Jan 12",
+                      "fill": "#8A8A8E",
+                      "fontFamily": "Outfit",
+                      "fontSize": 11
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "E6NxQ",
+              "name": "janCard2",
+              "width": 180,
+              "height": 240,
+              "fill": "#FFFFFF",
+              "cornerRadius": 18,
+              "layout": "none",
+              "effect": {
+                "type": "shadow",
+                "shadowType": "outer",
+                "color": "#0000001F",
+                "blur": 14,
+                "offset": {
+                  "x": 0,
+                  "y": 6
+                }
+              },
+              "children": [
+                {
+                  "type": "rectangle",
+                  "id": "3DAsa",
+                  "x": 8,
+                  "y": 8,
+                  "name": "jan2Img",
+                  "fill": "#E5E5EA",
+                  "width": 164,
+                  "height": 180,
+                  "cornerRadius": 12
+                },
+                {
+                  "type": "icon_font",
+                  "id": "1yyQI",
+                  "x": 80,
+                  "y": 80,
+                  "name": "jan2Icon",
+                  "iconFontFamily": "Material Symbols Rounded",
+                  "iconFontName": "palette",
+                  "width": 36,
+                  "height": 36,
+                  "fill": "#FF8C00",
+                  "opacity": 0.3
+                },
+                {
+                  "type": "text",
+                  "id": "HuuXZ",
+                  "x": 12,
+                  "y": 198,
+                  "name": "jan2Title",
+                  "content": "Space Rocket",
+                  "fill": "#1C1C1E",
+                  "fontFamily": "Outfit",
+                  "fontSize": 14,
+                  "fontWeight": "600"
+                },
+                {
+                  "type": "frame",
+                  "id": "YsBH4",
+                  "x": 12,
+                  "y": 216,
+                  "name": "jan2DateRow",
+                  "width": 160,
+                  "height": 16,
+                  "fill": "transparent",
+                  "layout": "horizontal",
+                  "gap": 4,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon_font",
+                      "id": "HB3Sj",
+                      "name": "jan2CalIcon",
+                      "iconFontFamily": "Material Symbols Rounded",
+                      "iconFontName": "calendar_today",
+                      "width": 10,
+                      "height": 10,
+                      "fill": "#8A8A8E"
+                    },
+                    {
+                      "type": "text",
+                      "id": "qaWns",
+                      "name": "jan2Date",
+                      "content": "Jan 25",
+                      "fill": "#8A8A8E",
+                      "fontFamily": "Outfit",
+                      "fontSize": 11
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "bJdjN",
+              "name": "janCard3",
+              "width": 180,
+              "height": 240,
+              "fill": "#FFFFFF",
+              "cornerRadius": 18,
+              "layout": "none",
+              "effect": {
+                "type": "shadow",
+                "shadowType": "outer",
+                "color": "#0000001F",
+                "blur": 14,
+                "offset": {
+                  "x": 0,
+                  "y": 6
+                }
+              },
+              "children": [
+                {
+                  "type": "rectangle",
+                  "id": "LGtgT",
+                  "x": 8,
+                  "y": 8,
+                  "name": "jan3Img",
+                  "fill": "#E5E5EA",
+                  "width": 164,
+                  "height": 180,
+                  "cornerRadius": 12
+                },
+                {
+                  "type": "icon_font",
+                  "id": "UmeFs",
+                  "x": 80,
+                  "y": 80,
+                  "name": "jan3Icon",
+                  "iconFontFamily": "Material Symbols Rounded",
+                  "iconFontName": "palette",
+                  "width": 36,
+                  "height": 36,
+                  "fill": "#FF8C00",
+                  "opacity": 0.3
+                },
+                {
+                  "type": "text",
+                  "id": "HHnYe",
+                  "x": 12,
+                  "y": 198,
+                  "name": "jan3Title",
+                  "content": "My Pet Cat",
+                  "fill": "#1C1C1E",
+                  "fontFamily": "Outfit",
+                  "fontSize": 14,
+                  "fontWeight": "600"
+                },
+                {
+                  "type": "frame",
+                  "id": "FiOqo",
+                  "x": 12,
+                  "y": 216,
+                  "name": "jan3DateRow",
+                  "width": 160,
+                  "height": 16,
+                  "fill": "transparent",
+                  "layout": "horizontal",
+                  "gap": 4,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon_font",
+                      "id": "wFAeX",
+                      "name": "jan3CalIcon",
+                      "iconFontFamily": "Material Symbols Rounded",
+                      "iconFontName": "calendar_today",
+                      "width": 10,
+                      "height": 10,
+                      "fill": "#8A8A8E"
+                    },
+                    {
+                      "type": "text",
+                      "id": "Wtloe",
+                      "name": "jan3Date",
+                      "content": "Jan 30",
+                      "fill": "#8A8A8E",
+                      "fontFamily": "Outfit",
+                      "fontSize": 11
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "ellipse",
+          "id": "XGaDh",
+          "x": 299,
+          "y": 736,
+          "name": "fabCircle",
+          "fill": "#FF8C00",
+          "width": 56,
+          "height": 56,
+          "effect": {
+            "type": "shadow",
+            "shadowType": "outer",
+            "color": "#00000033",
+            "blur": 12,
+            "offset": {
+              "x": 0,
+              "y": 4
+            }
+          }
+        },
+        {
+          "type": "icon_font",
+          "id": "td5J1",
+          "x": 316,
+          "y": 753,
+          "name": "fabIcon",
+          "iconFontFamily": "Material Symbols Rounded",
+          "iconFontName": "photo_camera",
+          "width": 22,
+          "height": 22,
+          "fill": "#FFFFFF"
+        }
+      ]
     }
   ],
   "variables": {
