@@ -25,8 +25,8 @@ struct IconCard: View {
     var body: some View {
         ZStack {
             RoundedRectangle(cornerRadius: 20)
-                .fill(.white)
-                .shadow(color: .black.opacity(0.08), radius: 12, x: 0, y: 6)
+                .fill(Brand.surface)
+                .brandCardShadow()
 
             Image(systemName: icon)
                 .font(.system(size: size))
@@ -39,6 +39,6 @@ struct IconCard: View {
 // MARK: - Preview
 
 #Preview {
-    IconCard(icon: "paintpalette.fill", size: 56, cardSize: 90, color: .orange)
+    IconCard(icon: "paintpalette.fill", size: 56, cardSize: 90, color: Brand.primary)
         .padding()
 }

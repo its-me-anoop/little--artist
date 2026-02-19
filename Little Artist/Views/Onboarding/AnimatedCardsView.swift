@@ -45,7 +45,7 @@ struct AnimatedCardsView: View {
         isActive: true
     )
     .frame(height: 340)
-    .background(Color.orange.opacity(0.08))
+    .background(Brand.primary.opacity(0.08))
 }
 
 #Preview("Fan") {
