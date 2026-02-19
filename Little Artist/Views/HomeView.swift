@@ -107,8 +107,7 @@ struct HomeView: View {
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     NavigationLink {
-                        // SearchView will be added in Task 8
-                        Text("Search")
+                        SearchView()
                     } label: {
                         Image(systemName: "magnifyingglass")
                     }
