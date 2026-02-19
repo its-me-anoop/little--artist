@@ -43,7 +43,7 @@ struct ArtworkThumbnailView: View {
                     .overlay {
                         Image(systemName: "paintpalette")
                             .font(.system(size: 36))
-                            .foregroundStyle(.orange.opacity(0.3))
+                            .foregroundStyle(Brand.primary.opacity(0.3))
                     }
             }
 

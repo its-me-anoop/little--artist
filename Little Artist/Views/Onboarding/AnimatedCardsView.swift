@@ -40,7 +40,7 @@ struct AnimatedCardsView: View {
 #Preview("Drift") {
     AnimatedCardsView(
         icons: ["paintpalette.fill", "photo.artframe", "paintbrush.pointed.fill"],
-        accentColor: .orange,
+        accentColor: Brand.primary,
         style: .drift,
         isActive: true
     )
