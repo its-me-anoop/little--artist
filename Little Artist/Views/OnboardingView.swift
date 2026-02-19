@@ -19,8 +19,6 @@ struct OnboardingView: View {
     @Binding var hasCompletedOnboarding: Bool
     @State private var currentPage = 0
 
-    private let accentColor = Color.orange
-
     private let pages: [OnboardingPage] = [
         OnboardingPage(
             icons: ["paintpalette.fill", "figure.child", "scribble.variable"],
@@ -67,7 +65,7 @@ struct OnboardingView: View {
                 RoundedRectangle(cornerRadius: 40)
                     .fill(
                         LinearGradient(
-                            colors: [accentColor.opacity(0.08), accentColor.opacity(0.15)],
+                            colors: [Brand.primary.opacity(0.08), Brand.primary.opacity(0.15)],
                             startPoint: .top,
                             endPoint: .bottom
                         )
@@ -80,7 +78,7 @@ struct OnboardingView: View {
                     ForEach(Array(pages.enumerated()), id: \.element.id) { index, page in
                         AnimatedCardsView(
                             icons: page.icons,
-                            accentColor: accentColor,
+                            accentColor: Brand.primary,
                             style: page.animation,
                             isActive: currentPage == index
                         )
@@ -97,8 +95,8 @@ struct OnboardingView: View {
                             hasCompletedOnboarding = true
                         }
                     }
-                    .font(.subheadline.weight(.medium))
-                    .foregroundStyle(accentColor)
+                    .font(Brand.subheadlineFont)
+                    .foregroundStyle(Brand.primary)
                     .padding(.trailing, 36)
                     .padding(.top, 16)
                 }
@@ -109,12 +107,12 @@ struct OnboardingView: View {
             // Title
             VStack(spacing: 4) {
                 Text(pages[currentPage].titleTop)
-                    .font(.system(size: 32, weight: .bold))
+                    .font(Brand.displayFont)
                     .foregroundStyle(.primary)
 
                 Text(pages[currentPage].titleHighlight)
-                    .font(.system(size: 32, weight: .bold))
-                    .foregroundStyle(accentColor)
+                    .font(Brand.displayFont)
+                    .foregroundStyle(Brand.primary)
             }
             .multilineTextAlignment(.center)
             .animation(.easeInOut(duration: 0.3), value: currentPage)
@@ -123,7 +121,7 @@ struct OnboardingView: View {
 
             // Description
             Text(pages[currentPage].description)
-                .font(.subheadline)
+                .font(Brand.subheadlineFont)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 40)
@@ -135,7 +133,7 @@ struct OnboardingView: View {
             HStack(spacing: 6) {
                 ForEach(0..<pages.count, id: \.self) { index in
                     Capsule()
-                        .fill(index == currentPage ? accentColor : Color.gray.opacity(0.3))
+                        .fill(index == currentPage ? Brand.primary : Brand.warmGray.opacity(0.3))
                         .frame(width: index == currentPage ? 24 : 8, height: 8)
                         .animation(.easeInOut(duration: 0.3), value: currentPage)
                 }
@@ -154,16 +152,16 @@ struct OnboardingView: View {
             } label: {
                 HStack(spacing: 8) {
                     Text(currentPage < pages.count - 1 ? "Next" : "Get Started")
-                        .font(.headline)
+                        .font(Brand.headlineFont)
                     if currentPage < pages.count - 1 {
                         Image(systemName: "arrow.right")
-                            .font(.headline)
+                            .font(Brand.headlineFont)
                     }
                 }
                 .foregroundStyle(.white)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 18)
-                .background(accentColor)
+                .background(Brand.primary)
                 .clipShape(Capsule())
             }
             .padding(.horizontal, 32)
