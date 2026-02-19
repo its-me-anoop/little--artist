@@ -18,6 +18,10 @@ import SwiftUI
 struct OnboardingView: View {
     @Binding var hasCompletedOnboarding: Bool
     @State private var currentPage = 0
+    @State private var showAddChild = false
+
+    private let selectionFeedback = UISelectionFeedbackGenerator()
+    private let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
 
     private let pages: [OnboardingPage] = [
         OnboardingPage(
@@ -63,13 +67,7 @@ struct OnboardingView: View {
             ZStack(alignment: .topTrailing) {
                 // Soft background blob
                 RoundedRectangle(cornerRadius: 40)
-                    .fill(
-                        LinearGradient(
-                            colors: [Brand.primary.opacity(0.08), Brand.primary.opacity(0.15)],
-                            startPoint: .top,
-                            endPoint: .bottom
-                        )
-                    )
+                    .fill(.ultraThinMaterial)
                     .frame(height: 340)
                     .padding(.horizontal, 16)
 
@@ -142,11 +140,12 @@ struct OnboardingView: View {
 
             // Action button
             Button {
+                impactFeedback.impactOccurred()
                 withAnimation(.easeInOut(duration: 0.3)) {
                     if currentPage < pages.count - 1 {
                         currentPage += 1
                     } else {
-                        hasCompletedOnboarding = true
+                        showAddChild = true
                     }
                 }
             } label: {
@@ -168,6 +167,14 @@ struct OnboardingView: View {
             .padding(.bottom, 48)
         }
         .background(Color(.systemBackground))
+        .onChange(of: currentPage) { _, _ in
+            selectionFeedback.selectionChanged()
+        }
+        .sheet(isPresented: $showAddChild, onDismiss: {
+            hasCompletedOnboarding = true
+        }) {
+            AddChildView()
+        }
     }
 }
 
