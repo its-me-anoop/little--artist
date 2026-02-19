@@ -2,27 +2,172 @@
 //  TimelineView.swift
 //  Little Artist
 //
-//  Chronological feed of all artworks with sticky month headers
-//  and a vertical timeline spine visualization.
+//  Chronological feed of all artworks with sticky month headers,
+//  a vertical timeline spine, and year filter chips.
 //
 
 import SwiftUI
 import SwiftData
 
 struct TimelineView: View {
-    @Query(sort: \Artwork.createdAt, order: .reverse) private var artworks: [Artwork]
+    @Query(sort: \Artwork.createdAt, order: .reverse) private var allArtworks: [Artwork]
+
+    @State private var selectedYear: Int? = nil
+
+    private var availableYears: [Int] {
+        let calendar = Calendar.current
+        let years = Set(allArtworks.map { calendar.component(.year, from: $0.createdAt) })
+        return years.sorted(by: >)
+    }
+
+    private var filteredArtworks: [Artwork] {
+        guard let year = selectedYear else { return allArtworks }
+        let calendar = Calendar.current
+        return allArtworks.filter { calendar.component(.year, from: $0.createdAt) == year }
+    }
+
+    private var groupedByMonth: [(key: String, artworks: [Artwork])] {
+        let calendar = Calendar.current
+        let monthFormatter = DateFormatter()
+        monthFormatter.dateFormat = "MMMM yyyy"
+
+        var groups: [(key: String, month: Int, year: Int, artworks: [Artwork])] = []
+        var map: [String: [Artwork]] = [:]
+        var order: [String: (month: Int, year: Int)] = [:]
+
+        for artwork in filteredArtworks {
+            let comps = calendar.dateComponents([.year, .month], from: artwork.createdAt)
+            let key = "\(comps.year ?? 0)-\(comps.month ?? 0)"
+            map[key, default: []].append(artwork)
+            if order[key] == nil {
+                order[key] = (month: comps.month ?? 0, year: comps.year ?? 0)
+            }
+        }
+
+        for (key, artworks) in map {
+            if let o = order[key] {
+                groups.append((key: key, month: o.month, year: o.year, artworks: artworks))
+            }
+        }
+
+        groups.sort { a, b in
+            if a.year != b.year { return a.year > b.year }
+            return a.month > b.month
+        }
+
+        return groups.map { group in
+            var comps = DateComponents()
+            comps.year = group.year
+            comps.month = group.month
+            comps.day = 1
+            let date = calendar.date(from: comps) ?? .now
+            let label = monthFormatter.string(from: date)
+            return (key: label, artworks: group.artworks.sorted { $0.createdAt > $1.createdAt })
+        }
+    }
 
     var body: some View {
         NavigationStack {
-            Text("Timeline coming soon")
-                .font(Brand.bodyFont)
+            Group {
+                if allArtworks.isEmpty {
+                    emptyState
+                } else {
+                    timelineContent
+                }
+            }
+            .navigationTitle("Timeline")
+            .background(Color(.systemGroupedBackground))
+        }
+    }
+
+    private var emptyState: some View {
+        VStack(spacing: 16) {
+            Spacer()
+            Image(systemName: "clock.arrow.trianglehead.counterclockwise.rotate.90")
+                .font(.system(size: 60, design: .rounded))
+                .foregroundStyle(Brand.primary.opacity(0.6))
+            Text("No artwork yet")
+                .font(.system(.title3, design: .rounded).weight(.semibold))
+            Text("Capture your first artwork\nto start building your timeline.")
+                .font(Brand.subheadlineFont)
                 .foregroundStyle(.secondary)
-                .navigationTitle("Timeline")
+                .multilineTextAlignment(.center)
+            Spacer()
+        }
+    }
+
+    private var timelineContent: some View {
+        ScrollView {
+            LazyVStack(alignment: .leading, spacing: 0, pinnedViews: [.sectionHeaders]) {
+                // Year chips
+                if availableYears.count > 1 {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 8) {
+                            ForEach(availableYears, id: \.self) { year in
+                                YearChipView(
+                                    label: String(year),
+                                    isSelected: selectedYear == year
+                                ) {
+                                    withAnimation(.snappy) {
+                                        selectedYear = (selectedYear == year) ? nil : year
+                                    }
+                                }
+                            }
+                        }
+                        .padding(.horizontal, Brand.screenPadding)
+                        .padding(.vertical, 12)
+                    }
+                }
+
+                // Month sections
+                ForEach(groupedByMonth, id: \.key) { group in
+                    Section {
+                        ForEach(group.artworks) { artwork in
+                            HStack(alignment: .top, spacing: 0) {
+                                // Spine + dot
+                                VStack(spacing: 0) {
+                                    Circle()
+                                        .fill(Brand.primary)
+                                        .frame(width: 10, height: 10)
+                                        .padding(.top, 20)
+                                    Rectangle()
+                                        .fill(Brand.softTan)
+                                        .frame(width: 2)
+                                }
+                                .frame(width: 30)
+
+                                // Entry card
+                                NavigationLink {
+                                    ArtworkDetailView(artwork: artwork)
+                                } label: {
+                                    TimelineEntryCardView(artwork: artwork)
+                                }
+                                .buttonStyle(.plain)
+                                .padding(.trailing, Brand.screenPadding)
+                                .padding(.vertical, 6)
+                            }
+                        }
+                    } header: {
+                        Text(group.key)
+                            .font(Brand.title3Font)
+                            .padding(.horizontal, Brand.screenPadding)
+                            .padding(.vertical, 8)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .background(.ultraThinMaterial)
+                    }
+                }
+            }
+            .padding(.bottom, 24)
         }
     }
 }
 
-#Preview {
+#Preview("With Data") {
     TimelineView()
         .modelContainer(PreviewSampleData.container)
+}
+
+#Preview("Empty") {
+    TimelineView()
+        .modelContainer(for: [Child.self, Artwork.self], inMemory: true)
 }
