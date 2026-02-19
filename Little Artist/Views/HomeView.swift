@@ -58,7 +58,17 @@ struct HomeView: View {
                     AddArtworkButton(action: { showAddArtwork = true })
                 }
             }
-            .navigationTitle("Little Artist")
+            .navigationTitle("Gallery")
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    NavigationLink {
+                        // SearchView will be added in Task 8
+                        Text("Search")
+                    } label: {
+                        Image(systemName: "magnifyingglass")
+                    }
+                }
+            }
             .sheet(isPresented: $showAddChild) {
                 AddChildView()
             }
