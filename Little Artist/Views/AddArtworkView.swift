@@ -48,24 +48,24 @@ struct AddArtworkView: View {
                 // Title field and save — pinned at the bottom
                 VStack(spacing: 16) {
                     TextField("Artwork title (optional)", text: $title)
-                        .font(.title3)
+                        .font(Brand.title3Font)
                         .multilineTextAlignment(.center)
                         .padding(.vertical, 14)
                         .padding(.horizontal, 24)
                         .background(
                             RoundedRectangle(cornerRadius: 14)
-                                .fill(Color(.secondarySystemBackground))
+                                .fill(Brand.surface)
                         )
                         .padding(.horizontal, 32)
 
                     TextField("Caption (optional)", text: $caption, axis: .vertical)
                         .lineLimit(2...4)
-                        .font(.body)
+                        .font(Brand.bodyFont)
                         .padding(.vertical, 12)
                         .padding(.horizontal, 16)
                         .background(
                             RoundedRectangle(cornerRadius: 14)
-                                .fill(Color(.secondarySystemBackground))
+                                .fill(Brand.surface)
                         )
                         .padding(.horizontal, 32)
 
@@ -76,19 +76,19 @@ struct AddArtworkView: View {
                             HStack(spacing: 8) {
                                 if isGeneratingSuggestions {
                                     ProgressView()
-                                        .tint(.orange)
+                                        .tint(Brand.primary)
                                 } else {
                                     Image(systemName: "sparkles")
                                 }
                                 Text(isGeneratingSuggestions ? "Generating Suggestions..." : "Suggest Title & Caption")
-                                    .font(.subheadline.weight(.semibold))
+                                    .font(Brand.subheadlineFont.weight(.semibold))
                             }
-                            .foregroundStyle(.orange)
+                            .foregroundStyle(Brand.primary)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 12)
                             .background(
                                 RoundedRectangle(cornerRadius: 12)
-                                    .fill(Color.orange.opacity(0.12))
+                                    .fill(Brand.primaryTint)
                             )
                         }
                         .buttonStyle(.plain)
@@ -112,7 +112,7 @@ struct AddArtworkView: View {
                             .foregroundStyle(.white)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 18)
-                            .background(capturedImageData == nil ? Color.gray : Color.orange)
+                            .background(capturedImageData == nil ? Brand.disabled : Brand.primary)
                             .clipShape(Capsule())
                     }
                     .disabled(capturedImageData == nil)
@@ -175,7 +175,7 @@ struct AddArtworkView: View {
                         .scaledToFit()
                         .frame(maxHeight: 300)
                         .clipShape(RoundedRectangle(cornerRadius: 20))
-                        .shadow(color: .black.opacity(0.1), radius: 12, x: 0, y: 6)
+                        .brandCardShadow()
 
                     Button {
                         self.capturedImageData = nil
@@ -197,10 +197,10 @@ struct AddArtworkView: View {
                 .overlay {
                     VStack(spacing: 12) {
                         Image(systemName: "paintpalette")
-                            .font(.system(size: 48))
-                            .foregroundStyle(.orange.opacity(0.4))
+                            .font(.system(size: 48, design: .rounded))
+                            .foregroundStyle(Brand.primary.opacity(0.4))
                         Text("Capture or select artwork")
-                            .font(.subheadline)
+                            .font(Brand.subheadlineFont)
                             .foregroundStyle(.secondary)
                     }
                 }
@@ -241,13 +241,13 @@ struct AddArtworkView: View {
     private func captureSourceLabel(icon: String, title: String) -> some View {
         VStack(spacing: 8) {
             Image(systemName: icon)
-                .font(.system(size: 20))
-                .foregroundStyle(.orange)
+                .font(.system(size: 20, design: .rounded))
+                .foregroundStyle(Brand.primary)
                 .frame(width: 56, height: 56)
-                .background(Color.orange.opacity(0.12))
+                .background(Brand.primaryTint)
                 .clipShape(RoundedRectangle(cornerRadius: 16))
             Text(title)
-                .font(.caption)
+                .font(Brand.captionFont)
                 .foregroundStyle(.secondary)
         }
     }
