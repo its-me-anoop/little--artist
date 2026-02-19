@@ -24,21 +24,13 @@ struct AddChildView: View {
     @Environment(\.supportsImagePlayground) private var supportsImagePlayground
 
     @State private var name = ""
-    @State private var selectedColor = "FF8C00"
+    @State private var selectedColor = Brand.defaultAvatarColor
     @State private var avatarImageData: Data?
     @State private var photoPickerItem: PhotosPickerItem?
     @State private var showCamera = false
     @State private var showImagePlayground = false
 
-    private let presetColors = [
-        "FF6B6B", // Red
-        "FF8C00", // Orange
-        "FFD93D", // Yellow
-        "6BCB77", // Green
-        "4D96FF", // Blue
-        "9B59B6", // Purple
-        "FF6B9D", // Pink
-    ]
+    private let presetColors = Brand.avatarColors
 
     var body: some View {
         NavigationStack {
@@ -59,20 +51,20 @@ struct AddChildView: View {
 
                     // Name field
                     TextField("Child's name", text: $name)
-                        .font(.title3)
+                        .font(Brand.title3Font)
                         .multilineTextAlignment(.center)
                         .padding(.vertical, 14)
                         .padding(.horizontal, 24)
                         .background(
                             RoundedRectangle(cornerRadius: 14)
-                                .fill(Color(.secondarySystemBackground))
+                                .fill(Brand.surface)
                         )
                         .padding(.horizontal, 40)
 
                     // Color picker
                     VStack(spacing: 12) {
                         Text("Pick a color")
-                            .font(.subheadline)
+                            .font(Brand.subheadlineFont)
                             .foregroundStyle(.secondary)
 
                         HStack(spacing: 14) {
@@ -85,7 +77,7 @@ struct AddChildView: View {
                                             Circle()
                                                 .strokeBorder(.white, lineWidth: 3)
                                             Image(systemName: "checkmark")
-                                                .font(.caption.bold())
+                                                .font(Brand.captionFont.bold())
                                                 .foregroundStyle(.white)
                                         }
                                     }
@@ -106,11 +98,11 @@ struct AddChildView: View {
                         saveChild()
                     } label: {
                         Text("Add Child")
-                            .font(.headline)
+                            .font(Brand.headlineFont)
                             .foregroundStyle(.white)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 18)
-                            .background(name.trimmingCharacters(in: .whitespaces).isEmpty ? Color.gray : Color.orange)
+                            .background(name.trimmingCharacters(in: .whitespaces).isEmpty ? Brand.disabled : Brand.primary)
                             .clipShape(Capsule())
                     }
                     .disabled(name.trimmingCharacters(in: .whitespaces).isEmpty)
@@ -168,16 +160,16 @@ struct AddChildView: View {
                     .frame(width: 110, height: 110)
 
                 Text(name.isEmpty ? "?" : String(name.prefix(1)).uppercased())
-                    .font(.system(size: 48, weight: .bold))
+                    .font(.system(size: 48, weight: .bold, design: .rounded))
                     .foregroundStyle(.white)
             }
         }
-        .shadow(color: .black.opacity(0.08), radius: 12, x: 0, y: 6)
+        .brandCardShadow()
         .overlay(alignment: .bottomTrailing) {
             if avatarImageData != nil {
                 Image(systemName: "xmark.circle.fill")
-                    .font(.title3)
-                    .foregroundStyle(.white, .red)
+                    .font(Brand.title3Font)
+                    .foregroundStyle(.white, Brand.dustyRose)
                     .offset(x: 4, y: 4)
             }
         }
@@ -216,13 +208,13 @@ struct AddChildView: View {
     private func photoSourceLabel(icon: String, title: String) -> some View {
         VStack(spacing: 8) {
             Image(systemName: icon)
-                .font(.system(size: 20))
-                .foregroundStyle(.orange)
+                .font(.system(size: 20, design: .rounded))
+                .foregroundStyle(Brand.primary)
                 .frame(width: 56, height: 56)
-                .background(Color.orange.opacity(0.12))
+                .background(Brand.primaryTint)
                 .clipShape(RoundedRectangle(cornerRadius: 16))
             Text(title)
-                .font(.caption)
+                .font(Brand.captionFont)
                 .foregroundStyle(.secondary)
         }
     }
