@@ -14,7 +14,8 @@ import SwiftData
 ///
 /// Displays a ``ChildAvatarView`` for each child and an ``AddChildButton``
 /// at the end. Tapping an avatar selects that child; the selection is
-/// indicated by an orange ring.
+/// indicated by an orange ring. Tapping the currently selected avatar opens
+/// that child's edit profile sheet.
 struct ChildSliderView: View {
     /// The ordered list of children to display.
     let children: [Child]
@@ -22,6 +23,8 @@ struct ChildSliderView: View {
     @Binding var selectedChild: Child?
     /// Closure invoked when the user taps the "Add" button.
     var onAddChild: () -> Void
+    /// Closure invoked when the user requests editing a child profile.
+    var onEditChild: (Child) -> Void = { _ in }
 
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
@@ -32,8 +35,13 @@ struct ChildSliderView: View {
                         isSelected: selectedChild?.persistentModelID == child.persistentModelID
                     )
                     .onTapGesture {
-                        withAnimation(.easeInOut(duration: 0.2)) {
-                            selectedChild = child
+                        let isAlreadySelected = selectedChild?.persistentModelID == child.persistentModelID
+                        if isAlreadySelected {
+                            onEditChild(child)
+                        } else {
+                            withAnimation(.easeInOut(duration: 0.2)) {
+                                selectedChild = child
+                            }
                         }
                     }
                 }
@@ -52,7 +60,8 @@ struct ChildSliderView: View {
     ChildSliderView(
         children: [],
         selectedChild: .constant(nil),
-        onAddChild: {}
+        onAddChild: {},
+        onEditChild: { _ in }
     )
     .modelContainer(for: [Child.self, Artwork.self], inMemory: true)
 }
@@ -61,7 +70,8 @@ struct ChildSliderView: View {
     ChildSliderView(
         children: PreviewSampleData.sampleChildren,
         selectedChild: .constant(PreviewSampleData.emma),
-        onAddChild: {}
+        onAddChild: {},
+        onEditChild: { _ in }
     )
     .modelContainer(for: [Child.self, Artwork.self], inMemory: true)
 }

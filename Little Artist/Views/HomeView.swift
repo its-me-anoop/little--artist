@@ -16,11 +16,11 @@ import SwiftData
 /// the child's ``ArtworkGalleryView`` (or an appropriate empty state),
 /// and a floating action button for capturing new artwork.
 struct HomeView: View {
-    @Environment(\.modelContext) private var modelContext
     @Query(sort: \Child.createdAt) private var children: [Child]
     @State private var selectedChild: Child?
     @State private var showAddChild = false
     @State private var showAddArtwork = false
+    @State private var editingChild: Child?
 
     private var filteredArtworks: [Artwork] {
         guard let child = selectedChild else { return [] }
@@ -34,7 +34,10 @@ struct HomeView: View {
                 ChildSliderView(
                     children: children,
                     selectedChild: $selectedChild,
-                    onAddChild: { showAddChild = true }
+                    onAddChild: { showAddChild = true },
+                    onEditChild: { child in
+                        editingChild = child
+                    }
                 )
                 .padding(.top, 8)
 
@@ -64,17 +67,34 @@ struct HomeView: View {
                     AddArtworkView(child: selectedChild)
                 }
             }
-            .onAppear {
-                if selectedChild == nil {
-                    selectedChild = children.first
+            .sheet(item: $editingChild) { child in
+                EditChildView(child: child) {
+                    if selectedChild?.persistentModelID == child.persistentModelID {
+                        selectedChild = nil
+                    }
                 }
+            }
+            .onAppear {
+                syncSelectedChild()
             }
             .onChange(of: children.count) {
-                if selectedChild == nil {
-                    selectedChild = children.first
-                }
+                syncSelectedChild()
             }
         }
+    }
+
+    private func syncSelectedChild() {
+        guard let firstChild = children.first else {
+            selectedChild = nil
+            return
+        }
+
+        if let selectedChild,
+           children.contains(where: { $0.persistentModelID == selectedChild.persistentModelID }) {
+            return
+        }
+
+        selectedChild = firstChild
     }
 }
 
