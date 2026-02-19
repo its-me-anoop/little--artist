@@ -76,6 +76,7 @@ struct MilestonesView: View {
                 .multilineTextAlignment(.center)
             Spacer()
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     private var content: some View {

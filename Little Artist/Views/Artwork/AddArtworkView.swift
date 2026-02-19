@@ -34,10 +34,47 @@ struct AddArtworkView: View {
             VStack(spacing: 0) {
                 ScrollView {
                     VStack(spacing: 24) {
+                        // Child indicator chip
+                        HStack(spacing: 8) {
+                            ZStack {
+                                if let imageData = child.avatarImageData, let uiImage = UIImage(data: imageData) {
+                                    Image(uiImage: uiImage)
+                                        .resizable()
+                                        .scaledToFill()
+                                        .frame(width: 28, height: 28)
+                                        .clipShape(Circle())
+                                } else {
+                                    Circle()
+                                        .fill(Color(hex: child.avatarColor))
+                                        .frame(width: 28, height: 28)
+                                        .overlay {
+                                            Text(String(child.name.prefix(1)).uppercased())
+                                                .font(.system(size: 13, weight: .bold, design: .rounded))
+                                                .foregroundStyle(.white)
+                                        }
+                                }
+                            }
+
+                            Text("Adding for \(child.name)")
+                                .font(Brand.subheadlineFont)
+                                .foregroundStyle(Brand.charcoal)
+                        }
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 8)
+                        .background(
+                            Capsule()
+                                .fill(Brand.surface)
+                                .overlay(
+                                    Capsule()
+                                        .strokeBorder(Brand.softTan, lineWidth: 1)
+                                )
+                        )
+                        .padding(.top, 12)
+
                         // Image preview or placeholder
                         imagePreview
                             .frame(maxWidth: .infinity, alignment: .center)
-                            .padding(.top, 16)
+                            .padding(.top, 4)
 
                         // Capture source buttons
                         captureSourceButtons

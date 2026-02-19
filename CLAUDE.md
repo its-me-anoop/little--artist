@@ -10,19 +10,33 @@ Native SwiftUI iOS app for archiving and celebrating children's artwork. Targets
 
 ```
 Little Artist/
-├── App/                    # Entry point & root views
-├── Views/                  # Full-screen views (HomeView, AddChildView, etc.)
-│   └── Onboarding/         # Onboarding page & animation views
-├── Components/             # Reusable UI components (avatars, buttons, thumbnails)
-├── Models/                 # SwiftData models (Child, Artwork)
-├── Utilities/              # Extensions, services, preview data
-└── Assets.xcassets/        # Colors, app icon
+├── App/                        # Entry point & root views
+├── Views/                      # Full-screen views
+│   ├── Onboarding/             # Onboarding page & animation views
+│   ├── Artwork/                # Artwork CRUD & gallery views
+│   ├── Children/               # Child profile CRUD views
+│   ├── HomeView.swift          # Tab root views stay at Views/ root
+│   ├── TimelineView.swift
+│   ├── SearchView.swift
+│   ├── SettingsView.swift
+│   └── MilestonesView.swift
+├── Components/                 # Reusable UI components
+│   ├── Buttons/                # Action buttons (AddArtwork, AddChild)
+│   ├── Cards/                  # Card widgets (Thumbnail, Stat, Timeline, Achievement)
+│   ├── Chips/                  # Filter & selection chips
+│   ├── Avatars/                # Avatar & avatar slider components
+│   └── UIKitBridges/           # UIKit wrappers (Camera, Scanner, Activity)
+├── Models/                     # SwiftData models (Child, Artwork)
+├── Services/                   # App services (AI suggestions, haptics)
+├── Utilities/                  # Extensions, tokens, preview data
+└── Assets.xcassets/            # Colors, app icon
 ```
 
 **Conventions:**
-- Views: `Little Artist/Views/` — named `*View.swift`
-- Reusable components: `Little Artist/Components/` — named descriptively (e.g., `ChildAvatarView.swift`)
+- Views: `Little Artist/Views/` — named `*View.swift`; tab roots stay flat, feature views go in subfolders (`Artwork/`, `Children/`, `Onboarding/`)
+- Reusable components: `Little Artist/Components/` — grouped by type (`Buttons/`, `Cards/`, `Chips/`, `Avatars/`, `UIKitBridges/`)
 - Models: `Little Artist/Models/` — entity name (e.g., `Child.swift`)
+- Services: `Little Artist/Services/` — named `*Service.swift`
 - Extensions: `Little Artist/Utilities/` — named `Type+Feature.swift`
 - All files and types use PascalCase; properties and variables use camelCase
 
@@ -226,9 +240,9 @@ These rules define how to translate Figma inputs into code for this project.
 - Convert all HTML/JSX elements to SwiftUI equivalents (`div` → `VStack`/`HStack`, `img` → `Image`, `span` → `Text`)
 - Replace Tailwind classes with SwiftUI modifiers (e.g., `rounded-full` → `.clipShape(Circle())`, `text-lg font-bold` → `.font(Brand.title2Font)`)
 - Map Figma colors to `Brand.*` tokens — never use raw hex from Figma output without checking BrandTokens.swift
-- Reuse existing components from `Little Artist/Components/` before creating new ones
-- Place new reusable components in `Little Artist/Components/`
-- Place new full-screen views in `Little Artist/Views/`
+- Reuse existing components from `Little Artist/Components/` subfolders before creating new ones
+- Place new reusable components in the appropriate `Little Artist/Components/` subfolder (`Buttons/`, `Cards/`, `Chips/`, `Avatars/`, `UIKitBridges/`)
+- Place new full-screen views in the appropriate `Little Artist/Views/` subfolder (`Artwork/`, `Children/`, `Onboarding/`) or at `Views/` root for tab-level screens
 - Follow the component structure pattern above (doc comment, MARK sections, Preview block)
 
 ### Asset Handling from Figma

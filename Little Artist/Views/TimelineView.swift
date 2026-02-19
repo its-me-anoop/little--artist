@@ -13,6 +13,10 @@ struct TimelineView: View {
     @Query(sort: \Artwork.createdAt, order: .reverse) private var allArtworks: [Artwork]
 
     @State private var selectedYear: Int? = nil
+    @State private var expandedMonths: Set<String> = []
+    @State private var appearedArtworkIDs: Set<PersistentIdentifier> = []
+
+    private let previewLimit = 3
 
     private var availableYears: [Int] {
         let calendar = Calendar.current
@@ -94,6 +98,7 @@ struct TimelineView: View {
                 .multilineTextAlignment(.center)
             Spacer()
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     private var timelineContent: some View {
@@ -121,8 +126,14 @@ struct TimelineView: View {
 
                 // Month sections
                 ForEach(groupedByMonth, id: \.key) { group in
+                    let isExpanded = expandedMonths.contains(group.key)
+                    let hasMore = group.artworks.count > previewLimit
+                    let visibleArtworks = isExpanded ? group.artworks : Array(group.artworks.prefix(previewLimit))
+
                     Section {
-                        ForEach(group.artworks) { artwork in
+                        ForEach(Array(visibleArtworks.enumerated()), id: \.element.id) { index, artwork in
+                            let hasAppeared = appearedArtworkIDs.contains(artwork.persistentModelID)
+
                             HStack(alignment: .top, spacing: 0) {
                                 // Spine + dot
                                 VStack(spacing: 0) {
@@ -130,6 +141,7 @@ struct TimelineView: View {
                                         .fill(Brand.primary)
                                         .frame(width: 10, height: 10)
                                         .padding(.top, 20)
+                                        .scaleEffect(hasAppeared ? 1 : 0)
                                     Rectangle()
                                         .fill(Brand.softTan)
                                         .frame(width: 2)
@@ -145,6 +157,52 @@ struct TimelineView: View {
                                 .buttonStyle(.plain)
                                 .padding(.trailing, Brand.screenPadding)
                                 .padding(.vertical, 6)
+                                .opacity(hasAppeared ? 1 : 0)
+                                .offset(x: hasAppeared ? 0 : 40)
+                            }
+                            .onAppear {
+                                guard !appearedArtworkIDs.contains(artwork.persistentModelID) else { return }
+                                let stagger = Double(index) * 0.08
+                                withAnimation(.spring(duration: 0.45, bounce: 0.15).delay(stagger)) {
+                                    appearedArtworkIDs.insert(artwork.persistentModelID)
+                                }
+                            }
+                        }
+
+                        // Show All / Show Less toggle
+                        if hasMore {
+                            HStack(alignment: .top, spacing: 0) {
+                                VStack(spacing: 0) {
+                                    Circle()
+                                        .fill(Brand.softTan)
+                                        .frame(width: 8, height: 8)
+                                        .padding(.top, 14)
+                                    Rectangle()
+                                        .fill(Brand.softTan)
+                                        .frame(width: 2)
+                                }
+                                .frame(width: 30)
+
+                                Button {
+                                    withAnimation(.snappy) {
+                                        if isExpanded {
+                                            expandedMonths.remove(group.key)
+                                        } else {
+                                            expandedMonths.insert(group.key)
+                                        }
+                                    }
+                                } label: {
+                                    HStack(spacing: 6) {
+                                        Text(isExpanded ? "Show Less" : "Show All (\(group.artworks.count))")
+                                            .font(Brand.subheadlineFont.weight(.medium))
+                                        Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
+                                            .font(.caption.weight(.semibold))
+                                    }
+                                    .foregroundStyle(Brand.primary)
+                                    .padding(.vertical, 10)
+                                }
+                                .buttonStyle(.plain)
+                                .padding(.trailing, Brand.screenPadding)
                             }
                         }
                     } header: {

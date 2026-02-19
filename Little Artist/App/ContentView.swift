@@ -13,36 +13,44 @@ import SwiftData
 
 /// The root content view displayed after onboarding is complete.
 struct ContentView: View {
-    @State private var selectedTab = 0
+    @State private var selectedTab: AppTab = .gallery
 
     var body: some View {
         TabView(selection: $selectedTab) {
-            HomeView()
-                .tabItem {
-                    Label("Gallery", systemImage: "photo.on.rectangle.angled")
-                }
-                .tag(0)
+            Tab("Gallery", systemImage: "photo.on.rectangle.angled", value: .gallery) {
+                HomeView()
+            }
 
-            TimelineView()
-                .tabItem {
-                    Label("Timeline", systemImage: "clock.arrow.trianglehead.counterclockwise.rotate.90")
-                }
-                .tag(1)
+            Tab("Timeline", systemImage: "clock.arrow.trianglehead.counterclockwise.rotate.90", value: .timeline) {
+                TimelineView()
+            }
 
-            MilestonesView()
-                .tabItem {
-                    Label("Milestones", systemImage: "star.fill")
-                }
-                .tag(2)
+            Tab("Milestones", systemImage: "star", value: .milestones) {
+                MilestonesView()
+            }
 
-            SettingsView()
-                .tabItem {
-                    Label("Settings", systemImage: "gearshape.fill")
+            Tab("Settings", systemImage: "gearshape", value: .settings) {
+                SettingsView()
+            }
+
+            Tab(value: .search, role: .search) {
+                NavigationStack {
+                    SearchView()
                 }
-                .tag(3)
+            }
         }
         .tint(Brand.primary)
     }
+}
+
+// MARK: - Tab Identifier
+
+enum AppTab: Hashable {
+    case gallery
+    case timeline
+    case milestones
+    case settings
+    case search
 }
 
 #Preview {

@@ -98,14 +98,38 @@ struct ArtworkDetailView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
 
                 // Attribution line
-                if let childName = artwork.child?.name {
-                    HStack(spacing: 4) {
-                        Text("by \(childName)")
+                if let child = artwork.child {
+                    HStack(spacing: 8) {
+                        // Inline child avatar
+                        ZStack {
+                            if let imageData = child.avatarImageData, let uiImage = UIImage(data: imageData) {
+                                Image(uiImage: uiImage)
+                                    .resizable()
+                                    .scaledToFill()
+                                    .frame(width: 24, height: 24)
+                                    .clipShape(Circle())
+                            } else {
+                                Circle()
+                                    .fill(Color(hex: child.avatarColor))
+                                    .frame(width: 24, height: 24)
+                                    .overlay {
+                                        Text(String(child.name.prefix(1)).uppercased())
+                                            .font(.system(size: 12, weight: .bold, design: .rounded))
+                                            .foregroundStyle(.white)
+                                    }
+                            }
+                        }
+
+                        Text(child.name)
+                            .font(Brand.captionFont)
+                            .foregroundStyle(.primary)
                         Text("·")
+                            .font(Brand.captionFont)
+                            .foregroundStyle(.secondary)
                         Text(artwork.createdAt, format: .dateTime.month(.abbreviated).day().year())
+                            .font(Brand.captionFont)
+                            .foregroundStyle(.secondary)
                     }
-                    .font(Brand.captionFont)
-                    .foregroundStyle(.secondary)
                 }
 
                 // Caption
@@ -156,17 +180,6 @@ struct ArtworkDetailView: View {
         }
         .navigationTitle("Artwork")
         .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                Button {
-                    HapticService.light()
-                    artwork.isFavorited.toggle()
-                } label: {
-                    Image(systemName: artwork.isFavorited ? "heart.fill" : "heart")
-                        .foregroundStyle(artwork.isFavorited ? Brand.dustyRose : .secondary)
-                }
-            }
-        }
         .sheet(isPresented: $showEditSheet) {
             NavigationStack {
                 Form {
