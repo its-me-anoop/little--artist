@@ -19,16 +19,16 @@ struct AddChildButton: View {
         VStack(spacing: 6) {
             ZStack {
                 Circle()
-                    .strokeBorder(Color.orange.opacity(0.5), style: StrokeStyle(lineWidth: 2, dash: [6, 4]))
+                    .strokeBorder(Brand.primary.opacity(0.5), style: StrokeStyle(lineWidth: 2, dash: [6, 4]))
                     .frame(width: 60, height: 60)
 
                 Image(systemName: "plus")
                     .font(.title2.weight(.semibold))
-                    .foregroundStyle(.orange)
+                    .foregroundStyle(Brand.primary)
             }
 
             Text("Add")
-                .font(.caption)
+                .font(Brand.captionFont)
                 .foregroundStyle(.secondary)
                 .frame(width: 64)
         }

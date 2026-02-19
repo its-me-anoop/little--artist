@@ -27,7 +27,7 @@ struct YearChipView: View {
                 .padding(.horizontal, 14)
                 .padding(.vertical, 7)
                 .foregroundStyle(isSelected ? .white : .primary)
-                .background(isSelected ? Color.orange : Color(.tertiarySystemFill))
+                .background(isSelected ? Brand.primary : Brand.softTan.opacity(0.5))
                 .clipShape(Capsule())
         }
         .buttonStyle(.plain)

@@ -33,19 +33,19 @@ struct ChildAvatarView: View {
                         .frame(width: 60, height: 60)
 
                     Text(String(child.name.prefix(1)).uppercased())
-                        .font(.system(size: 26, weight: .bold))
+                        .font(.system(size: 26, weight: .bold, design: .rounded))
                         .foregroundStyle(.white)
                 }
             }
             .overlay {
                 Circle()
-                    .strokeBorder(Color.orange, lineWidth: isSelected ? 3 : 0)
+                    .strokeBorder(Brand.primary, lineWidth: isSelected ? 3 : 0)
                     .frame(width: 68, height: 68)
             }
-            .shadow(color: .black.opacity(0.06), radius: 6, x: 0, y: 3)
+            .brandAvatarShadow()
 
             Text(child.name)
-                .font(.caption)
+                .font(Brand.captionFont)
                 .foregroundStyle(isSelected ? .primary : .secondary)
                 .lineLimit(1)
                 .frame(width: 64)

@@ -50,7 +50,7 @@ struct ArtworkThumbnailView: View {
             // Info section
             VStack(alignment: .leading, spacing: 5) {
                 Text(artwork.title.isEmpty ? "Untitled" : artwork.title)
-                    .font(.subheadline.weight(.semibold))
+                    .font(Brand.subheadlineFont.weight(.semibold))
                     .foregroundStyle(artwork.title.isEmpty ? .secondary : .primary)
                     .lineLimit(1)
 
@@ -58,7 +58,7 @@ struct ArtworkThumbnailView: View {
                     Image(systemName: "calendar")
                         .font(.system(size: 10))
                     Text(formattedDate)
-                        .font(.caption2)
+                        .font(Brand.caption2Font)
                 }
                 .foregroundStyle(.secondary)
             }
@@ -71,8 +71,7 @@ struct ArtworkThumbnailView: View {
             RoundedRectangle(cornerRadius: 18)
                 .fill(Color(.secondarySystemGroupedBackground))
                 .stroke(colorScheme == .dark ? Color.white.opacity(0.08) : .clear, lineWidth: 1)
-                .shadow(color: .black.opacity(colorScheme == .dark ? 0.4 : 0.12), radius: 1, x: 0, y: 1)
-                .shadow(color: .black.opacity(colorScheme == .dark ? 0.3 : 0.10), radius: 14, x: 0, y: 6)
+                .brandCardShadow()
         }
     }
 }

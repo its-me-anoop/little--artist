@@ -23,9 +23,9 @@ struct AddArtworkButton: View {
                 .font(.title2.weight(.semibold))
                 .foregroundStyle(.white)
                 .frame(width: 60, height: 60)
-                .background(Color.orange)
+                .background(Brand.primary)
                 .clipShape(Circle())
-                .shadow(color: .orange.opacity(0.4), radius: 10, x: 0, y: 4)
+                .brandFABShadow()
         }
         .padding(.trailing, 24)
         .padding(.bottom, 24)
