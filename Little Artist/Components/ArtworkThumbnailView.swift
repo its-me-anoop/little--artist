@@ -73,6 +73,9 @@ struct ArtworkThumbnailView: View {
                 .stroke(colorScheme == .dark ? Color.white.opacity(0.08) : .clear, lineWidth: 1)
                 .brandCardShadow()
         }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(artwork.title.isEmpty ? "Untitled" : artwork.title) by \(artwork.child?.name ?? "unknown"), created \(formattedDate)")
+        .accessibilityHint("Double tap to view details")
     }
 }
 

@@ -17,6 +17,7 @@ struct AddArtworkButton: View {
 
     var body: some View {
         Button {
+            HapticService.medium()
             action()
         } label: {
             Image(systemName: "plus")
@@ -27,6 +28,8 @@ struct AddArtworkButton: View {
                 .clipShape(Circle())
                 .brandFABShadow()
         }
+        .accessibilityLabel("Add new artwork")
+        .accessibilityHint("Double tap to capture artwork")
         .padding(.trailing, 24)
         .padding(.bottom, 24)
     }

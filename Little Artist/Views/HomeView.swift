@@ -39,6 +39,7 @@ struct HomeView: View {
                         HStack(spacing: 8) {
                             // "All" chip
                             Button {
+                                HapticService.selection()
                                 withAnimation(.snappy) {
                                     selectedChild = nil
                                 }
@@ -58,6 +59,7 @@ struct HomeView: View {
                                     child: child,
                                     isSelected: selectedChild?.persistentModelID == child.persistentModelID
                                 ) {
+                                    HapticService.selection()
                                     withAnimation(.snappy) {
                                         if selectedChild?.persistentModelID == child.persistentModelID {
                                             selectedChild = nil

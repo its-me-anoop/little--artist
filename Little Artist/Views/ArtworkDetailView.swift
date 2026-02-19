@@ -79,6 +79,7 @@ struct ArtworkDetailView: View {
 
                     // Favorite toggle
                     Button {
+                        HapticService.light()
                         artwork.isFavorited.toggle()
                     } label: {
                         Image(systemName: artwork.isFavorited ? "heart.fill" : "heart")
@@ -158,6 +159,7 @@ struct ArtworkDetailView: View {
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Button {
+                    HapticService.light()
                     artwork.isFavorited.toggle()
                 } label: {
                     Image(systemName: artwork.isFavorited ? "heart.fill" : "heart")
@@ -239,6 +241,7 @@ struct ArtworkDetailView: View {
     private func saveEdits() {
         artwork.title = editTitle.trimmingCharacters(in: .whitespacesAndNewlines)
         artwork.caption = editCaption.trimmingCharacters(in: .whitespacesAndNewlines)
+        HapticService.success()
         showEditSheet = false
     }
 
@@ -259,6 +262,7 @@ struct ArtworkDetailView: View {
     }
 
     private func deleteArtwork() {
+        HapticService.warning()
         modelContext.delete(artwork)
         dismiss()
     }
