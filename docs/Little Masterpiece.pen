@@ -17935,6 +17935,382 @@
           "fill": "#FFFFFF"
         }
       ]
+    },
+    {
+      "type": "frame",
+      "id": "vOA52",
+      "x": 5890,
+      "y": 0,
+      "name": "Home - No Children",
+      "width": 375,
+      "height": 812,
+      "fill": "#FFFFFF",
+      "layout": "none",
+      "clip": true,
+      "children": [
+        {
+          "type": "frame",
+          "id": "jC7b4",
+          "x": 0,
+          "y": 0,
+          "name": "navBar",
+          "width": 375,
+          "height": 88,
+          "fill": "#FFFFFF",
+          "layout": "none",
+          "children": [
+            {
+              "type": "text",
+              "id": "QWLSi",
+              "x": 138,
+              "y": 54,
+              "name": "navTitle",
+              "content": "Little Artist",
+              "fill": "#1C1C1E",
+              "fontFamily": "Outfit",
+              "fontSize": 17,
+              "fontWeight": "600"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "PW7bD",
+          "x": 0,
+          "y": 88,
+          "name": "avatarRow",
+          "width": 375,
+          "height": 100,
+          "fill": "#FFFFFF",
+          "layout": "none",
+          "children": [
+            {
+              "type": "ellipse",
+              "id": "Eu3P8",
+              "x": 20,
+              "y": 20,
+              "name": "addCircle",
+              "width": 60,
+              "height": 60,
+              "fill": "#F2F2F7"
+            },
+            {
+              "type": "text",
+              "id": "pcCwa",
+              "x": 35,
+              "y": 28,
+              "name": "addPlus",
+              "content": "+",
+              "fill": "#8A8A8E",
+              "fontFamily": "Outfit",
+              "fontSize": 24,
+              "fontWeight": "normal"
+            },
+            {
+              "type": "text",
+              "id": "eKjlI",
+              "x": 32,
+              "y": 84,
+              "name": "addLabel",
+              "content": "Add",
+              "fill": "#8A8A8E",
+              "fontFamily": "Outfit",
+              "fontSize": 11,
+              "fontWeight": "normal"
+            }
+          ]
+        },
+        {
+          "type": "rectangle",
+          "id": "VbsPI",
+          "x": 0,
+          "y": 190,
+          "name": "divider",
+          "width": 375,
+          "height": 1,
+          "fill": "#E5E5EA"
+        },
+        {
+          "type": "icon_font",
+          "id": "Whshc",
+          "x": 151,
+          "y": 430,
+          "name": "emptyIcon",
+          "iconFontFamily": "Material Symbols Rounded",
+          "iconFontName": "child_care",
+          "width": 72,
+          "height": 72,
+          "fill": "#FF8C004D"
+        },
+        {
+          "type": "text",
+          "id": "1zhcZ",
+          "x": 95,
+          "y": 520,
+          "name": "emptyTitle",
+          "content": "No little artists yet",
+          "fill": "#1C1C1E",
+          "fontFamily": "Outfit",
+          "fontSize": 22,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "mM53u",
+          "x": 98,
+          "y": 554,
+          "name": "emptySub",
+          "content": "Tap + to add your first child",
+          "fill": "#8A8A8E",
+          "fontFamily": "Outfit",
+          "fontSize": 15,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "frame",
+          "id": "bNvek",
+          "x": 107,
+          "y": 600,
+          "name": "addChildBtn",
+          "width": 160,
+          "height": 44,
+          "fill": "transparent",
+          "cornerRadius": 22,
+          "layout": "none",
+          "stroke": {
+            "align": "center",
+            "fill": "#FF8C00",
+            "thickness": 1.5
+          },
+          "children": [
+            {
+              "type": "text",
+              "id": "q9cbd",
+              "x": 42,
+              "y": 13,
+              "name": "addChildLabel",
+              "content": "Add Child",
+              "fill": "#FF8C00",
+              "fontFamily": "Outfit",
+              "fontSize": 15,
+              "fontWeight": "500"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "ACJB4",
+      "x": 6325,
+      "y": 0,
+      "name": "Home - No Artwork",
+      "width": 375,
+      "height": 812,
+      "fill": "#FFFFFF",
+      "layout": "none",
+      "clip": true,
+      "children": [
+        {
+          "type": "frame",
+          "id": "Lpxbs",
+          "x": 0,
+          "y": 0,
+          "name": "navBar",
+          "width": 375,
+          "height": 88,
+          "fill": "#FFFFFF",
+          "layout": "none",
+          "children": [
+            {
+              "type": "text",
+              "id": "1rfEJ",
+              "x": 138,
+              "y": 54,
+              "name": "navTitle",
+              "content": "Little Artist",
+              "fill": "#1C1C1E",
+              "fontFamily": "Outfit",
+              "fontSize": 17,
+              "fontWeight": "600"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "pN6g4",
+          "x": 0,
+          "y": 88,
+          "name": "avatarRow",
+          "width": 375,
+          "height": 100,
+          "fill": "#FFFFFF",
+          "layout": "none",
+          "children": [
+            {
+              "type": "ellipse",
+              "id": "Kd3y8",
+              "x": 20,
+              "y": 20,
+              "name": "emmaCircle",
+              "width": 60,
+              "height": 60,
+              "fill": "#FF8C00"
+            },
+            {
+              "type": "text",
+              "id": "8n0PP",
+              "x": 41,
+              "y": 29,
+              "name": "emmaLetter",
+              "content": "E",
+              "fill": "#FFFFFF",
+              "fontFamily": "Outfit",
+              "fontSize": 24,
+              "fontWeight": "700"
+            },
+            {
+              "type": "ellipse",
+              "id": "qutIq",
+              "x": 16,
+              "y": 16,
+              "name": "emmaRing",
+              "width": 68,
+              "height": 68,
+              "fill": "transparent",
+              "stroke": {
+                "align": "center",
+                "fill": "#FF8C00",
+                "thickness": 3
+              }
+            },
+            {
+              "type": "text",
+              "id": "NhLoY",
+              "x": 26,
+              "y": 84,
+              "name": "emmaLabel",
+              "content": "Emma",
+              "fill": "#8A8A8E",
+              "fontFamily": "Outfit",
+              "fontSize": 11,
+              "fontWeight": "normal"
+            },
+            {
+              "type": "ellipse",
+              "id": "QJpM6",
+              "x": 104,
+              "y": 20,
+              "name": "addCircle",
+              "width": 60,
+              "height": 60,
+              "fill": "#F2F2F7"
+            },
+            {
+              "type": "text",
+              "id": "muTRy",
+              "x": 119,
+              "y": 28,
+              "name": "addPlus",
+              "content": "+",
+              "fill": "#8A8A8E",
+              "fontFamily": "Outfit",
+              "fontSize": 24,
+              "fontWeight": "normal"
+            },
+            {
+              "type": "text",
+              "id": "5X6QJ",
+              "x": 116,
+              "y": 84,
+              "name": "addLabel",
+              "content": "Add",
+              "fill": "#8A8A8E",
+              "fontFamily": "Outfit",
+              "fontSize": 11,
+              "fontWeight": "normal"
+            }
+          ]
+        },
+        {
+          "type": "rectangle",
+          "id": "7BkD4",
+          "x": 0,
+          "y": 190,
+          "name": "divider",
+          "width": 375,
+          "height": 1,
+          "fill": "#E5E5EA"
+        },
+        {
+          "type": "icon_font",
+          "id": "uWYky",
+          "x": 151,
+          "y": 430,
+          "name": "emptyIcon",
+          "iconFontFamily": "Material Symbols Rounded",
+          "iconFontName": "palette",
+          "width": 72,
+          "height": 72,
+          "fill": "#FF8C004D"
+        },
+        {
+          "type": "text",
+          "id": "z9dXT",
+          "x": 111,
+          "y": 520,
+          "name": "emptyTitle",
+          "content": "No artwork yet",
+          "fill": "#1C1C1E",
+          "fontFamily": "Outfit",
+          "fontSize": 22,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "1VHYj",
+          "x": 58,
+          "y": 554,
+          "name": "emptySub",
+          "content": "Tap + to capture their first masterpiece",
+          "fill": "#8A8A8E",
+          "fontFamily": "Outfit",
+          "fontSize": 15,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "ellipse",
+          "id": "w2WT3",
+          "x": 299,
+          "y": 736,
+          "name": "fabCircle",
+          "width": 56,
+          "height": 56,
+          "fill": "#FF8C00",
+          "effect": {
+            "type": "shadow",
+            "shadowType": "outer",
+            "color": "#00000033",
+            "blur": 12,
+            "offset": {
+              "x": 0,
+              "y": 4
+            }
+          }
+        },
+        {
+          "type": "icon_font",
+          "id": "UBPeW",
+          "x": 316,
+          "y": 753,
+          "name": "fabIcon",
+          "iconFontFamily": "Material Symbols Rounded",
+          "iconFontName": "photo_camera",
+          "width": 22,
+          "height": 22,
+          "fill": "#FFFFFF"
+        }
+      ]
     }
   ],
   "variables": {
