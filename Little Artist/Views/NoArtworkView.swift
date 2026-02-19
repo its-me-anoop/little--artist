@@ -18,14 +18,14 @@ struct NoArtworkView: View {
             Spacer()
 
             Image(systemName: "paintpalette")
-                .font(.system(size: 60))
-                .foregroundStyle(.orange.opacity(0.6))
+                .font(.system(size: 60, design: .rounded))
+                .foregroundStyle(Brand.primary.opacity(0.6))
 
             Text("No artwork yet")
-                .font(.title3.weight(.semibold))
+                .font(.system(.title3, design: .rounded).weight(.semibold))
 
             Text("Capture your first masterpiece\nby tapping the camera button.")
-                .font(.subheadline)
+                .font(Brand.subheadlineFont)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
 

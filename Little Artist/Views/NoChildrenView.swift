@@ -21,14 +21,14 @@ struct NoChildrenView: View {
             Spacer()
 
             Image(systemName: "figure.child")
-                .font(.system(size: 60))
-                .foregroundStyle(.orange.opacity(0.6))
+                .font(.system(size: 60, design: .rounded))
+                .foregroundStyle(Brand.primary.opacity(0.6))
 
             Text("Add your first little artist")
-                .font(.title3.weight(.semibold))
+                .font(.system(.title3, design: .rounded).weight(.semibold))
 
             Text("Tap the + button to add a child\nand start capturing their artwork.")
-                .font(.subheadline)
+                .font(Brand.subheadlineFont)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
 
@@ -36,11 +36,11 @@ struct NoChildrenView: View {
                 onAddChild()
             } label: {
                 Text("Add Child")
-                    .font(.headline)
+                    .font(Brand.headlineFont)
                     .foregroundStyle(.white)
                     .padding(.horizontal, 32)
                     .padding(.vertical, 14)
-                    .background(Color.orange)
+                    .background(Brand.primary)
                     .clipShape(Capsule())
             }
             .padding(.top, 8)
