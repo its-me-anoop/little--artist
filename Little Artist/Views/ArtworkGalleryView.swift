@@ -118,7 +118,7 @@ struct ArtworkGalleryView: View {
                 if let selectedYear {
                     // Year header
                     Text(String(selectedYear))
-                        .font(.title2.weight(.bold))
+                        .font(.system(.title2, design: .rounded).bold())
                         .padding(.horizontal, 20)
                         .padding(.top, 8)
 
@@ -130,10 +130,10 @@ struct ArtworkGalleryView: View {
                                     .font(.headline)
                                 Text("\(monthGroup.artworks.count)")
                                     .font(.caption.weight(.medium))
-                                    .foregroundStyle(.orange)
+                                    .foregroundStyle(Brand.primary)
                                     .padding(.horizontal, 8)
                                     .padding(.vertical, 2)
-                                    .background(Color.orange.opacity(0.12))
+                                    .background(Brand.primaryTint)
                                     .clipShape(Capsule())
                             }
                             .padding(.horizontal, 20)

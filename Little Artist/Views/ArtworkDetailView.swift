@@ -49,13 +49,13 @@ struct ArtworkDetailView: View {
                         .frame(maxWidth: .infinity, minHeight: 320)
                         .overlay {
                             Image(systemName: "paintpalette")
-                                .font(.system(size: 52))
-                                .foregroundStyle(.orange.opacity(0.35))
+                                .font(.system(size: 52, design: .rounded))
+                                .foregroundStyle(Brand.primary.opacity(0.35))
                         }
                 }
 
                 Text(displayTitle)
-                    .font(.title2.weight(.bold))
+                    .font(.system(.title2, design: .rounded).bold())
                     .frame(maxWidth: .infinity, alignment: .leading)
 
                 if let displayCaption {
