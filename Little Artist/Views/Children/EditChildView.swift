@@ -336,13 +336,14 @@ struct EditChildView: View {
     }
 
     private func presentSharing() async {
+        // Check if already shared BEFORE creating/fetching the share,
+        // because shareChild() always results in a share existing.
+        let wasAlreadyShared = sharingService.isShared(child)
         do {
             let (share, container) = try await sharingService.shareChild(child)
             activeShare = share
             activeContainer = container
-            // Use custom management view for existing shares,
-            // UICloudSharingController for new shares (to send invitations)
-            if sharingService.isShared(child) {
+            if wasAlreadyShared {
                 showShareManagement = true
             } else {
                 showCloudSharing = true
