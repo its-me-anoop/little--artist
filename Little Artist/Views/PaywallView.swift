@@ -37,26 +37,20 @@ struct PaywallView: View {
         case artworks
 
         var title: String {
-            switch self {
-            case .children: return "Artist Limit Reached"
-            case .artworks: return "Artwork Limit Reached"
-            }
+            "Unlock Premium Features"
         }
 
         var message: String {
             switch self {
             case .children:
-                return "The free plan supports up to \(PremiumManager.freeChildLimit) children. Upgrade to Little Artist Premium for unlimited child profiles."
+                return "Add unlimited child profiles, iCloud sync, AI captions, and more with Little Artist Premium."
             case .artworks:
-                return "The free plan supports up to \(PremiumManager.freeArtworkLimit) artworks. Upgrade to Little Artist Premium for unlimited artwork storage."
+                return "Save unlimited artworks, sync across devices, and unlock AI-powered captions with Little Artist Premium."
             }
         }
 
         var icon: String {
-            switch self {
-            case .children: return "person.3.fill"
-            case .artworks: return "photo.stack.fill"
-            }
+            "sparkles"
         }
     }
 

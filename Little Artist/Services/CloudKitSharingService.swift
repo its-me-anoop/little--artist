@@ -283,17 +283,33 @@ final class CloudKitSharingService {
     }
 
     /// Accepts an incoming share invitation.
+    ///
+    /// Automatically initialises the CloudKit stack if needed so that
+    /// share acceptance works even when the user hasn't enabled iCloud
+    /// sync in Settings (e.g. recipient opening a share link for the first time).
     func acceptShare(metadata: CKShare.Metadata) {
+        // Ensure the CloudKit stack is ready before accepting
+        if persistentContainer == nil {
+            logger.info("Initialising CloudKit stack for share acceptance")
+            setup()
+        }
+
         guard let container = persistentContainer,
               let sharedStore else {
+            logger.error("Cannot accept share — CloudKit stack failed to initialise")
             return
         }
+
+        logger.info("Accepting share invitation: \(metadata.share.recordID.recordName, privacy: .public)")
+
         container.acceptShareInvitations(
             from: [metadata],
             into: sharedStore
         ) { _, error in
             if let error {
-                print("[CloudKitSharingService] Failed to accept share: \(error)")
+                logger.error("Failed to accept share: \(error.localizedDescription, privacy: .public)")
+            } else {
+                logger.info("Share accepted successfully")
             }
         }
     }

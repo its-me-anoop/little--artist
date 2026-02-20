@@ -24,7 +24,12 @@ enum Brand {
     /// Light tint of primary for backgrounds & highlights.
     static let primaryTint = Color(hex: "F2784B").opacity(0.12)
     /// Warm cream – main background colour.
-    static let cream = Color(hex: "FFF8F0")
+    /// Adapts to dark mode: warm cream in light, system background in dark.
+    static let cream = Color(UIColor { traits in
+        traits.userInterfaceStyle == .dark
+            ? UIColor.systemBackground
+            : UIColor(red: 1.0, green: 0.973, blue: 0.941, alpha: 1)  // #FFF8F0
+    })
     /// Slightly lighter cream – cards, sheets and elevated surfaces.
     /// Adapts to dark mode: near-white in light, dark gray in dark.
     static let surface = Color(UIColor { traits in
@@ -33,11 +38,26 @@ enum Brand {
             : UIColor(red: 1.0, green: 0.984, blue: 0.969, alpha: 1)  // #FFFBF7
     })
     /// Dark charcoal – primary text colour.
-    static let charcoal = Color(hex: "3D3D3D")
+    /// Adapts to dark mode: dark charcoal in light, light gray in dark.
+    static let charcoal = Color(UIColor { traits in
+        traits.userInterfaceStyle == .dark
+            ? UIColor(red: 0.90, green: 0.90, blue: 0.92, alpha: 1)   // #E5E5EA
+            : UIColor(red: 0.24, green: 0.24, blue: 0.24, alpha: 1)   // #3D3D3D
+    })
     /// Warm gray – secondary / caption text colour.
-    static let warmGray = Color(hex: "8A8680")
+    /// Adapts to dark mode: warm gray in light, lighter gray in dark.
+    static let warmGray = Color(UIColor { traits in
+        traits.userInterfaceStyle == .dark
+            ? UIColor(red: 0.62, green: 0.62, blue: 0.64, alpha: 1)   // #9E9EA3
+            : UIColor(red: 0.54, green: 0.53, blue: 0.50, alpha: 1)   // #8A8680
+    })
     /// Soft tan – dividers, borders and separators.
-    static let softTan = Color(hex: "E8E0D8")
+    /// Adapts to dark mode: soft tan in light, dark separator in dark.
+    static let softTan = Color(UIColor { traits in
+        traits.userInterfaceStyle == .dark
+            ? UIColor.separator
+            : UIColor(red: 0.91, green: 0.88, blue: 0.85, alpha: 1)   // #E8E0D8
+    })
     /// Sage green – accent 1.
     static let sage = Color(hex: "A8C5A0")
     /// Sky blue – accent 2.
