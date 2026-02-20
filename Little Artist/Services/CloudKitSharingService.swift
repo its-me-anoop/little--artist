@@ -329,11 +329,20 @@ final class CloudKitSharingService {
         container.acceptShareInvitations(
             from: [metadata],
             into: sharedStore
-        ) { _, error in
+        ) { [weak self] _, error in
             if let error {
                 logger.error("Failed to accept share: \(error.localizedDescription, privacy: .public)")
-            } else {
-                logger.info("Share accepted successfully")
+                return
+            }
+            logger.info("Share accepted — scheduling sync retries for data download")
+            // CloudKit needs time to download shared records after acceptance.
+            // Schedule multiple sync attempts with increasing delays.
+            Task { @MainActor in
+                for delay in [2.0, 5.0, 10.0, 20.0, 30.0] {
+                    try? await Task.sleep(for: .seconds(delay))
+                    logger.info("Running post-accept sync attempt after \(delay, privacy: .public)s")
+                    self?.syncSharedDataToSwiftData()
+                }
             }
         }
     }
@@ -347,20 +356,32 @@ final class CloudKitSharingService {
     /// shared store, and once at startup. Wrapped in error handling to
     /// prevent crashes from propagating.
     private func syncSharedDataToSwiftData() {
-        guard let container = persistentContainer,
-              let sharedStore,
-              let modelContainer else {
+        guard let container = persistentContainer else {
+            logger.debug("syncShared: skipped — no persistent container")
+            return
+        }
+        guard let sharedStore else {
+            logger.debug("syncShared: skipped — no shared store")
+            return
+        }
+        guard let modelContainer else {
+            logger.debug("syncShared: skipped — no model container")
             return
         }
 
         do {
             let context = container.viewContext
+            // Refresh context to pick up any new CloudKit imports
+            context.refreshAllObjects()
 
             // Fetch all Child objects from the shared store
             let childRequest = NSFetchRequest<NSManagedObject>(entityName: "Child")
             childRequest.affectedStores = [sharedStore]
 
             let sharedChildren = try context.fetch(childRequest)
+
+            logger.info("syncShared: found \(sharedChildren.count, privacy: .public) children in shared store")
+
             guard !sharedChildren.isEmpty else { return }
 
             logger.info("Found \(sharedChildren.count) shared children to mirror")
