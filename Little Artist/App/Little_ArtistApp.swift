@@ -41,7 +41,7 @@ struct Little_ArtistApp: App {
         }
         #endif
 
-        let schema = Schema(versionedSchema: SchemaV4.self)
+        let schema = Schema(versionedSchema: SchemaV5.self)
         let isPremium = UserDefaults.standard.bool(forKey: "isPremium")
         let iCloudEnabled = UserDefaults.standard.bool(forKey: "iCloudSyncEnabled")
 
@@ -61,6 +61,9 @@ struct Little_ArtistApp: App {
                 migrationPlan: LittleArtistMigrationPlan.self,
                 configurations: [modelConfiguration]
             )
+
+            // Always provide the model container for shared data mirroring
+            CloudKitSharingService.shared.modelContainer = container
 
             // Initialise CloudKit sharing stack when premium + iCloud enabled
             if isPremium && iCloudEnabled {

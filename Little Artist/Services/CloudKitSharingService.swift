@@ -34,6 +34,9 @@ final class CloudKitSharingService {
     private var privateStore: NSPersistentStore?
     private var sharedStore: NSPersistentStore?
 
+    /// SwiftData model container for mirroring shared data.
+    var modelContainer: ModelContainer?
+
     /// Child object URLs whose sharing was stopped locally (pending CloudKit sync).
     private var stoppedSharingURLs: Set<String> = []
 
@@ -127,6 +130,18 @@ final class CloudKitSharingService {
 
         persistentContainer = container
 
+        // Listen for remote changes on the shared store so we can
+        // mirror shared children/artworks into SwiftData.
+        NotificationCenter.default.addObserver(
+            forName: .NSPersistentStoreRemoteChange,
+            object: container.persistentStoreCoordinator,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor in
+                self?.syncSharedDataToSwiftData()
+            }
+        }
+
         // Force CloudKit schema initialization in debug builds
         #if DEBUG
         do {
@@ -136,6 +151,9 @@ final class CloudKitSharingService {
             logger.error("Failed to initialize CloudKit schema: \(error.localizedDescription, privacy: .public)")
         }
         #endif
+
+        // Run an initial sync in case shared data already exists
+        syncSharedDataToSwiftData()
     }
 
     // MARK: - Sharing
@@ -311,6 +329,110 @@ final class CloudKitSharingService {
             } else {
                 logger.info("Share accepted successfully")
             }
+        }
+    }
+
+    // MARK: - Shared Data Sync
+
+    /// Mirrors children and artworks from the Core Data shared store into
+    /// SwiftData so they appear alongside locally created data.
+    ///
+    /// Called automatically when remote change notifications arrive on the
+    /// shared store, and once at startup.
+    private func syncSharedDataToSwiftData() {
+        guard let container = persistentContainer,
+              let sharedStore,
+              let modelContainer else {
+            return
+        }
+
+        let context = container.viewContext
+
+        // Fetch all Child objects from the shared store
+        let childRequest = NSFetchRequest<NSManagedObject>(entityName: "CD_Child")
+        childRequest.affectedStores = [sharedStore]
+
+        guard let sharedChildren = try? context.fetch(childRequest), !sharedChildren.isEmpty else {
+            return
+        }
+
+        logger.info("Found \(sharedChildren.count) shared children to mirror")
+
+        let modelContext = ModelContext(modelContainer)
+
+        for managedChild in sharedChildren {
+            let recordName = container.recordID(for: managedChild.objectID)?.recordName
+                ?? managedChild.objectID.uriRepresentation().absoluteString
+
+            // Check if already mirrored
+            var existing = FetchDescriptor<Child>(
+                predicate: #Predicate { $0.sharedRecordName == recordName }
+            )
+            existing.fetchLimit = 1
+            if let found = try? modelContext.fetch(existing), !found.isEmpty {
+                // Update existing mirror
+                let mirror = found[0]
+                mirror.name = managedChild.value(forKey: "name") as? String ?? mirror.name
+                mirror.avatarColor = managedChild.value(forKey: "avatarColor") as? String ?? mirror.avatarColor
+                mirror.avatarImageData = managedChild.value(forKey: "avatarImageData") as? Data
+                syncArtworks(for: managedChild, into: mirror, container: container, modelContext: modelContext)
+                continue
+            }
+
+            // Create new SwiftData child
+            let newChild = Child(
+                name: managedChild.value(forKey: "name") as? String ?? "Shared Child",
+                avatarColor: managedChild.value(forKey: "avatarColor") as? String ?? Brand.defaultAvatarColor,
+                avatarImageData: managedChild.value(forKey: "avatarImageData") as? Data,
+                createdAt: managedChild.value(forKey: "createdAt") as? Date ?? .now
+            )
+            newChild.sharedRecordName = recordName
+            modelContext.insert(newChild)
+
+            syncArtworks(for: managedChild, into: newChild, container: container, modelContext: modelContext)
+
+            logger.info("Mirrored shared child: \(newChild.name, privacy: .public)")
+        }
+
+        do {
+            try modelContext.save()
+            logger.info("Shared data mirrored to SwiftData")
+        } catch {
+            logger.error("Failed to save mirrored data: \(error.localizedDescription, privacy: .public)")
+        }
+    }
+
+    /// Mirrors artworks from a shared Core Data child into a SwiftData child.
+    private func syncArtworks(
+        for managedChild: NSManagedObject,
+        into swiftDataChild: Child,
+        container: NSPersistentCloudKitContainer,
+        modelContext: ModelContext
+    ) {
+        guard let artworkSet = managedChild.value(forKey: "artworks") as? NSSet else { return }
+
+        let existingTitlesAndDates = Set(
+            (swiftDataChild.artworks ?? []).map { "\($0.title)|\($0.createdAt.timeIntervalSince1970)" }
+        )
+
+        for case let managedArtwork as NSManagedObject in artworkSet {
+            let title = managedArtwork.value(forKey: "title") as? String ?? ""
+            let createdAt = managedArtwork.value(forKey: "createdAt") as? Date ?? .now
+            let key = "\(title)|\(createdAt.timeIntervalSince1970)"
+
+            // Skip if already mirrored (by title+date combination)
+            if existingTitlesAndDates.contains(key) { continue }
+
+            let artwork = Artwork(
+                title: title,
+                caption: managedArtwork.value(forKey: "caption") as? String ?? "",
+                imageData: managedArtwork.value(forKey: "imageData") as? Data,
+                voiceNoteData: managedArtwork.value(forKey: "voiceNoteData") as? Data,
+                isFavorited: managedArtwork.value(forKey: "isFavorited") as? Bool ?? false,
+                createdAt: createdAt,
+                child: swiftDataChild
+            )
+            modelContext.insert(artwork)
         }
     }
 

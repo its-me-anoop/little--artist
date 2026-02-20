@@ -31,6 +31,10 @@ final class Child {
     @Attribute(.externalStorage)
     var avatarImageData: Data?
 
+    /// CloudKit record name for children received via sharing.
+    /// `nil` for locally created children; set for mirrored shared children.
+    var sharedRecordName: String?
+
     /// The artworks belonging to this child. Deletion cascades.
     @Relationship(deleteRule: .cascade, inverse: \Artwork.child)
     var artworks: [Artwork]?

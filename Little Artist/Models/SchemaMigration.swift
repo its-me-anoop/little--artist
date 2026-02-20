@@ -45,15 +45,24 @@ enum SchemaV4: VersionedSchema {
     }
 }
 
+// MARK: - V5 Schema (Added sharedRecordName for CloudKit sharing)
+
+enum SchemaV5: VersionedSchema {
+    static var versionIdentifier = Schema.Version(5, 0, 0)
+    static var models: [any PersistentModel.Type] {
+        [Child.self, Artwork.self, Tag.self]
+    }
+}
+
 // MARK: - Migration Plan
 
 enum LittleArtistMigrationPlan: SchemaMigrationPlan {
     static var schemas: [any VersionedSchema.Type] {
-        [SchemaV1.self, SchemaV2.self, SchemaV3.self, SchemaV4.self]
+        [SchemaV1.self, SchemaV2.self, SchemaV3.self, SchemaV4.self, SchemaV5.self]
     }
 
     static var stages: [MigrationStage] {
-        [migrateV1toV2, migrateV2toV3, migrateV3toV4]
+        [migrateV1toV2, migrateV2toV3, migrateV3toV4, migrateV4toV5]
     }
 
     static let migrateV1toV2 = MigrationStage.lightweight(
@@ -69,5 +78,10 @@ enum LittleArtistMigrationPlan: SchemaMigrationPlan {
     static let migrateV3toV4 = MigrationStage.lightweight(
         fromVersion: SchemaV3.self,
         toVersion: SchemaV4.self
+    )
+
+    static let migrateV4toV5 = MigrationStage.lightweight(
+        fromVersion: SchemaV4.self,
+        toVersion: SchemaV5.self
     )
 }
