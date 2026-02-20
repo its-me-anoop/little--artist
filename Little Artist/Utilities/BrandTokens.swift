@@ -26,7 +26,12 @@ enum Brand {
     /// Warm cream – main background colour.
     static let cream = Color(hex: "FFF8F0")
     /// Slightly lighter cream – cards, sheets and elevated surfaces.
-    static let surface = Color(hex: "FFFBF7")
+    /// Adapts to dark mode: near-white in light, dark gray in dark.
+    static let surface = Color(UIColor { traits in
+        traits.userInterfaceStyle == .dark
+            ? UIColor(red: 0.17, green: 0.17, blue: 0.17, alpha: 1)   // #2C2C2C
+            : UIColor(red: 1.0, green: 0.984, blue: 0.969, alpha: 1)  // #FFFBF7
+    })
     /// Dark charcoal – primary text colour.
     static let charcoal = Color(hex: "3D3D3D")
     /// Warm gray – secondary / caption text colour.
@@ -102,6 +107,55 @@ enum Brand {
     static let fabSize: CGFloat = 60
     static let onboardingCardHeight: CGFloat = 340
     static let colorCircleSize: CGFloat = 40
+
+    // MARK: - Adaptive Layout
+
+    /// Width-responsive tokens for iPad adaptation.
+    enum Adaptive {
+        static func screenPadding(for sizeClass: UserInterfaceSizeClass?) -> CGFloat {
+            sizeClass == .regular ? 40 : Brand.screenPadding
+        }
+
+        static func gallerySpacing(for sizeClass: UserInterfaceSizeClass?) -> CGFloat {
+            sizeClass == .regular ? 32 : Brand.gallerySpacing
+        }
+
+        static func sectionSpacing(for sizeClass: UserInterfaceSizeClass?) -> CGFloat {
+            sizeClass == .regular ? 36 : Brand.sectionSpacing
+        }
+
+        /// Maximum content width to prevent ultra-wide stretching on iPad landscape.
+        static let maxContentWidth: CGFloat = 700
+
+        /// Returns gallery column count based on available width.
+        static func galleryColumns(for width: CGFloat) -> Int {
+            switch width {
+            case ..<400: return 3
+            case ..<600: return 4
+            case ..<900: return 5
+            default: return 6
+            }
+        }
+
+        /// Returns search result column count based on available width.
+        static func searchColumns(for width: CGFloat) -> Int {
+            switch width {
+            case ..<500: return 2
+            case ..<800: return 3
+            default: return 4
+            }
+        }
+
+        /// Returns stat grid column count — 2 on compact, 4 on regular.
+        static func statGridColumns(for sizeClass: UserInterfaceSizeClass?) -> Int {
+            sizeClass == .regular ? 4 : 2
+        }
+
+        /// Scale factor for onboarding card animations — larger on iPad.
+        static func onboardingCardScale(for sizeClass: UserInterfaceSizeClass?) -> CGFloat {
+            sizeClass == .regular ? 1.6 : 1.0
+        }
+    }
 }
 
 // MARK: - Shadow View Modifiers
@@ -140,5 +194,35 @@ extension View {
     /// FAB shadow – primary colour 40 % opacity, 10 pt blur, 4 pt y-offset.
     func brandFABShadow() -> some View {
         modifier(FABShadowModifier())
+    }
+
+    // MARK: - Sheet Sizing
+
+    /// Wider sheet presentation on iPad (regular size class).
+    @ViewBuilder
+    func adaptiveSheetSizing(sizeClass: UserInterfaceSizeClass?) -> some View {
+        if sizeClass == .regular {
+            if #available(iOS 18.0, *) {
+                self.presentationSizing(.page)
+            } else {
+                self.presentationDetents([.large])
+            }
+        } else {
+            self
+        }
+    }
+
+    /// Edit-sheet presentation: wider on iPad, half/full on iPhone.
+    @ViewBuilder
+    func editSheetSizing(sizeClass: UserInterfaceSizeClass?) -> some View {
+        if sizeClass == .regular {
+            if #available(iOS 18.0, *) {
+                self.presentationSizing(.page)
+            } else {
+                self.presentationDetents([.large])
+            }
+        } else {
+            self.presentationDetents([.medium, .large])
+        }
     }
 }

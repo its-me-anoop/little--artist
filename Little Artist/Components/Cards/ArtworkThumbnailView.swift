@@ -28,18 +28,19 @@ struct ArtworkThumbnailView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            // Artwork image — fixed size, clipped
+            // Artwork image — flexible width, fixed aspect ratio
             if let data = artwork.imageData, let uiImage = UIImage(data: data) {
                 Image(uiImage: uiImage)
                     .resizable()
                     .scaledToFill()
-                    .frame(width: 164, height: 180)
+                    .frame(maxWidth: .infinity)
+                    .aspectRatio(164.0 / 180.0, contentMode: .fill)
                     .clipped()
                     .clipShape(RoundedRectangle(cornerRadius: 12))
             } else {
                 RoundedRectangle(cornerRadius: 12)
                     .fill(Color(.tertiarySystemBackground))
-                    .frame(width: 164, height: 180)
+                    .aspectRatio(164.0 / 180.0, contentMode: .fill)
                     .overlay {
                         Image(systemName: "paintpalette")
                             .font(.system(size: 36))

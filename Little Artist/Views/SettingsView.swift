@@ -14,13 +14,23 @@ struct SettingsView: View {
     @Query(sort: \Child.createdAt) private var children: [Child]
     @Query private var artworks: [Artwork]
 
+    private var store: StoreKitManager { StoreKitManager.shared }
+    private let sharingService = CloudKitSharingService.shared
+
     @AppStorage("aiCaptionsEnabled") private var aiCaptionsEnabled = true
     @AppStorage("defaultCameraBack") private var defaultCameraBack = true
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = true
+    @AppStorage("iCloudSyncEnabled") private var iCloudSyncEnabled = false
+    @AppStorage("notificationsEnabled") private var notificationsEnabled = false
 
     @State private var showAddChild = false
     @State private var showDeleteChildConfirmation = false
     @State private var childToDelete: Child?
+    @State private var paywallReason: PaywallView.LimitReason?
+    @State private var isRestoring = false
+    @State private var exportPayload: SharePayload?
+    @State private var isExporting = false
+    @State private var showRestartAlert = false
 
     private var storageUsed: String {
         let bytes = artworks.compactMap(\.imageData).reduce(0) { $0 + $1.count }
@@ -65,6 +75,12 @@ struct SettingsView: View {
                                 Text(child.name)
                                     .font(Brand.bodyFont)
 
+                                if sharingService.isInitialised && sharingService.isShared(child) {
+                                    Image(systemName: "person.2.fill")
+                                        .font(.system(size: 11, weight: .medium))
+                                        .foregroundStyle(Brand.sky)
+                                }
+
                                 Spacer()
 
                                 Text("\(child.artworks?.count ?? 0) artworks")
@@ -81,7 +97,11 @@ struct SettingsView: View {
                     }
 
                     Button {
-                        showAddChild = true
+                        if PremiumManager.canAddChild(currentCount: children.count) {
+                            showAddChild = true
+                        } else {
+                            paywallReason = .children
+                        }
                     } label: {
                         Label("Add Child", systemImage: "plus")
                             .foregroundStyle(Brand.primary)
@@ -107,17 +127,120 @@ struct SettingsView: View {
                         .pickerStyle(.segmented)
                         .frame(width: 140)
                     }
+
+                    Toggle(isOn: $notificationsEnabled) {
+                        Label("Reminders", systemImage: "bell.fill")
+                    }
+                    .tint(Brand.primary)
+                    .onChange(of: notificationsEnabled) { _, enabled in
+                        if enabled {
+                            Task { @MainActor in
+                                let granted = await NotificationService.requestPermission()
+                                if granted {
+                                    NotificationService.scheduleAll(artworks: artworks)
+                                } else {
+                                    notificationsEnabled = false
+                                }
+                            }
+                        } else {
+                            NotificationService.cancelAll()
+                        }
+                    }
                 } header: {
                     Text("Preferences")
                 }
 
+                // SUBSCRIPTION
+                Section {
+                    HStack {
+                        Label("Plan", systemImage: "crown.fill")
+                        Spacer()
+                        Text(store.isPremium ? "Premium" : "Free")
+                            .foregroundStyle(store.isPremium ? Brand.primary : .secondary)
+                            .fontWeight(store.isPremium ? .semibold : .regular)
+                    }
+
+                    if !store.isPremium {
+                        Button {
+                            paywallReason = .artworks
+                        } label: {
+                            Label("Upgrade to Premium", systemImage: "sparkles")
+                                .foregroundStyle(Brand.primary)
+                        }
+                    }
+
+                    Button {
+                        isRestoring = true
+                        Task {
+                            await store.restorePurchases()
+                            isRestoring = false
+                        }
+                    } label: {
+                        HStack {
+                            Label("Restore Purchases", systemImage: "arrow.clockwise")
+                            if isRestoring {
+                                Spacer()
+                                ProgressView()
+                            }
+                        }
+                    }
+                    .disabled(isRestoring)
+                } header: {
+                    Text("Subscription")
+                }
+
                 // DATA
                 Section {
+                    // iCloud Sync toggle (premium only)
+                    if store.isPremium {
+                        Toggle(isOn: $iCloudSyncEnabled) {
+                            Label("iCloud Sync", systemImage: "icloud.fill")
+                        }
+                        .tint(Brand.primary)
+                        .onChange(of: iCloudSyncEnabled) {
+                            showRestartAlert = true
+                        }
+                    } else {
+                        Button {
+                            paywallReason = .artworks
+                        } label: {
+                            HStack {
+                                Label("iCloud Sync", systemImage: "icloud.fill")
+                                    .foregroundStyle(Brand.disabled)
+                                Spacer()
+                                Text("Premium")
+                                    .font(Brand.caption2Font)
+                                    .foregroundStyle(Brand.primary)
+                            }
+                        }
+                    }
+
                     HStack {
                         Label("Storage", systemImage: "externaldrive.fill")
                         Spacer()
                         Text(storageUsed)
                             .foregroundStyle(.secondary)
+                    }
+
+                    // PDF Export per child
+                    ForEach(children) { child in
+                        Button {
+                            if store.isPremium {
+                                exportPortfolio(for: child)
+                            } else {
+                                paywallReason = .artworks
+                            }
+                        } label: {
+                            HStack {
+                                Label("Export \(child.name)'s Portfolio", systemImage: "doc.richtext")
+                                    .foregroundStyle(store.isPremium ? Brand.primary : Brand.disabled)
+                                if isExporting {
+                                    Spacer()
+                                    ProgressView()
+                                }
+                            }
+                        }
+                        .disabled(isExporting)
                     }
                 } header: {
                     Text("Data")
@@ -132,6 +255,12 @@ struct SettingsView: View {
                             .foregroundStyle(.secondary)
                     }
 
+                    NavigationLink {
+                        PrivacyPolicyView()
+                    } label: {
+                        Label("Privacy Policy", systemImage: "hand.raised.fill")
+                    }
+
                     Button {
                         hasCompletedOnboarding = false
                     } label: {
@@ -144,6 +273,12 @@ struct SettingsView: View {
             .navigationTitle("Settings")
             .sheet(isPresented: $showAddChild) {
                 AddChildView()
+            }
+            .sheet(item: $paywallReason) { reason in
+                PaywallView(reason: reason)
+            }
+            .sheet(item: $exportPayload) { payload in
+                ActivityView(activityItems: payload.items)
             }
             .alert("Delete Child?", isPresented: $showDeleteChildConfirmation) {
                 Button("Cancel", role: .cancel) {
@@ -160,6 +295,25 @@ struct SettingsView: View {
                     Text("This will permanently delete \(child.name) and all their \(child.artworks?.count ?? 0) artworks.")
                 }
             }
+            .alert("Restart Required", isPresented: $showRestartAlert) {
+                Button("OK") {}
+            } message: {
+                Text("Please restart the app for the iCloud sync change to take effect.")
+            }
+        }
+    }
+    private func exportPortfolio(for child: Child) {
+        isExporting = true
+        let childArtworks = child.artworks ?? []
+        let name = child.name
+
+        Task {
+            let pdfData = PDFExportService.generatePortfolio(childName: name, artworks: childArtworks)
+            let tempURL = FileManager.default.temporaryDirectory
+                .appendingPathComponent("\(name)_Portfolio.pdf")
+            try? pdfData.write(to: tempURL)
+            isExporting = false
+            exportPayload = SharePayload(items: [tempURL])
         }
     }
 }

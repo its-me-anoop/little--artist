@@ -4,19 +4,25 @@
 //
 //  A five-page onboarding carousel introducing the app's key features.
 //  Each page uses a unique card entrance animation for visual delight.
+//  On iPad (regular width), switches to a side-by-side layout with
+//  scaled-up animations on the left and text/controls on the right.
 //
 //  Created by Anoop Jose on 13/02/2026.
 //
 
 import SwiftUI
+import SwiftData
 
 /// A five-page onboarding carousel presented on first launch.
 ///
 /// Each page highlights a key feature of the app (artwork capture, AI captions,
 /// voice notes, sharing) with a unique card entrance animation. The user can
 /// swipe between pages, skip onboarding, or tap "Get Started" on the last page.
+/// On iPad, renders a side-by-side layout with enlarged card animations.
 struct OnboardingView: View {
     @Binding var hasCompletedOnboarding: Bool
+    @Environment(\.horizontalSizeClass) private var sizeClass
+    @Query private var children: [Child]
     @State private var currentPage = 0
     @State private var showAddChild = false
 
@@ -61,17 +67,113 @@ struct OnboardingView: View {
         )
     ]
 
+    // MARK: - Shared Subviews
+
+    private var skipButton: some View {
+        Group {
+            if currentPage < pages.count - 1 {
+                Button("Skip") {
+                    withAnimation {
+                        hasCompletedOnboarding = true
+                    }
+                }
+                .font(Brand.subheadlineFont)
+                .foregroundStyle(Brand.primary)
+            }
+        }
+    }
+
+    private var titleSection: some View {
+        VStack(spacing: 4) {
+            Text(pages[currentPage].titleTop)
+                .font(Brand.displayFont)
+                .foregroundStyle(.primary)
+
+            Text(pages[currentPage].titleHighlight)
+                .font(Brand.displayFont)
+                .foregroundStyle(Brand.primary)
+        }
+        .animation(.easeInOut(duration: 0.3), value: currentPage)
+    }
+
+    private var descriptionSection: some View {
+        Text(pages[currentPage].description)
+            .font(Brand.subheadlineFont)
+            .foregroundStyle(.secondary)
+            .animation(.easeInOut(duration: 0.3), value: currentPage)
+    }
+
+    private var pageIndicators: some View {
+        HStack(spacing: 6) {
+            ForEach(0..<pages.count, id: \.self) { index in
+                Capsule()
+                    .fill(index == currentPage ? Brand.primary : Brand.warmGray.opacity(0.3))
+                    .frame(width: index == currentPage ? 24 : 8, height: 8)
+                    .animation(.easeInOut(duration: 0.3), value: currentPage)
+            }
+        }
+    }
+
+    private var actionButton: some View {
+        Button {
+            impactFeedback.impactOccurred()
+            withAnimation(.easeInOut(duration: 0.3)) {
+                if currentPage < pages.count - 1 {
+                    currentPage += 1
+                } else if children.isEmpty {
+                    showAddChild = true
+                } else {
+                    hasCompletedOnboarding = true
+                }
+            }
+        } label: {
+            HStack(spacing: 8) {
+                Text(currentPage < pages.count - 1 ? "Next" : "Get Started")
+                    .font(Brand.headlineFont)
+                if currentPage < pages.count - 1 {
+                    Image(systemName: "arrow.right")
+                        .font(Brand.headlineFont)
+                }
+            }
+            .foregroundStyle(.white)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 18)
+            .background(Brand.primary)
+            .clipShape(Capsule())
+        }
+    }
+
+    // MARK: - Body
+
     var body: some View {
+        Group {
+            if sizeClass == .regular {
+                iPadLayout
+            } else {
+                iPhoneLayout
+            }
+        }
+        .background(Color(.systemBackground))
+        .onChange(of: currentPage) { _, _ in
+            selectionFeedback.selectionChanged()
+        }
+        .sheet(isPresented: $showAddChild, onDismiss: {
+            hasCompletedOnboarding = true
+        }) {
+            AddChildView()
+        }
+    }
+
+    // MARK: - iPhone Layout
+
+    private var iPhoneLayout: some View {
         VStack(spacing: 0) {
-            // Top illustration area with Skip
             ZStack(alignment: .topTrailing) {
-                // Soft background blob
                 RoundedRectangle(cornerRadius: 40)
                     .fill(.ultraThinMaterial)
                     .frame(height: 340)
                     .padding(.horizontal, 16)
 
-                // Illustration cards
                 TabView(selection: $currentPage) {
                     ForEach(Array(pages.enumerated()), id: \.element.id) { index, page in
                         AnimatedCardsView(
@@ -86,94 +188,94 @@ struct OnboardingView: View {
                 .tabViewStyle(.page(indexDisplayMode: .never))
                 .frame(height: 340)
 
-                // Skip button
-                if currentPage < pages.count - 1 {
-                    Button("Skip") {
-                        withAnimation {
-                            hasCompletedOnboarding = true
-                        }
-                    }
-                    .font(Brand.subheadlineFont)
-                    .foregroundStyle(Brand.primary)
+                skipButton
                     .padding(.trailing, 36)
                     .padding(.top, 16)
-                }
             }
 
             Spacer().frame(height: 36)
 
-            // Title
-            VStack(spacing: 4) {
-                Text(pages[currentPage].titleTop)
-                    .font(Brand.displayFont)
-                    .foregroundStyle(.primary)
-
-                Text(pages[currentPage].titleHighlight)
-                    .font(Brand.displayFont)
-                    .foregroundStyle(Brand.primary)
-            }
-            .multilineTextAlignment(.center)
-            .animation(.easeInOut(duration: 0.3), value: currentPage)
+            titleSection
+                .multilineTextAlignment(.center)
 
             Spacer().frame(height: 16)
 
-            // Description
-            Text(pages[currentPage].description)
-                .font(Brand.subheadlineFont)
-                .foregroundStyle(.secondary)
+            descriptionSection
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 40)
-                .animation(.easeInOut(duration: 0.3), value: currentPage)
 
             Spacer()
 
-            // Page indicators
-            HStack(spacing: 6) {
-                ForEach(0..<pages.count, id: \.self) { index in
-                    Capsule()
-                        .fill(index == currentPage ? Brand.primary : Brand.warmGray.opacity(0.3))
-                        .frame(width: index == currentPage ? 24 : 8, height: 8)
-                        .animation(.easeInOut(duration: 0.3), value: currentPage)
-                }
-            }
-            .padding(.bottom, 24)
+            pageIndicators
+                .padding(.bottom, 24)
 
-            // Action button
-            Button {
-                impactFeedback.impactOccurred()
-                withAnimation(.easeInOut(duration: 0.3)) {
-                    if currentPage < pages.count - 1 {
-                        currentPage += 1
-                    } else {
-                        showAddChild = true
+            actionButton
+                .padding(.horizontal, 32)
+                .padding(.bottom, 48)
+        }
+    }
+
+    // MARK: - iPad Layout
+
+    private var iPadLayout: some View {
+        HStack(spacing: 0) {
+            // Left pane — scaled card animations
+            ZStack {
+                RoundedRectangle(cornerRadius: Brand.radiusOnboarding)
+                    .fill(.ultraThinMaterial)
+
+                TabView(selection: $currentPage) {
+                    ForEach(Array(pages.enumerated()), id: \.element.id) { index, page in
+                        AnimatedCardsView(
+                            icons: page.icons,
+                            accentColor: Brand.primary,
+                            style: page.animation,
+                            isActive: currentPage == index
+                        )
+                        .scaleEffect(Brand.Adaptive.onboardingCardScale(for: sizeClass))
+                        .tag(index)
                     }
                 }
-            } label: {
-                HStack(spacing: 8) {
-                    Text(currentPage < pages.count - 1 ? "Next" : "Get Started")
-                        .font(Brand.headlineFont)
-                    if currentPage < pages.count - 1 {
-                        Image(systemName: "arrow.right")
-                            .font(Brand.headlineFont)
-                    }
-                }
-                .foregroundStyle(.white)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 18)
-                .background(Brand.primary)
-                .clipShape(Capsule())
+                .tabViewStyle(.page(indexDisplayMode: .never))
             }
-            .padding(.horizontal, 32)
-            .padding(.bottom, 48)
-        }
-        .background(Color(.systemBackground))
-        .onChange(of: currentPage) { _, _ in
-            selectionFeedback.selectionChanged()
-        }
-        .sheet(isPresented: $showAddChild, onDismiss: {
-            hasCompletedOnboarding = true
-        }) {
-            AddChildView()
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+            // Right pane — text & controls
+            VStack(alignment: .leading, spacing: 0) {
+                HStack {
+                    Spacer()
+                    skipButton
+                        .padding(.trailing, 36)
+                        .padding(.top, 24)
+                }
+
+                Spacer()
+
+                titleSection
+                    .multilineTextAlignment(.leading)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 40)
+
+                Spacer().frame(height: 20)
+
+                descriptionSection
+                    .multilineTextAlignment(.leading)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 40)
+
+                Spacer().frame(height: 40)
+
+                pageIndicators
+                    .padding(.horizontal, 40)
+
+                Spacer()
+
+                actionButton
+                    .frame(maxWidth: 320)
+                    .padding(.horizontal, 40)
+                    .padding(.bottom, 48)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
     }
 }

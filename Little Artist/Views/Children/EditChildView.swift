@@ -8,6 +8,7 @@
 //  Created by Codex on 19/02/2026.
 //
 
+import CloudKit
 import SwiftUI
 import SwiftData
 import PhotosUI
@@ -32,8 +33,12 @@ struct EditChildView: View {
     @State private var showCamera = false
     @State private var showImagePlayground = false
     @State private var showDeleteConfirmation = false
+    @State private var showCloudSharing = false
+    @State private var activeShare: CKShare?
+    @State private var activeContainer: CKContainer?
 
     private let presetColors = Brand.avatarColors
+    private let sharingService = CloudKitSharingService.shared
 
     init(child: Child, onDelete: (() -> Void)? = nil) {
         self.child = child
@@ -63,6 +68,7 @@ struct EditChildView: View {
                     // Name field
                     TextField("Child's name", text: $name)
                         .font(Brand.title3Font)
+                        .foregroundStyle(.primary)
                         .multilineTextAlignment(.center)
                         .padding(.vertical, 14)
                         .padding(.horizontal, 24)
@@ -99,6 +105,35 @@ struct EditChildView: View {
                                         }
                                     }
                             }
+                        }
+                    }
+
+                    // Sharing section (premium + iCloud only)
+                    if PremiumManager.isPremium && sharingService.isInitialised {
+                        VStack(spacing: 8) {
+                            Button {
+                                Task { await presentSharing() }
+                            } label: {
+                                HStack(spacing: 8) {
+                                    Image(systemName: sharingService.isShared(child) ? "person.2.fill" : "person.badge.plus")
+                                        .font(.system(size: 16, weight: .medium))
+                                    Text(sharingService.isShared(child) ? "Manage Sharing" : "Share Profile")
+                                        .font(Brand.headlineFont)
+                                }
+                                .foregroundStyle(Brand.sky)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 16)
+                                .overlay {
+                                    Capsule()
+                                        .stroke(Brand.sky, lineWidth: 1.5)
+                                }
+                            }
+                            .padding(.horizontal, 32)
+
+                            Text("Invite another parent to view and edit this profile")
+                                .font(Brand.caption2Font)
+                                .foregroundStyle(Brand.warmGray)
+                                .multilineTextAlignment(.center)
                         }
                     }
 
@@ -165,6 +200,15 @@ struct EditChildView: View {
                         }
                         photoPickerItem = nil
                     }
+                }
+            }
+            .sheet(isPresented: $showCloudSharing) {
+                if let activeShare, let activeContainer {
+                    CloudSharingView(
+                        share: activeShare,
+                        container: activeContainer,
+                        child: child
+                    )
                 }
             }
             .alert("Delete this child profile?", isPresented: $showDeleteConfirmation) {
@@ -263,6 +307,17 @@ struct EditChildView: View {
         child.avatarColor = selectedColor
         child.avatarImageData = avatarImageData
         dismiss()
+    }
+
+    private func presentSharing() async {
+        do {
+            let (share, container) = try await sharingService.shareChild(child)
+            activeShare = share
+            activeContainer = container
+            showCloudSharing = true
+        } catch {
+            print("[EditChildView] Failed to create share: \(error)")
+        }
     }
 
     private func deleteChild() {

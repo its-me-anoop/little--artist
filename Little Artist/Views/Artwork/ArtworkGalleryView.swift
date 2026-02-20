@@ -18,16 +18,31 @@ import SwiftData
 struct ArtworkGalleryView: View {
     let artworks: [Artwork]
 
-    @State private var columnCount: Int = 3
+    /// When set, tapping a tile calls this callback instead of pushing a NavigationLink (iPad master-detail).
+    var onSelect: ((Artwork) -> Void)? = nil
+    /// The currently selected artwork's ID, used to highlight the tile in master-detail mode.
+    var selectedArtworkID: PersistentIdentifier? = nil
+
+    @Environment(\.horizontalSizeClass) private var sizeClass
+
+    @State private var columnCount: Int?
     @State private var sortNewestFirst = true
     @State private var showFavoritesOnly = false
+    @State private var availableWidth: CGFloat = 390
 
     private let spacing: CGFloat = 3
-    private let columnRange = 2...5
     private let tileRadius: CGFloat = 4
 
-    private var columns: [GridItem] {
-        Array(repeating: GridItem(.flexible(), spacing: spacing), count: columnCount)
+    private var columnRange: ClosedRange<Int> {
+        sizeClass == .regular ? 2...8 : 2...5
+    }
+
+    private func resolvedColumnCount(width: CGFloat) -> Int {
+        columnCount ?? Brand.Adaptive.galleryColumns(for: width)
+    }
+
+    private func columns(for width: CGFloat) -> [GridItem] {
+        Array(repeating: GridItem(.flexible(), spacing: spacing), count: resolvedColumnCount(width: width))
     }
 
     private var displayedArtworks: [Artwork] {
@@ -60,11 +75,11 @@ struct ArtworkGalleryView: View {
         let daySort = yearSort
 
         return yearMap.keys.sorted(by: yearSort).map { year in
-            let months = yearMap[year]!
+            let months = yearMap[year, default: [:]]
             let monthGroups = months.keys.sorted(by: monthSort).map { month in
-                let days = months[month]!
+                let days = months[month, default: [:]]
                 let dayGroups = days.keys.sorted(by: daySort).map { day in
-                    DayGroup(day: day, artworks: days[day]!)
+                    DayGroup(day: day, artworks: days[day, default: []])
                 }
                 return MonthGroup(month: month, year: year, dayGroups: dayGroups)
             }
@@ -72,16 +87,21 @@ struct ArtworkGalleryView: View {
         }
     }
 
+    private var adaptivePadding: CGFloat {
+        Brand.Adaptive.screenPadding(for: sizeClass)
+    }
+
     var body: some View {
         ScrollView {
-            // Floating toolbar pill
-            HStack(spacing: 8) {
+            // Toolbar — separated icon groups
+            HStack(spacing: 12) {
+                // Count badge
                 Text("\(displayedArtworks.count)")
                     .font(.system(size: 13, weight: .semibold, design: .rounded))
                     .foregroundStyle(Brand.primary)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
-                    .background(Brand.primaryTint)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 6)
+                    .background(.ultraThinMaterial)
                     .clipShape(Capsule())
 
                 Spacer()
@@ -91,10 +111,11 @@ struct ArtworkGalleryView: View {
                     withAnimation(.snappy) { showFavoritesOnly.toggle() }
                 } label: {
                     Image(systemName: showFavoritesOnly ? "heart.fill" : "heart")
-                        .font(.system(size: 15))
-                        .foregroundStyle(showFavoritesOnly ? Brand.dustyRose : Brand.warmGray)
-                        .frame(minWidth: 44, minHeight: 44)
-                        .contentShape(Rectangle())
+                        .font(.system(size: 15, weight: .medium))
+                        .foregroundStyle(showFavoritesOnly ? Brand.dustyRose : .secondary)
+                        .frame(width: 36, height: 36)
+                        .background(.ultraThinMaterial)
+                        .clipShape(Circle())
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel(showFavoritesOnly ? "Show all" : "Show favorites only")
@@ -104,66 +125,58 @@ struct ArtworkGalleryView: View {
                     Button {
                         withAnimation(.snappy) { sortNewestFirst = true }
                     } label: {
-                        Label("Newest First", systemImage: "arrow.down")
+                        Label("Newest First", systemImage: sortNewestFirst ? "checkmark" : "")
                     }
-                    .disabled(sortNewestFirst)
 
                     Button {
                         withAnimation(.snappy) { sortNewestFirst = false }
                     } label: {
-                        Label("Oldest First", systemImage: "arrow.up")
+                        Label("Oldest First", systemImage: sortNewestFirst ? "" : "checkmark")
                     }
-                    .disabled(!sortNewestFirst)
                 } label: {
                     Image(systemName: "arrow.up.arrow.down")
-                        .font(.system(size: 15))
-                        .foregroundStyle(Brand.warmGray)
-                        .frame(minWidth: 44, minHeight: 44)
-                        .contentShape(Rectangle())
+                        .font(.system(size: 15, weight: .medium))
+                        .foregroundStyle(.secondary)
+                        .frame(width: 36, height: 36)
+                        .background(.ultraThinMaterial)
+                        .clipShape(Circle())
                 }
                 .accessibilityLabel("Sort order")
 
-                // Grid size controls
-                HStack(spacing: 0) {
+                // Grid size group
+                HStack(spacing: 6) {
                     Button {
-                        withAnimation(.snappy) { columnCount = min(columnRange.upperBound, columnCount + 1) }
+                        let current = resolvedColumnCount(width: availableWidth)
+                        withAnimation(.snappy) { columnCount = min(columnRange.upperBound, current + 1) }
                     } label: {
                         Image(systemName: "minus")
-                            .font(.system(size: 14, weight: .medium))
-                            .foregroundStyle(columnCount >= columnRange.upperBound ? Brand.disabled : Brand.warmGray)
-                            .frame(minWidth: 44, minHeight: 44)
-                            .contentShape(Rectangle())
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundStyle(resolvedColumnCount(width: availableWidth) >= columnRange.upperBound ? Brand.disabled.opacity(0.4) : .secondary)
+                            .frame(width: 36, height: 36)
+                            .background(.ultraThinMaterial)
+                            .clipShape(Circle())
                     }
                     .buttonStyle(.plain)
-                    .disabled(columnCount >= columnRange.upperBound)
+                    .disabled(resolvedColumnCount(width: availableWidth) >= columnRange.upperBound)
                     .accessibilityLabel("Smaller thumbnails")
 
-                    Image(systemName: "square.grid.3x3")
-                        .font(.system(size: 14))
-                        .foregroundStyle(Brand.warmGray)
-
                     Button {
-                        withAnimation(.snappy) { columnCount = max(columnRange.lowerBound, columnCount - 1) }
+                        let current = resolvedColumnCount(width: availableWidth)
+                        withAnimation(.snappy) { columnCount = max(columnRange.lowerBound, current - 1) }
                     } label: {
                         Image(systemName: "plus")
-                            .font(.system(size: 14, weight: .medium))
-                            .foregroundStyle(columnCount <= columnRange.lowerBound ? Brand.disabled : Brand.warmGray)
-                            .frame(minWidth: 44, minHeight: 44)
-                            .contentShape(Rectangle())
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundStyle(resolvedColumnCount(width: availableWidth) <= columnRange.lowerBound ? Brand.disabled.opacity(0.4) : .secondary)
+                            .frame(width: 36, height: 36)
+                            .background(.ultraThinMaterial)
+                            .clipShape(Circle())
                     }
                     .buttonStyle(.plain)
-                    .disabled(columnCount <= columnRange.lowerBound)
+                    .disabled(resolvedColumnCount(width: availableWidth) <= columnRange.lowerBound)
                     .accessibilityLabel("Larger thumbnails")
                 }
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 4)
-            .background(
-                Capsule()
-                    .fill(Brand.surface)
-                    .shadow(color: Brand.charcoal.opacity(0.06), radius: 8, y: 2)
-            )
-            .padding(.horizontal, Brand.screenPadding)
+            .padding(.horizontal, adaptivePadding)
             .padding(.vertical, 8)
 
             if displayedArtworks.isEmpty && showFavoritesOnly {
@@ -192,7 +205,7 @@ struct ArtworkGalleryView: View {
                                 .fill(Brand.primary)
                                 .frame(width: 32, height: 3)
                         }
-                        .padding(.horizontal, Brand.screenPadding)
+                        .padding(.horizontal, adaptivePadding)
                         .padding(.top, 8)
 
                         ForEach(yearGroup.monthGroups) { monthGroup in
@@ -205,7 +218,7 @@ struct ArtworkGalleryView: View {
                                     .font(Brand.headlineFont)
                                     .foregroundStyle(Brand.warmGray)
                             }
-                            .padding(.horizontal, Brand.screenPadding)
+                            .padding(.horizontal, adaptivePadding)
 
                             ForEach(monthGroup.dayGroups) { dayGroup in
                                 VStack(alignment: .leading, spacing: spacing) {
@@ -213,16 +226,33 @@ struct ArtworkGalleryView: View {
                                     Text(dayGroup.displayName(month: monthGroup.month, year: monthGroup.year))
                                         .font(Brand.captionFont)
                                         .foregroundStyle(Brand.warmGray.opacity(0.7))
-                                        .padding(.horizontal, Brand.screenPadding)
+                                        .padding(.horizontal, adaptivePadding)
 
-                                    LazyVGrid(columns: columns, spacing: spacing) {
+                                    LazyVGrid(columns: columns(for: availableWidth), spacing: spacing) {
                                         ForEach(dayGroup.artworks) { artwork in
-                                            NavigationLink {
-                                                ArtworkDetailView(artwork: artwork)
-                                            } label: {
-                                                GalleryTile(artwork: artwork)
+                                            Group {
+                                                if let onSelect {
+                                                    Button {
+                                                        onSelect(artwork)
+                                                    } label: {
+                                                        GalleryTile(artwork: artwork)
+                                                    }
+                                                    .buttonStyle(.plain)
+                                                } else {
+                                                    NavigationLink {
+                                                        ArtworkDetailView(artwork: artwork)
+                                                    } label: {
+                                                        GalleryTile(artwork: artwork)
+                                                    }
+                                                    .buttonStyle(.plain)
+                                                }
                                             }
-                                            .buttonStyle(.plain)
+                                            .overlay {
+                                                if artwork.persistentModelID == selectedArtworkID {
+                                                    RoundedRectangle(cornerRadius: 4)
+                                                        .strokeBorder(Brand.primary, lineWidth: 3)
+                                                }
+                                            }
                                             .contextMenu {
                                                 Button {
                                                     artwork.isFavorited.toggle()
@@ -232,7 +262,10 @@ struct ArtworkGalleryView: View {
                                                         systemImage: artwork.isFavorited ? "heart.slash" : "heart"
                                                     )
                                                 }
-                                                Button("Share", systemImage: "square.and.arrow.up") {}
+                                                ShareLink(
+                                                    item: artwork.title.isEmpty ? "Artwork" : artwork.title,
+                                                    preview: SharePreview(artwork.title.isEmpty ? "Artwork" : artwork.title)
+                                                )
                                             } preview: {
                                                 if let data = artwork.imageData, let uiImage = UIImage(data: data) {
                                                     Image(uiImage: uiImage)
@@ -251,14 +284,22 @@ struct ArtworkGalleryView: View {
                 .padding(.bottom, 80)
             }
         }
+        .background(
+            GeometryReader { geo in
+                Color.clear
+                    .onAppear { availableWidth = geo.size.width }
+                    .onChange(of: geo.size.width) { _, newWidth in availableWidth = newWidth }
+            }
+        )
         .gesture(
             MagnifyGesture()
                 .onEnded { value in
                     withAnimation(.snappy) {
+                        let current = resolvedColumnCount(width: availableWidth)
                         if value.magnification > 1.2 {
-                            columnCount = max(columnRange.lowerBound, columnCount - 1)
+                            columnCount = max(columnRange.lowerBound, current - 1)
                         } else if value.magnification < 0.8 {
-                            columnCount = min(columnRange.upperBound, columnCount + 1)
+                            columnCount = min(columnRange.upperBound, current + 1)
                         }
                     }
                 }

@@ -18,19 +18,60 @@ import SwiftData
 /// ``ContentView`` based on whether the user has completed onboarding.
 @main
 struct Little_ArtistApp: App {
+    @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
+
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
+    @AppStorage("iCloudSyncEnabled") private var iCloudSyncEnabled = false
+
+    /// Reference to StoreKit manager so transaction listener starts early.
+    private let storeKit = StoreKitManager.shared
 
     var sharedModelContainer: ModelContainer = {
-        let schema = Schema([
-            Child.self,
-            Artwork.self,
-        ])
-        let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
+        // Ensure the Application Support directory exists before SwiftData tries to write.
+        let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+        if !FileManager.default.fileExists(atPath: appSupport.path) {
+            try? FileManager.default.createDirectory(at: appSupport, withIntermediateDirectories: true)
+        }
+
+        let schema = Schema(versionedSchema: SchemaV4.self)
+        let isPremium = UserDefaults.standard.bool(forKey: "isPremium")
+        let iCloudEnabled = UserDefaults.standard.bool(forKey: "iCloudSyncEnabled")
+
+        // Use explicit store URL so Core Data's NSPersistentCloudKitContainer
+        // can point at the same SQLite file for CloudKit sharing.
+        let storeURL = appSupport.appendingPathComponent("default.store")
+        let modelConfiguration = ModelConfiguration(
+            schema: schema,
+            url: storeURL,
+            cloudKitDatabase: (isPremium && iCloudEnabled) ? .automatic : .none
+        )
 
         do {
-            return try ModelContainer(for: schema, configurations: [modelConfiguration])
+            let container = try ModelContainer(
+                for: schema,
+                migrationPlan: LittleArtistMigrationPlan.self,
+                configurations: [modelConfiguration]
+            )
+
+            // Initialise CloudKit sharing stack when premium + iCloud enabled
+            if isPremium && iCloudEnabled {
+                CloudKitSharingService.shared.setup()
+            }
+
+            return container
         } catch {
-            fatalError("Could not create ModelContainer: \(error)")
+            // If migration fails, delete the old store and create fresh.
+            try? FileManager.default.removeItem(at: storeURL)
+            let storeDir = storeURL.deletingLastPathComponent()
+            for suffix in ["-shm", "-wal"] {
+                let related = storeDir.appendingPathComponent(storeURL.lastPathComponent + suffix)
+                try? FileManager.default.removeItem(at: related)
+            }
+            do {
+                return try ModelContainer(for: schema, configurations: [modelConfiguration])
+            } catch {
+                fatalError("Could not create ModelContainer: \(error)")
+            }
         }
     }()
 

@@ -17,10 +17,10 @@ import SwiftData
 @Model
 final class Artwork {
     /// A short title for the artwork (may be empty).
-    var title: String
+    var title: String = ""
 
     /// An optional longer description or caption.
-    var caption: String
+    var caption: String = ""
 
     /// The artwork photograph stored externally for efficient storage.
     @Attribute(.externalStorage)
@@ -31,13 +31,16 @@ final class Artwork {
     var voiceNoteData: Data?
 
     /// Whether this artwork has been starred/favourited by the user.
-    var isFavorited: Bool
+    var isFavorited: Bool = false
 
     /// The date this artwork was captured.
-    var createdAt: Date
+    var createdAt: Date = Date.now
 
     /// The child who created this artwork.
     var child: Child?
+
+    /// Tags applied to this artwork for categorization.
+    var tags: [Tag]?
 
     init(
         title: String,
@@ -46,7 +49,8 @@ final class Artwork {
         voiceNoteData: Data? = nil,
         isFavorited: Bool = false,
         createdAt: Date = .now,
-        child: Child? = nil
+        child: Child? = nil,
+        tags: [Tag]? = nil
     ) {
         self.title = title
         self.caption = caption
@@ -55,5 +59,6 @@ final class Artwork {
         self.isFavorited = isFavorited
         self.createdAt = createdAt
         self.child = child
+        self.tags = tags
     }
 }

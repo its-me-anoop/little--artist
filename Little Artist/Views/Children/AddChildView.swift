@@ -52,6 +52,7 @@ struct AddChildView: View {
                     // Name field
                     TextField("Child's name", text: $name)
                         .font(Brand.title3Font)
+                        .foregroundStyle(.primary)
                         .multilineTextAlignment(.center)
                         .padding(.vertical, 14)
                         .padding(.horizontal, 24)

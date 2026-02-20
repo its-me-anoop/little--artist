@@ -10,42 +10,48 @@ import SwiftUI
 
 struct TimelineEntryCardView: View {
     let artwork: Artwork
+    var isSelected: Bool = false
+
+    @Environment(\.horizontalSizeClass) private var sizeClass
+
+    private var thumbSize: CGFloat { sizeClass == .regular ? 100 : 64 }
+    private var thumbRadius: CGFloat { sizeClass == .regular ? 12 : 8 }
 
     var body: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: sizeClass == .regular ? 16 : 12) {
             // Thumbnail
             if let data = artwork.imageData, let uiImage = UIImage(data: data) {
                 Image(uiImage: uiImage)
                     .resizable()
                     .scaledToFill()
-                    .frame(width: 64, height: 64)
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                    .frame(width: thumbSize, height: thumbSize)
+                    .clipShape(RoundedRectangle(cornerRadius: thumbRadius))
             } else {
-                RoundedRectangle(cornerRadius: 8)
+                RoundedRectangle(cornerRadius: thumbRadius)
                     .fill(Color(.tertiarySystemBackground))
-                    .frame(width: 64, height: 64)
+                    .frame(width: thumbSize, height: thumbSize)
                     .overlay {
                         Image(systemName: "paintpalette")
-                            .font(.system(size: 20))
+                            .font(.system(size: sizeClass == .regular ? 28 : 20))
                             .foregroundStyle(Brand.primary.opacity(0.3))
                     }
             }
 
             // Text stack
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: sizeClass == .regular ? 6 : 4) {
                 Text(artwork.title.isEmpty ? "Untitled" : artwork.title)
-                    .font(Brand.subheadlineFont.weight(.semibold))
+                    .font(sizeClass == .regular ? Brand.headlineFont : Brand.subheadlineFont.weight(.semibold))
                     .foregroundStyle(artwork.title.isEmpty ? .secondary : .primary)
                     .lineLimit(1)
 
                 if let child = artwork.child {
                     Text("by \(child.name)")
-                        .font(Brand.caption2Font)
+                        .font(sizeClass == .regular ? Brand.captionFont : Brand.caption2Font)
                         .foregroundStyle(.secondary)
                 }
 
                 Text(artwork.createdAt, format: .dateTime.month(.abbreviated).day())
-                    .font(Brand.caption2Font)
+                    .font(sizeClass == .regular ? Brand.captionFont : Brand.caption2Font)
                     .foregroundStyle(.tertiary)
             }
 
@@ -57,9 +63,15 @@ struct TimelineEntryCardView: View {
                     .foregroundStyle(Brand.dustyRose)
             }
         }
-        .padding(12)
+        .padding(sizeClass == .regular ? 16 : 12)
         .background(Color(.secondarySystemGroupedBackground))
         .clipShape(RoundedRectangle(cornerRadius: Brand.radiusImage))
+        .overlay {
+            if isSelected {
+                RoundedRectangle(cornerRadius: Brand.radiusImage)
+                    .strokeBorder(Brand.primary, lineWidth: 2.5)
+            }
+        }
         .brandCardShadow()
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(artwork.title.isEmpty ? "Untitled" : artwork.title) by \(artwork.child?.name ?? "unknown"), \(artwork.createdAt.formatted(.dateTime.month(.wide).day().year()))")

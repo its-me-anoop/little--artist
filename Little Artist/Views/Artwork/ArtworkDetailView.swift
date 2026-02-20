@@ -15,14 +15,19 @@ import SwiftData
 struct ArtworkDetailView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.horizontalSizeClass) private var sizeClass
 
     let artwork: Artwork
+    /// When set, called after deletion instead of dismissing (for master-detail pane).
+    var onDelete: (() -> Void)? = nil
     @State private var showEditSheet = false
     @State private var showDeleteConfirmation = false
     @State private var sharePayload: SharePayload?
     @State private var editTitle = ""
     @State private var editCaption = ""
     @State private var editVoiceNoteData: Data?
+    @State private var editTags: [Tag] = []
+    @State private var editDate = Date.now
     @State private var isGeneratingSuggestions = false
     @State private var suggestionErrorMessage: String?
     @State private var imageScale: CGFloat = 1.0
@@ -37,157 +42,187 @@ struct ArtworkDetailView: View {
         return trimmed.isEmpty ? nil : trimmed
     }
 
+    // MARK: - Image Section
+
+    private var imageSection: some View {
+        ZStack(alignment: .topTrailing) {
+            if let imageData = artwork.imageData, let uiImage = UIImage(data: imageData) {
+                Image(uiImage: uiImage)
+                    .resizable()
+                    .scaledToFit()
+                    .scaleEffect(imageScale)
+                    .frame(maxWidth: .infinity)
+                    .clipShape(RoundedRectangle(cornerRadius: 20))
+                    .gesture(
+                        MagnifyGesture()
+                            .onChanged { value in
+                                imageScale = min(max(value.magnification, 1.0), 5.0)
+                            }
+                            .onEnded { _ in
+                                withAnimation(.spring(duration: 0.3)) {
+                                    if imageScale < 1.2 {
+                                        imageScale = 1.0
+                                    }
+                                }
+                            }
+                    )
+                    .onTapGesture(count: 2) {
+                        withAnimation(.spring(duration: 0.3)) {
+                            imageScale = imageScale > 1.5 ? 1.0 : 2.0
+                        }
+                    }
+            } else {
+                RoundedRectangle(cornerRadius: 20)
+                    .fill(Color(.tertiarySystemBackground))
+                    .frame(maxWidth: .infinity, minHeight: 320)
+                    .overlay {
+                        Image(systemName: "paintpalette")
+                            .font(.system(size: 52, design: .rounded))
+                            .foregroundStyle(Brand.primary.opacity(0.35))
+                    }
+            }
+
+            // Favorite toggle
+            Button {
+                HapticService.light()
+                artwork.isFavorited.toggle()
+            } label: {
+                Image(systemName: artwork.isFavorited ? "heart.fill" : "heart")
+                    .font(.title3)
+                    .foregroundStyle(artwork.isFavorited ? Brand.dustyRose : .white)
+                    .padding(10)
+                    .background(.ultraThinMaterial)
+                    .clipShape(Circle())
+            }
+            .padding(12)
+        }
+    }
+
+    // MARK: - Metadata Section
+
+    private var metadataSection: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            // Title
+            Text(displayTitle)
+                .font(Brand.title2Font)
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+            // Attribution line
+            if let child = artwork.child {
+                HStack(spacing: 8) {
+                    ZStack {
+                        if let imageData = child.avatarImageData, let uiImage = UIImage(data: imageData) {
+                            Image(uiImage: uiImage)
+                                .resizable()
+                                .scaledToFill()
+                                .frame(width: 24, height: 24)
+                                .clipShape(Circle())
+                        } else {
+                            Circle()
+                                .fill(Color(hex: child.avatarColor))
+                                .frame(width: 24, height: 24)
+                                .overlay {
+                                    Text(String(child.name.prefix(1)).uppercased())
+                                        .font(.system(size: 12, weight: .bold, design: .rounded))
+                                        .foregroundStyle(.white)
+                                }
+                        }
+                    }
+
+                    Text(child.name)
+                        .font(Brand.captionFont)
+                        .foregroundStyle(.primary)
+                    Text("·")
+                        .font(Brand.captionFont)
+                        .foregroundStyle(.secondary)
+                    Text(artwork.createdAt, format: .dateTime.month(.abbreviated).day().year())
+                        .font(Brand.captionFont)
+                        .foregroundStyle(.secondary)
+                }
+            }
+
+            // Caption
+            if let displayCaption {
+                Text(displayCaption)
+                    .font(Brand.bodyFont)
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+
+            // Tags
+            if let tags = artwork.tags, !tags.isEmpty {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 6) {
+                        ForEach(tags) { tag in
+                            Text(tag.name)
+                                .font(Brand.caption2Font)
+                                .foregroundStyle(Brand.primary)
+                                .padding(.horizontal, 10)
+                                .padding(.vertical, 4)
+                                .background(
+                                    Capsule()
+                                        .fill(Brand.primaryTint)
+                                )
+                        }
+                    }
+                }
+            }
+
+            // Voice memo playback
+            if let voiceData = artwork.voiceNoteData {
+                VStack(alignment: .leading, spacing: 8) {
+                    Label("Voice Memo", systemImage: "mic.fill")
+                        .font(Brand.captionFont.weight(.medium))
+                        .foregroundStyle(Brand.warmGray)
+                    VoiceMemoPlayerView(audioData: voiceData)
+                }
+            }
+
+            Spacer().frame(height: 8)
+
+            // Action buttons row
+            HStack(spacing: 16) {
+                Button { prepareShareItems() } label: {
+                    Label("Share", systemImage: "square.and.arrow.up")
+                        .font(Brand.subheadlineFont)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 12)
+                        .background(Brand.primaryTint)
+                        .foregroundStyle(Brand.primary)
+                        .clipShape(RoundedRectangle(cornerRadius: Brand.radiusButton))
+                }
+
+                Button { startEditing() } label: {
+                    Label("Edit", systemImage: "pencil")
+                        .font(Brand.subheadlineFont)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 12)
+                        .background(Brand.primaryTint)
+                        .foregroundStyle(Brand.primary)
+                        .clipShape(RoundedRectangle(cornerRadius: Brand.radiusButton))
+                }
+
+                Button { showDeleteConfirmation = true } label: {
+                    Label("Delete", systemImage: "trash")
+                        .font(Brand.subheadlineFont)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 12)
+                        .background(Brand.dustyRose.opacity(0.12))
+                        .foregroundStyle(Brand.dustyRose)
+                        .clipShape(RoundedRectangle(cornerRadius: Brand.radiusButton))
+                }
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                // Hero image with pinch-to-zoom and favorite overlay
-                ZStack(alignment: .topTrailing) {
-                    if let imageData = artwork.imageData, let uiImage = UIImage(data: imageData) {
-                        Image(uiImage: uiImage)
-                            .resizable()
-                            .scaledToFit()
-                            .scaleEffect(imageScale)
-                            .frame(maxWidth: .infinity)
-                            .clipShape(RoundedRectangle(cornerRadius: 20))
-                            .gesture(
-                                MagnifyGesture()
-                                    .onChanged { value in
-                                        imageScale = min(max(value.magnification, 1.0), 5.0)
-                                    }
-                                    .onEnded { _ in
-                                        withAnimation(.spring(duration: 0.3)) {
-                                            if imageScale < 1.2 {
-                                                imageScale = 1.0
-                                            }
-                                        }
-                                    }
-                            )
-                            .onTapGesture(count: 2) {
-                                withAnimation(.spring(duration: 0.3)) {
-                                    imageScale = imageScale > 1.5 ? 1.0 : 2.0
-                                }
-                            }
-                    } else {
-                        RoundedRectangle(cornerRadius: 20)
-                            .fill(Color(.tertiarySystemBackground))
-                            .frame(maxWidth: .infinity, minHeight: 320)
-                            .overlay {
-                                Image(systemName: "paintpalette")
-                                    .font(.system(size: 52, design: .rounded))
-                                    .foregroundStyle(Brand.primary.opacity(0.35))
-                            }
-                    }
-
-                    // Favorite toggle
-                    Button {
-                        HapticService.light()
-                        artwork.isFavorited.toggle()
-                    } label: {
-                        Image(systemName: artwork.isFavorited ? "heart.fill" : "heart")
-                            .font(.title3)
-                            .foregroundStyle(artwork.isFavorited ? Brand.dustyRose : .white)
-                            .padding(10)
-                            .background(.ultraThinMaterial)
-                            .clipShape(Circle())
-                    }
-                    .padding(12)
-                }
-
-                // Title
-                Text(displayTitle)
-                    .font(Brand.title2Font)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-
-                // Attribution line
-                if let child = artwork.child {
-                    HStack(spacing: 8) {
-                        // Inline child avatar
-                        ZStack {
-                            if let imageData = child.avatarImageData, let uiImage = UIImage(data: imageData) {
-                                Image(uiImage: uiImage)
-                                    .resizable()
-                                    .scaledToFill()
-                                    .frame(width: 24, height: 24)
-                                    .clipShape(Circle())
-                            } else {
-                                Circle()
-                                    .fill(Color(hex: child.avatarColor))
-                                    .frame(width: 24, height: 24)
-                                    .overlay {
-                                        Text(String(child.name.prefix(1)).uppercased())
-                                            .font(.system(size: 12, weight: .bold, design: .rounded))
-                                            .foregroundStyle(.white)
-                                    }
-                            }
-                        }
-
-                        Text(child.name)
-                            .font(Brand.captionFont)
-                            .foregroundStyle(.primary)
-                        Text("·")
-                            .font(Brand.captionFont)
-                            .foregroundStyle(.secondary)
-                        Text(artwork.createdAt, format: .dateTime.month(.abbreviated).day().year())
-                            .font(Brand.captionFont)
-                            .foregroundStyle(.secondary)
-                    }
-                }
-
-                // Caption
-                if let displayCaption {
-                    Text(displayCaption)
-                        .font(Brand.bodyFont)
-                        .foregroundStyle(.secondary)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                }
-
-                // Voice memo playback
-                if let voiceData = artwork.voiceNoteData {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Label("Voice Memo", systemImage: "mic.fill")
-                            .font(Brand.captionFont.weight(.medium))
-                            .foregroundStyle(Brand.warmGray)
-                        VoiceMemoPlayerView(audioData: voiceData)
-                    }
-                }
-
-                Spacer().frame(height: 8)
-
-                // Action buttons row
-                HStack(spacing: 16) {
-                    Button { prepareShareItems() } label: {
-                        Label("Share", systemImage: "square.and.arrow.up")
-                            .font(Brand.subheadlineFont)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 12)
-                            .background(Brand.primaryTint)
-                            .foregroundStyle(Brand.primary)
-                            .clipShape(RoundedRectangle(cornerRadius: Brand.radiusButton))
-                    }
-
-                    Button { startEditing() } label: {
-                        Label("Edit", systemImage: "pencil")
-                            .font(Brand.subheadlineFont)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 12)
-                            .background(Brand.primaryTint)
-                            .foregroundStyle(Brand.primary)
-                            .clipShape(RoundedRectangle(cornerRadius: Brand.radiusButton))
-                    }
-
-                    Button { showDeleteConfirmation = true } label: {
-                        Label("Delete", systemImage: "trash")
-                            .font(Brand.subheadlineFont)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 12)
-                            .background(Brand.dustyRose.opacity(0.12))
-                            .foregroundStyle(Brand.dustyRose)
-                            .clipShape(RoundedRectangle(cornerRadius: Brand.radiusButton))
-                    }
-                }
-                .buttonStyle(.plain)
+                imageSection
+                metadataSection
             }
-            .padding(Brand.screenPadding)
+            .padding(Brand.Adaptive.screenPadding(for: sizeClass))
         }
         .navigationTitle("Artwork")
         .navigationBarTitleDisplayMode(.inline)
@@ -198,6 +233,13 @@ struct ArtworkDetailView: View {
                         TextField("Artwork title (optional)", text: $editTitle)
                         TextField("Caption (optional)", text: $editCaption, axis: .vertical)
                             .lineLimit(2...5)
+                        DatePicker(
+                            "Date Created",
+                            selection: $editDate,
+                            in: ...Date.now,
+                            displayedComponents: .date
+                        )
+                        .tint(Brand.primary)
                     }
 
                     Section("Voice Memo") {
@@ -205,28 +247,47 @@ struct ArtworkDetailView: View {
                             .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
                     }
 
-                    if aiSuggestionsEnabled {
-                        Section("AI") {
+                    Section("Tags") {
+                        TagPickerView(selectedTags: $editTags)
+                            .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
+                    }
+
+                    Section {
+                        AIShimmerView(isAnimating: isGeneratingSuggestions) {
                             Button {
                                 generateAISuggestionsForEdits()
                             } label: {
                                 HStack(spacing: 8) {
                                     if isGeneratingSuggestions {
-                                        ProgressView()
+                                        Image(systemName: "sparkles")
+                                            .symbolEffect(.variableColor.iterative, isActive: true)
                                     } else {
                                         Image(systemName: "sparkles")
                                     }
-                                    Text(isGeneratingSuggestions ? "Improving..." : "Improve with On-Device AI")
+                                    Text(isGeneratingSuggestions ? "Creating magic..." : "Improve with On-Device AI")
+                                        .font(Brand.subheadlineFont.weight(.semibold))
                                 }
+                                .foregroundStyle(aiSuggestionsEnabled ? Brand.primary : Brand.disabled)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 12)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 12)
+                                        .fill(aiSuggestionsEnabled ? Brand.primaryTint : Color(.tertiarySystemFill))
+                                )
                             }
-                            .disabled(isGeneratingSuggestions)
-
-                            if let suggestionErrorMessage {
-                                Text(suggestionErrorMessage)
-                                    .font(.footnote)
-                                    .foregroundStyle(.secondary)
-                            }
+                            .buttonStyle(.plain)
+                            .disabled(!aiSuggestionsEnabled || isGeneratingSuggestions)
                         }
+                        .listRowBackground(Color.clear)
+                        .listRowInsets(EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0))
+
+                        if let suggestionErrorMessage {
+                            Text(suggestionErrorMessage)
+                                .font(.footnote)
+                                .foregroundStyle(.secondary)
+                        }
+                    } header: {
+                        Label("AI", systemImage: "sparkles")
                     }
                 }
                 .navigationTitle("Edit Artwork")
@@ -244,7 +305,7 @@ struct ArtworkDetailView: View {
                     }
                 }
             }
-            .presentationDetents([.medium, .large])
+            .editSheetSizing(sizeClass: sizeClass)
         }
         .sheet(item: $sharePayload) { payload in
             ActivityView(activityItems: payload.items)
@@ -264,6 +325,8 @@ struct ArtworkDetailView: View {
         editTitle = artwork.title
         editCaption = artwork.caption
         editVoiceNoteData = artwork.voiceNoteData
+        editTags = artwork.tags ?? []
+        editDate = artwork.createdAt
         suggestionErrorMessage = nil
         showEditSheet = true
     }
@@ -272,6 +335,8 @@ struct ArtworkDetailView: View {
         artwork.title = editTitle.trimmingCharacters(in: .whitespacesAndNewlines)
         artwork.caption = editCaption.trimmingCharacters(in: .whitespacesAndNewlines)
         artwork.voiceNoteData = editVoiceNoteData
+        artwork.tags = editTags
+        artwork.createdAt = editDate
         HapticService.success()
         showEditSheet = false
     }
@@ -295,10 +360,14 @@ struct ArtworkDetailView: View {
     private func deleteArtwork() {
         HapticService.warning()
         modelContext.delete(artwork)
-        dismiss()
+        if let onDelete {
+            onDelete()
+        } else {
+            dismiss()
+        }
     }
 
-    /// Whether AI suggestions can be offered on this device.
+    /// Whether AI suggestions can be used (requires device support for FoundationModels).
     private var aiSuggestionsEnabled: Bool {
         AISuggestionService.isAvailable
     }

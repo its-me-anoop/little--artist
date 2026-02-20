@@ -3,12 +3,13 @@
 //  Little Artist
 //
 //  Provides on-device AI-powered title and caption suggestions for artwork
-//  using Apple's FoundationModels framework and Vision OCR.
+//  using Apple's FoundationModels framework, Vision classification, and OCR.
 //
 
 import Foundation
 import UIKit
 import Vision
+import CoreImage
 #if canImport(FoundationModels)
 import FoundationModels
 #endif
@@ -25,8 +26,8 @@ struct AISuggestion: Decodable {
 
 /// Centralised service for generating AI-powered artwork suggestions.
 ///
-/// Uses Vision OCR to extract text from artwork images, then feeds the
-/// extracted text into Apple's on-device `FoundationModels` framework
+/// Uses Vision classification and OCR to analyse artwork images, then feeds
+/// the analysis into Apple's on-device `FoundationModels` framework
 /// to produce short, child-friendly titles and captions.
 enum AISuggestionService {
 
@@ -40,12 +41,150 @@ enum AISuggestionService {
         return false
     }
 
-    // MARK: - OCR
+    // MARK: - Image Analysis
+
+    /// Analyses an artwork image using Vision classification and OCR.
+    ///
+    /// Returns a structured description including classification labels,
+    /// detected text, and dominant colours to give the language model
+    /// meaningful context about the artwork's visual content.
+    static func analyseImage(_ imageData: Data) -> String {
+        guard let image = UIImage(data: imageData), let cgImage = image.cgImage else {
+            return "Unable to process image"
+        }
+
+        var descriptions: [String] = []
+
+        // 1. Image classification — identifies objects, scenes, and themes
+        let classifyRequest = VNClassifyImageRequest()
+        let handler = VNImageRequestHandler(cgImage: cgImage)
+        do {
+            try handler.perform([classifyRequest])
+            let topLabels = (classifyRequest.results ?? [])
+                .filter { $0.confidence > 0.3 }
+                .sorted { $0.confidence > $1.confidence }
+                .prefix(10)
+                .map { "\($0.identifier) (\(Int($0.confidence * 100))%)" }
+            if !topLabels.isEmpty {
+                descriptions.append("Visual content: \(topLabels.joined(separator: ", "))")
+            }
+        } catch {
+            // Classification failed, continue with other analysis
+        }
+
+        // 2. OCR — extract any text written in the artwork
+        let textRequest = VNRecognizeTextRequest()
+        textRequest.recognitionLevel = .accurate
+        textRequest.usesLanguageCorrection = true
+        let textHandler = VNImageRequestHandler(cgImage: cgImage)
+        do {
+            try textHandler.perform([textRequest])
+            let lines = (textRequest.results ?? [])
+                .compactMap { $0.topCandidates(1).first?.string }
+                .prefix(6)
+            if !lines.isEmpty {
+                descriptions.append("Text in image: \(lines.joined(separator: ", "))")
+            }
+        } catch {
+            // OCR failed, continue
+        }
+
+        // 3. Dominant colours — describe the colour palette
+        let colours = extractDominantColours(from: cgImage)
+        if !colours.isEmpty {
+            descriptions.append("Dominant colours: \(colours.joined(separator: ", "))")
+        }
+
+        // 4. Basic image properties
+        let width = cgImage.width
+        let height = cgImage.height
+        let orientation = width > height ? "landscape" : (height > width ? "portrait" : "square")
+        descriptions.append("Format: \(orientation)")
+
+        return descriptions.isEmpty ? "No visual details detected" : descriptions.joined(separator: ". ")
+    }
+
+    /// Extracts dominant colour names from an image using CIAreaHistogram.
+    private static func extractDominantColours(from cgImage: CGImage) -> [String] {
+        let ciImage = CIImage(cgImage: cgImage)
+        let context = CIContext()
+
+        // Sample colours from a grid of points across the image
+        let width = CGFloat(cgImage.width)
+        let height = CGFloat(cgImage.height)
+        var colourCounts: [String: Int] = [:]
+
+        let samplePoints = 5
+        for row in 0..<samplePoints {
+            for col in 0..<samplePoints {
+                let x = width * CGFloat(col) / CGFloat(samplePoints) + width / CGFloat(samplePoints * 2)
+                let y = height * CGFloat(row) / CGFloat(samplePoints) + height / CGFloat(samplePoints * 2)
+                let rect = CGRect(x: x, y: y, width: 1, height: 1)
+
+                guard let filter = CIFilter(name: "CIAreaAverage", parameters: [
+                    kCIInputImageKey: ciImage,
+                    kCIInputExtentKey: CIVector(cgRect: rect)
+                ]),
+                let outputImage = filter.outputImage else { continue }
+
+                var pixel = [UInt8](repeating: 0, count: 4)
+                context.render(outputImage, toBitmap: &pixel, rowBytes: 4,
+                              bounds: CGRect(x: 0, y: 0, width: 1, height: 1),
+                              format: .RGBA8, colorSpace: CGColorSpaceCreateDeviceRGB())
+
+                let name = colourName(r: pixel[0], g: pixel[1], b: pixel[2])
+                colourCounts[name, default: 0] += 1
+            }
+        }
+
+        return colourCounts
+            .sorted { $0.value > $1.value }
+            .prefix(4)
+            .map { $0.key }
+    }
+
+    /// Maps RGB values to a human-readable colour name.
+    private static func colourName(r: UInt8, g: UInt8, b: UInt8) -> String {
+        let rf = Double(r) / 255.0
+        let gf = Double(g) / 255.0
+        let bf = Double(b) / 255.0
+
+        let maxC = max(rf, gf, bf)
+        let minC = min(rf, gf, bf)
+        let brightness = (maxC + minC) / 2.0
+        let saturation = maxC == minC ? 0 : (maxC - minC) / (1.0 - abs(2 * brightness - 1))
+
+        if brightness < 0.15 { return "black" }
+        if brightness > 0.9 && saturation < 0.1 { return "white" }
+        if saturation < 0.12 { return brightness > 0.5 ? "light gray" : "dark gray" }
+
+        // Calculate hue
+        var hue: Double = 0
+        if maxC == rf {
+            hue = 60.0 * (((gf - bf) / (maxC - minC)).truncatingRemainder(dividingBy: 6))
+        } else if maxC == gf {
+            hue = 60.0 * (((bf - rf) / (maxC - minC)) + 2)
+        } else {
+            hue = 60.0 * (((rf - gf) / (maxC - minC)) + 4)
+        }
+        if hue < 0 { hue += 360 }
+
+        switch hue {
+        case 0..<15: return "red"
+        case 15..<40: return "orange"
+        case 40..<70: return "yellow"
+        case 70..<160: return "green"
+        case 160..<200: return "teal"
+        case 200..<250: return "blue"
+        case 250..<290: return "purple"
+        case 290..<330: return "pink"
+        default: return "red"
+        }
+    }
+
+    // MARK: - OCR (legacy helper)
 
     /// Extracts readable text from artwork image data using Vision OCR.
-    ///
-    /// - Parameter imageData: The raw image bytes to analyse.
-    /// - Returns: A comma-separated string of recognised text lines (up to 6).
     static func extractText(from imageData: Data) -> String {
         guard let image = UIImage(data: imageData), let cgImage = image.cgImage else {
             return ""
@@ -72,38 +211,33 @@ enum AISuggestionService {
     // MARK: - Suggestion Generation
 
     /// Generates a new title and caption for a child's artwork.
-    ///
-    /// - Parameters:
-    ///   - imageData: The artwork image data for OCR analysis.
-    ///   - childName: The name of the child artist.
-    /// - Returns: An `AISuggestion` containing a title and caption.
-    /// - Throws: If the language model session fails after retry.
     @available(iOS 26.0, *)
     static func generateSuggestions(imageData: Data, childName: String) async throws -> AISuggestion {
         #if canImport(FoundationModels)
-        let extractedText = extractText(from: imageData)
+        let imageAnalysis = analyseImage(imageData)
 
         let session = LanguageModelSession(
             instructions: """
-            You create short, joyful title and caption suggestions for a child's artwork.
-            Keep language family-friendly and specific.
-            Return ONLY valid JSON in this exact shape:
-            {"title":"...","caption":"..."}
-            Do not return markdown or extra keys.
+            You name children's artwork with creative, fun, short titles.
+            You are given a visual analysis of the artwork. Focus on the SUBJECTS and SCENES
+            depicted (animals, people, flowers, houses, landscapes, etc.), not the colours or medium.
+            Rules:
+            - Title: 2-4 words, creative and playful, like a storybook name. Never include the child's name. Never list colours. Never say "drawing" or "painting".
+            - Caption: One warm sentence (max 15 words) celebrating what the child created. Be specific about subjects.
+            Return ONLY valid JSON: {"title":"...","caption":"..."}
             """
         )
 
         let prompt = """
-        Child name: \(childName)
-        OCR text found in image: \(extractedText.isEmpty ? "None" : extractedText)
-        Generate one unique title (max 5 words) and one unique caption (1 sentence, max 18 words).
+        Child: \(childName)
+        What the artwork shows: \(imageAnalysis)
+        Name this artwork with a fun, imaginative title and a warm caption about what \(childName) drew.
         """
 
         do {
             let response = try await session.respond(to: prompt)
             return parseSuggestions(from: response.content)
         } catch {
-            // Retry once — the first call can fail while the model warms up.
             try await Task.sleep(for: .milliseconds(350))
             let retryResponse = try await session.respond(to: prompt)
             return parseSuggestions(from: retryResponse.content)
@@ -114,14 +248,6 @@ enum AISuggestionService {
     }
 
     /// Improves an existing title and caption for a child's artwork.
-    ///
-    /// - Parameters:
-    ///   - imageData: The artwork image data for OCR analysis.
-    ///   - existingTitle: The current title to improve.
-    ///   - existingCaption: The current caption to improve.
-    ///   - childName: The name of the child artist.
-    /// - Returns: An `AISuggestion` with the improved title and caption.
-    /// - Throws: If the language model session fails after retry.
     @available(iOS 26.0, *)
     static func improveSuggestions(
         imageData: Data?,
@@ -130,24 +256,25 @@ enum AISuggestionService {
         childName: String
     ) async throws -> AISuggestion {
         #if canImport(FoundationModels)
-        let extractedText = imageData.map { extractText(from: $0) } ?? ""
+        let imageAnalysis = imageData.map { analyseImage($0) } ?? "No image available"
 
         let session = LanguageModelSession(
             instructions: """
-            You improve title and caption text for a child's artwork.
-            Keep language warm, family-friendly, and concise.
-            Return ONLY valid JSON in this exact shape:
-            {"title":"...","caption":"..."}
-            Do not return markdown or extra keys.
+            You improve titles and captions for children's artwork.
+            Focus on the SUBJECTS and SCENES depicted, not colours or medium.
+            Rules:
+            - Title: 2-4 words, creative and playful. Never include the child's name. Never list colours. Never say "drawing" or "painting".
+            - Caption: One warm sentence (max 15 words) celebrating what the child created.
+            Return ONLY valid JSON: {"title":"...","caption":"..."}
             """
         )
 
         let prompt = """
-        Child name: \(childName)
-        Existing title: \(existingTitle.isEmpty ? "None" : existingTitle)
-        Existing caption: \(existingCaption.isEmpty ? "None" : existingCaption)
-        OCR text found in image: \(extractedText.isEmpty ? "None" : extractedText)
-        Provide one improved title (max 5 words) and one improved caption (1 sentence, max 18 words).
+        Child: \(childName)
+        Current title: \(existingTitle.isEmpty ? "None" : existingTitle)
+        Current caption: \(existingCaption.isEmpty ? "None" : existingCaption)
+        What the artwork shows: \(imageAnalysis)
+        Improve the title and caption to be more creative and specific to the artwork.
         """
 
         do {
@@ -166,9 +293,6 @@ enum AISuggestionService {
     // MARK: - Parsing
 
     /// Parses an `AISuggestion` from raw language model output.
-    ///
-    /// Attempts JSON decoding first, then falls back to line-by-line
-    /// `Title:` / `Caption:` parsing if JSON extraction fails.
     static func parseSuggestions(from content: String) -> AISuggestion {
         // Try JSON extraction first
         if let jsonRange = content.range(of: #"\{[\s\S]*\}"#, options: .regularExpression) {

@@ -12,7 +12,10 @@ import SwiftData
 struct TimelineView: View {
     @Query(sort: \Artwork.createdAt, order: .reverse) private var allArtworks: [Artwork]
 
+    @Environment(\.horizontalSizeClass) private var sizeClass
+
     @State private var selectedYear: Int? = nil
+    @State private var selectedArtwork: Artwork?
     @State private var expandedMonths: Set<String> = []
     @State private var appearedArtworkIDs: Set<PersistentIdentifier> = []
 
@@ -75,6 +78,38 @@ struct TimelineView: View {
             Group {
                 if allArtworks.isEmpty {
                     emptyState
+                } else if sizeClass == .regular {
+                    // iPad: master-detail split
+                    HStack(spacing: 0) {
+                        timelineContent
+                            .frame(maxWidth: .infinity)
+
+                        Divider()
+
+                        Group {
+                            if let selectedArtwork {
+                                ArtworkDetailView(
+                                    artwork: selectedArtwork,
+                                    onDelete: {
+                                        self.selectedArtwork = nil
+                                    }
+                                )
+                                .id(selectedArtwork.persistentModelID)
+                            } else {
+                                VStack(spacing: 16) {
+                                    Image(systemName: "hand.tap")
+                                        .font(.system(size: 48, design: .rounded))
+                                        .foregroundStyle(Brand.primary.opacity(0.3))
+                                    Text("Select an artwork")
+                                        .font(Brand.title3Font)
+                                        .foregroundStyle(Brand.warmGray)
+                                }
+                                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                                .background(Color(.systemGroupedBackground))
+                            }
+                        }
+                        .frame(maxWidth: .infinity)
+                    }
                 } else {
                     timelineContent
                 }
@@ -101,6 +136,10 @@ struct TimelineView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
+    private var adaptivePadding: CGFloat {
+        Brand.Adaptive.screenPadding(for: sizeClass)
+    }
+
     private var timelineContent: some View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: 0, pinnedViews: [.sectionHeaders]) {
@@ -119,7 +158,7 @@ struct TimelineView: View {
                                 }
                             }
                         }
-                        .padding(.horizontal, Brand.screenPadding)
+                        .padding(.horizontal, adaptivePadding)
                         .padding(.vertical, 12)
                     }
                 }
@@ -148,14 +187,30 @@ struct TimelineView: View {
                                 }
                                 .frame(width: 30)
 
-                                // Entry card
-                                NavigationLink {
-                                    ArtworkDetailView(artwork: artwork)
-                                } label: {
-                                    TimelineEntryCardView(artwork: artwork)
+                                // Entry card — Button on iPad, NavigationLink on iPhone
+                                Group {
+                                    if sizeClass == .regular {
+                                        Button {
+                                            withAnimation(.snappy) {
+                                                selectedArtwork = artwork
+                                            }
+                                        } label: {
+                                            TimelineEntryCardView(
+                                                artwork: artwork,
+                                                isSelected: selectedArtwork?.persistentModelID == artwork.persistentModelID
+                                            )
+                                        }
+                                        .buttonStyle(.plain)
+                                    } else {
+                                        NavigationLink {
+                                            ArtworkDetailView(artwork: artwork)
+                                        } label: {
+                                            TimelineEntryCardView(artwork: artwork)
+                                        }
+                                        .buttonStyle(.plain)
+                                    }
                                 }
-                                .buttonStyle(.plain)
-                                .padding(.trailing, Brand.screenPadding)
+                                .padding(.trailing, adaptivePadding)
                                 .padding(.vertical, 6)
                                 .opacity(hasAppeared ? 1 : 0)
                                 .offset(x: hasAppeared ? 0 : 40)
@@ -202,13 +257,13 @@ struct TimelineView: View {
                                     .padding(.vertical, 10)
                                 }
                                 .buttonStyle(.plain)
-                                .padding(.trailing, Brand.screenPadding)
+                                .padding(.trailing, adaptivePadding)
                             }
                         }
                     } header: {
                         Text(group.key)
                             .font(Brand.title3Font)
-                            .padding(.horizontal, Brand.screenPadding)
+                            .padding(.horizontal, adaptivePadding)
                             .padding(.vertical, 8)
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .background(.ultraThinMaterial)

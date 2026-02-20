@@ -12,18 +12,18 @@ import SwiftData
 struct SearchView: View {
     @Query(sort: \Artwork.createdAt, order: .reverse) private var allArtworks: [Artwork]
     @Query(sort: \Child.createdAt) private var children: [Child]
+    @Query(sort: \Tag.name) private var allTags: [Tag]
 
     @State private var searchText = ""
     @State private var selectedChildIDs: Set<PersistentIdentifier> = []
+    @State private var selectedTagIDs: Set<PersistentIdentifier> = []
     @State private var showFavoritesOnly = false
     @AppStorage("recentSearches") private var recentSearchesData: Data = Data()
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.horizontalSizeClass) private var sizeClass
 
-    private let columns = [
-        GridItem(.flexible(), spacing: 12),
-        GridItem(.flexible(), spacing: 12)
-    ]
+    @State private var availableWidth: CGFloat = 390
 
     private var recentSearches: [String] {
         (try? JSONDecoder().decode([String].self, from: recentSearchesData)) ?? []
@@ -54,12 +54,21 @@ struct SearchView: View {
             results = results.filter(\.isFavorited)
         }
 
+        // Tag filter
+        if !selectedTagIDs.isEmpty {
+            results = results.filter { artwork in
+                guard let tags = artwork.tags else { return false }
+                return tags.contains { selectedTagIDs.contains($0.persistentModelID) }
+            }
+        }
+
         // Text search
         let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
         if !query.isEmpty {
             results = results.filter { artwork in
                 artwork.title.lowercased().contains(query) ||
-                artwork.caption.lowercased().contains(query)
+                artwork.caption.lowercased().contains(query) ||
+                artwork.tags?.contains { $0.name.lowercased().contains(query) } == true
             }
         }
 
@@ -145,8 +154,31 @@ struct SearchView: View {
                     }
                 }
 
+                // Tag filter chips
+                if !allTags.isEmpty {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 8) {
+                            ForEach(allTags) { tag in
+                                TagChipView(
+                                    name: tag.name,
+                                    isSelected: selectedTagIDs.contains(tag.persistentModelID)
+                                ) {
+                                    withAnimation(.snappy) {
+                                        if selectedTagIDs.contains(tag.persistentModelID) {
+                                            selectedTagIDs.remove(tag.persistentModelID)
+                                        } else {
+                                            selectedTagIDs.insert(tag.persistentModelID)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        .padding(.horizontal, Brand.screenPadding)
+                    }
+                }
+
                 // Results
-                if !searchText.isEmpty || !selectedChildIDs.isEmpty || showFavoritesOnly {
+                if !searchText.isEmpty || !selectedChildIDs.isEmpty || showFavoritesOnly || !selectedTagIDs.isEmpty {
                     Text("Results (\(filteredArtworks.count))")
                         .font(Brand.caption2Font.weight(.medium))
                         .foregroundStyle(.secondary)
@@ -166,7 +198,13 @@ struct SearchView: View {
                         .frame(maxWidth: .infinity)
                         .padding(.top, 60)
                     } else {
-                        LazyVGrid(columns: columns, spacing: 12) {
+                        LazyVGrid(
+                            columns: Array(
+                                repeating: GridItem(.flexible(), spacing: 12),
+                                count: Brand.Adaptive.searchColumns(for: availableWidth)
+                            ),
+                            spacing: 12
+                        ) {
                             ForEach(filteredArtworks) { artwork in
                                 NavigationLink {
                                     ArtworkDetailView(artwork: artwork)
@@ -176,7 +214,7 @@ struct SearchView: View {
                                 .buttonStyle(.plain)
                             }
                         }
-                        .padding(.horizontal, Brand.screenPadding)
+                        .padding(.horizontal, Brand.Adaptive.screenPadding(for: sizeClass))
                     }
                 }
             }
@@ -190,7 +228,13 @@ struct SearchView: View {
             saveSearch(searchText)
         }
         .scrollDismissesKeyboard(.interactively)
-        .background(Color(.systemGroupedBackground))
+        .background(
+            GeometryReader { geo in
+                Color(.systemGroupedBackground)
+                    .onAppear { availableWidth = geo.size.width }
+                    .onChange(of: geo.size.width) { _, newWidth in availableWidth = newWidth }
+            }
+        )
     }
 }
 

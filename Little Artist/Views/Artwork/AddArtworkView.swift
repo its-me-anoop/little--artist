@@ -17,6 +17,7 @@ import VisionKit
 struct AddArtworkView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.horizontalSizeClass) private var sizeClass
 
     let child: Child
 
@@ -26,143 +27,208 @@ struct AddArtworkView: View {
     @State private var showCamera = false
     @State private var showDocumentScanner = false
     @State private var photoPickerItem: PhotosPickerItem?
+    @State private var batchPickerItems: [PhotosPickerItem] = []
+    @State private var isBatchImporting = false
     @State private var voiceNoteData: Data?
+    @State private var artworkDate = Date.now
     @State private var isGeneratingSuggestions = false
     @State private var suggestionErrorMessage: String?
+    @State private var selectedTags: [Tag] = []
+
+    // MARK: - Extracted Subviews
+
+    private var childIndicatorChip: some View {
+        HStack(spacing: 8) {
+            ZStack {
+                if let imageData = child.avatarImageData, let uiImage = UIImage(data: imageData) {
+                    Image(uiImage: uiImage)
+                        .resizable()
+                        .scaledToFill()
+                        .frame(width: 28, height: 28)
+                        .clipShape(Circle())
+                } else {
+                    Circle()
+                        .fill(Color(hex: child.avatarColor))
+                        .frame(width: 28, height: 28)
+                        .overlay {
+                            Text(String(child.name.prefix(1)).uppercased())
+                                .font(.system(size: 13, weight: .bold, design: .rounded))
+                                .foregroundStyle(.white)
+                        }
+                }
+            }
+
+            Text("Adding for \(child.name)")
+                .font(Brand.subheadlineFont)
+                .foregroundStyle(.primary)
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 8)
+        .background(
+            Capsule()
+                .fill(Brand.surface)
+                .overlay(
+                    Capsule()
+                        .strokeBorder(Brand.softTan, lineWidth: 1)
+                )
+        )
+    }
+
+    private var formFields: some View {
+        let isRegular = sizeClass == .regular
+        let fieldPadding: CGFloat = isRegular ? 0 : 32
+
+        return VStack(spacing: 24) {
+            // Title field
+            TextField("Artwork title (optional)", text: $title)
+                .font(Brand.title3Font)
+                .foregroundStyle(.primary)
+                .multilineTextAlignment(isRegular ? .leading : .center)
+                .padding(.vertical, 14)
+                .padding(.horizontal, 24)
+                .background(
+                    RoundedRectangle(cornerRadius: 14)
+                        .fill(Brand.surface)
+                )
+                .padding(.horizontal, fieldPadding)
+
+            // Caption field
+            TextField("Caption (optional)", text: $caption, axis: .vertical)
+                .lineLimit(2...4)
+                .font(Brand.bodyFont)
+                .foregroundStyle(.primary)
+                .padding(.vertical, 12)
+                .padding(.horizontal, 16)
+                .background(
+                    RoundedRectangle(cornerRadius: 14)
+                        .fill(Brand.surface)
+                )
+                .padding(.horizontal, fieldPadding)
+
+            // Date picker
+            DatePicker(
+                "Date Created",
+                selection: $artworkDate,
+                in: ...Date.now,
+                displayedComponents: .date
+            )
+            .font(Brand.bodyFont)
+            .foregroundStyle(.primary)
+            .tint(Brand.primary)
+            .padding(.vertical, 10)
+            .padding(.horizontal, 16)
+            .background(
+                RoundedRectangle(cornerRadius: 14)
+                    .fill(Brand.surface)
+            )
+            .padding(.horizontal, fieldPadding)
+
+            // Voice memo (optional)
+            VoiceMemoRecorderView(voiceNoteData: $voiceNoteData)
+                .padding(.horizontal, fieldPadding)
+
+            // Tag selection
+            TagPickerView(selectedTags: $selectedTags)
+                .padding(.horizontal, fieldPadding)
+
+            // AI suggestions
+            if capturedImageData != nil {
+                AIShimmerView(isAnimating: isGeneratingSuggestions) {
+                    Button {
+                        generateAISuggestions()
+                    } label: {
+                        HStack(spacing: 8) {
+                            if isGeneratingSuggestions {
+                                Image(systemName: "sparkles")
+                                    .symbolEffect(.variableColor.iterative, isActive: true)
+                            } else {
+                                Image(systemName: "sparkles")
+                            }
+                            Text(isGeneratingSuggestions ? "Creating magic..." : "Suggest Title & Caption")
+                                .font(Brand.subheadlineFont.weight(.semibold))
+                        }
+                        .foregroundStyle(aiSuggestionsEnabled ? Brand.primary : Brand.disabled)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 12)
+                        .background(
+                            RoundedRectangle(cornerRadius: 12)
+                                .fill(aiSuggestionsEnabled ? Brand.primaryTint : Color(.tertiarySystemFill))
+                        )
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(!aiSuggestionsEnabled || isGeneratingSuggestions)
+                }
+                .padding(.horizontal, fieldPadding)
+            }
+
+            if let suggestionErrorMessage {
+                Text(suggestionErrorMessage)
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, fieldPadding)
+            }
+        }
+    }
+
+    private var saveButton: some View {
+        Button {
+            saveArtwork()
+        } label: {
+            Text("Save Artwork")
+                .font(.headline)
+                .foregroundStyle(.white)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 18)
+                .background(capturedImageData == nil ? Brand.disabled : Brand.primary)
+                .clipShape(Capsule())
+        }
+        .disabled(capturedImageData == nil)
+        .padding(.horizontal, 32)
+        .padding(.top, 12)
+        .padding(.bottom, 16)
+        .background(Color(.systemBackground))
+    }
+
+    // MARK: - Body
 
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
                 ScrollView {
                     VStack(spacing: 24) {
-                        // Child indicator chip
-                        HStack(spacing: 8) {
-                            ZStack {
-                                if let imageData = child.avatarImageData, let uiImage = UIImage(data: imageData) {
-                                    Image(uiImage: uiImage)
-                                        .resizable()
-                                        .scaledToFill()
-                                        .frame(width: 28, height: 28)
-                                        .clipShape(Circle())
-                                } else {
-                                    Circle()
-                                        .fill(Color(hex: child.avatarColor))
-                                        .frame(width: 28, height: 28)
-                                        .overlay {
-                                            Text(String(child.name.prefix(1)).uppercased())
-                                                .font(.system(size: 13, weight: .bold, design: .rounded))
-                                                .foregroundStyle(.white)
-                                        }
+                        childIndicatorChip
+                            .padding(.top, 12)
+
+                        if sizeClass == .regular {
+                            // iPad: two-column layout
+                            HStack(alignment: .top, spacing: 32) {
+                                VStack(spacing: 24) {
+                                    imagePreview
+                                    captureSourceButtons
                                 }
+                                .frame(maxWidth: .infinity)
+
+                                formFields
+                                    .frame(maxWidth: .infinity)
                             }
+                            .padding(.horizontal, Brand.screenPadding)
+                        } else {
+                            // iPhone: single-column layout
+                            imagePreview
+                                .frame(maxWidth: .infinity, alignment: .center)
+                                .padding(.top, 4)
 
-                            Text("Adding for \(child.name)")
-                                .font(Brand.subheadlineFont)
-                                .foregroundStyle(Brand.charcoal)
+                            captureSourceButtons
+
+                            formFields
                         }
-                        .padding(.horizontal, 14)
-                        .padding(.vertical, 8)
-                        .background(
-                            Capsule()
-                                .fill(Brand.surface)
-                                .overlay(
-                                    Capsule()
-                                        .strokeBorder(Brand.softTan, lineWidth: 1)
-                                )
-                        )
-                        .padding(.top, 12)
-
-                        // Image preview or placeholder
-                        imagePreview
-                            .frame(maxWidth: .infinity, alignment: .center)
-                            .padding(.top, 4)
-
-                        // Capture source buttons
-                        captureSourceButtons
                     }
+                    .padding(.bottom, 24)
                 }
                 .scrollDismissesKeyboard(.interactively)
 
-                // Title field and save — pinned at the bottom
-                VStack(spacing: 16) {
-                    TextField("Artwork title (optional)", text: $title)
-                        .font(Brand.title3Font)
-                        .multilineTextAlignment(.center)
-                        .padding(.vertical, 14)
-                        .padding(.horizontal, 24)
-                        .background(
-                            RoundedRectangle(cornerRadius: 14)
-                                .fill(Brand.surface)
-                        )
-                        .padding(.horizontal, 32)
-
-                    TextField("Caption (optional)", text: $caption, axis: .vertical)
-                        .lineLimit(2...4)
-                        .font(Brand.bodyFont)
-                        .padding(.vertical, 12)
-                        .padding(.horizontal, 16)
-                        .background(
-                            RoundedRectangle(cornerRadius: 14)
-                                .fill(Brand.surface)
-                        )
-                        .padding(.horizontal, 32)
-
-                    // Voice memo (optional)
-                    VoiceMemoRecorderView(voiceNoteData: $voiceNoteData)
-                        .padding(.horizontal, 32)
-
-                    if aiSuggestionsEnabled {
-                        Button {
-                            generateAISuggestions()
-                        } label: {
-                            HStack(spacing: 8) {
-                                if isGeneratingSuggestions {
-                                    ProgressView()
-                                        .tint(Brand.primary)
-                                } else {
-                                    Image(systemName: "sparkles")
-                                }
-                                Text(isGeneratingSuggestions ? "Generating Suggestions..." : "Suggest Title & Caption")
-                                    .font(Brand.subheadlineFont.weight(.semibold))
-                            }
-                            .foregroundStyle(Brand.primary)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 12)
-                            .background(
-                                RoundedRectangle(cornerRadius: 12)
-                                    .fill(Brand.primaryTint)
-                            )
-                        }
-                        .buttonStyle(.plain)
-                        .padding(.horizontal, 32)
-                        .disabled(capturedImageData == nil || isGeneratingSuggestions)
-                    }
-
-                    if let suggestionErrorMessage {
-                        Text(suggestionErrorMessage)
-                            .font(.footnote)
-                            .foregroundStyle(.secondary)
-                            .multilineTextAlignment(.center)
-                            .padding(.horizontal, 32)
-                    }
-
-                    Button {
-                        saveArtwork()
-                    } label: {
-                        Text("Save Artwork")
-                            .font(.headline)
-                            .foregroundStyle(.white)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 18)
-                            .background(capturedImageData == nil ? Brand.disabled : Brand.primary)
-                            .clipShape(Capsule())
-                    }
-                    .disabled(capturedImageData == nil)
-                    .padding(.horizontal, 32)
-                }
-                .padding(.top, 16)
-                .padding(.bottom, 16)
-                .background(Color(.systemBackground))
+                saveButton
             }
             .navigationTitle("New Artwork")
             .navigationBarTitleDisplayMode(.inline)
@@ -200,6 +266,35 @@ struct AddArtworkView: View {
                     }
                 }
             }
+            .onChange(of: batchPickerItems) { _, items in
+                guard !items.isEmpty else { return }
+                isBatchImporting = true
+                Task {
+                    await batchImport(items: items)
+                    batchPickerItems = []
+                    isBatchImporting = false
+                    dismiss()
+                }
+            }
+            .overlay {
+                if isBatchImporting {
+                    ZStack {
+                        Color.black.opacity(0.3)
+                            .ignoresSafeArea()
+                        VStack(spacing: 14) {
+                            ProgressView()
+                                .controlSize(.large)
+                                .tint(Brand.primary)
+                            Text("Importing \(batchPickerItems.count) artworks...")
+                                .font(Brand.subheadlineFont)
+                                .foregroundStyle(Brand.charcoal)
+                        }
+                        .padding(28)
+                        .background(.regularMaterial)
+                        .clipShape(RoundedRectangle(cornerRadius: Brand.radiusCard))
+                    }
+                }
+            }
         }
     }
 
@@ -215,7 +310,7 @@ struct AddArtworkView: View {
                     Image(uiImage: uiImage)
                         .resizable()
                         .scaledToFit()
-                        .frame(maxHeight: 300)
+                        .frame(maxHeight: sizeClass == .regular ? 400 : 300)
                         .clipShape(RoundedRectangle(cornerRadius: 20))
                         .brandCardShadow()
 
@@ -231,11 +326,11 @@ struct AddArtworkView: View {
 
                 Spacer(minLength: 0)
             }
-            .padding(.horizontal, 32)
+            .padding(.horizontal, sizeClass == .regular ? 0 : 32)
         } else {
             RoundedRectangle(cornerRadius: 20)
                 .fill(Color(.tertiarySystemBackground))
-                .frame(height: 220)
+                .frame(height: sizeClass == .regular ? 300 : 220)
                 .overlay {
                     VStack(spacing: 12) {
                         Image(systemName: "paintpalette")
@@ -246,7 +341,7 @@ struct AddArtworkView: View {
                             .foregroundStyle(.secondary)
                     }
                 }
-                .padding(.horizontal, 32)
+                .padding(.horizontal, sizeClass == .regular ? 0 : 32)
         }
     }
 
@@ -262,9 +357,19 @@ struct AddArtworkView: View {
             }
             .buttonStyle(.plain)
 
-            // Gallery
+            // Gallery (single)
             PhotosPicker(selection: $photoPickerItem, matching: .images) {
                 captureSourceLabel(icon: "photo.on.rectangle.angled", title: "Gallery")
+            }
+            .buttonStyle(.plain)
+
+            // Batch import (multiple)
+            PhotosPicker(
+                selection: $batchPickerItems,
+                maxSelectionCount: 50,
+                matching: .images
+            ) {
+                captureSourceLabel(icon: "square.stack.3d.up.fill", title: "Batch")
             }
             .buttonStyle(.plain)
 
@@ -294,6 +399,22 @@ struct AddArtworkView: View {
         }
     }
 
+    // MARK: - Batch Import
+
+    private func batchImport(items: [PhotosPickerItem]) async {
+        for item in items {
+            guard let data = try? await item.loadTransferable(type: Data.self) else { continue }
+            let artwork = Artwork(
+                title: "",
+                imageData: data,
+                createdAt: artworkDate,
+                child: child
+            )
+            modelContext.insert(artwork)
+        }
+        HapticService.success()
+    }
+
     // MARK: - Save
 
     private func saveArtwork() {
@@ -303,16 +424,17 @@ struct AddArtworkView: View {
             caption: caption.trimmingCharacters(in: .whitespacesAndNewlines),
             imageData: capturedImageData,
             voiceNoteData: voiceNoteData,
-            child: child
+            createdAt: artworkDate,
+            child: child,
+            tags: selectedTags
         )
         modelContext.insert(artwork)
         dismiss()
     }
 
-    /// Whether AI suggestions can be offered on this device.
+    /// Whether AI suggestions can be used (requires device support for FoundationModels).
     private var aiSuggestionsEnabled: Bool {
-        guard capturedImageData != nil else { return false }
-        return AISuggestionService.isAvailable
+        AISuggestionService.isAvailable
     }
 
     /// Generates AI-powered title and caption suggestions for the captured artwork.

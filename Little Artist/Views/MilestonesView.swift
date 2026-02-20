@@ -13,6 +13,20 @@ struct MilestonesView: View {
     @Query(sort: \Child.createdAt) private var children: [Child]
     @Query(sort: \Artwork.createdAt, order: .reverse) private var artworks: [Artwork]
 
+    @Environment(\.horizontalSizeClass) private var sizeClass
+
+    /// Tracks which achievements have already been celebrated (by name).
+    @AppStorage("celebratedAchievements") private var celebratedAchievementsData: Data = Data()
+    @State private var celebratingAchievement: Achievement?
+
+    private var celebratedNames: Set<String> {
+        (try? JSONDecoder().decode(Set<String>.self, from: celebratedAchievementsData)) ?? []
+    }
+
+    private func saveCelebrated(_ names: Set<String>) {
+        celebratedAchievementsData = (try? JSONEncoder().encode(names)) ?? Data()
+    }
+
     private var totalArtworks: Int { artworks.count }
     private var childCount: Int { children.count }
 
@@ -35,12 +49,12 @@ struct MilestonesView: View {
         let favoritedCount = artworks.filter(\.isFavorited).count
 
         return [
-            Achievement(name: "First Steps", icon: "star.fill", current: min(totalArtworks, 1), target: 1, description: "Save your first artwork"),
-            Achievement(name: "Prolific", icon: "paintbrush.fill", current: min(totalArtworks, 10), target: 10, description: "Save 10 artworks"),
-            Achievement(name: "Gallery", icon: "photo.stack.fill", current: min(totalArtworks, 25), target: 25, description: "Save 25 artworks"),
-            Achievement(name: "Rainbow", icon: "figure.child", current: min(childCount, 3), target: 3, description: "Artwork from 3 children"),
-            Achievement(name: "Collector", icon: "heart.fill", current: min(favoritedCount, 5), target: 5, description: "Favorite 5 artworks"),
-            Achievement(name: "Time Capsule", icon: "clock.fill", current: min(uniqueMonths, 12), target: 12, description: "Artwork spanning 12 months"),
+            Achievement(name: "First Steps", icon: "star.fill", current: min(totalArtworks, 1), target: 1, description: "Save your first artwork", accentColor: Brand.primary),
+            Achievement(name: "Prolific", icon: "paintbrush.fill", current: min(totalArtworks, 10), target: 10, description: "Save 10 artworks", accentColor: Brand.sage),
+            Achievement(name: "Gallery", icon: "photo.stack.fill", current: min(totalArtworks, 25), target: 25, description: "Collect 25 masterpieces", accentColor: Brand.sky),
+            Achievement(name: "Rainbow", icon: "figure.child", current: min(childCount, 3), target: 3, description: "3 little artists creating", accentColor: Brand.lavender),
+            Achievement(name: "Collector", icon: "heart.fill", current: min(favoritedCount, 5), target: 5, description: "Favorite 5 artworks", accentColor: Brand.dustyRose),
+            Achievement(name: "Time Capsule", icon: "clock.fill", current: min(uniqueMonths, 12), target: 12, description: "A year of creativity", accentColor: Color(hex: "E8C94A")),
         ]
     }
 
@@ -59,6 +73,32 @@ struct MilestonesView: View {
             }
             .navigationTitle("Milestones")
             .background(Color(.systemGroupedBackground))
+            .overlay {
+                if let achievement = celebratingAchievement {
+                    AchievementCelebrationView(achievement: achievement) {
+                        celebratingAchievement = nil
+                    }
+                }
+            }
+            .onAppear { checkForNewAchievements() }
+            .onChange(of: artworks.count) { _, _ in checkForNewAchievements() }
+            .onChange(of: children.count) { _, _ in checkForNewAchievements() }
+        }
+    }
+
+    /// Checks if any achievement was newly unlocked and shows celebration.
+    private func checkForNewAchievements() {
+        let known = celebratedNames
+        // Find the first unlocked achievement that hasn't been celebrated
+        if let newAchievement = achievements.first(where: { $0.isUnlocked && !known.contains($0.name) }) {
+            // Mark it celebrated immediately
+            var updated = known
+            updated.insert(newAchievement.name)
+            saveCelebrated(updated)
+            // Show celebration after a brief delay so the view is ready
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                celebratingAchievement = newAchievement
+            }
         }
     }
 
@@ -79,9 +119,13 @@ struct MilestonesView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
+    private var adaptivePadding: CGFloat {
+        Brand.Adaptive.screenPadding(for: sizeClass)
+    }
+
     private var content: some View {
         ScrollView {
-            VStack(spacing: Brand.gallerySpacing) {
+            VStack(spacing: Brand.Adaptive.gallerySpacing(for: sizeClass)) {
                 // Hero stat card
                 VStack(spacing: 12) {
                     Image(systemName: "paintpalette.fill")
@@ -117,34 +161,42 @@ struct MilestonesView: View {
                     .padding(.horizontal, 24)
                 }
                 .padding(.vertical, 24)
-                .frame(maxWidth: .infinity)
+                .frame(maxWidth: sizeClass == .regular ? Brand.Adaptive.maxContentWidth : .infinity)
                 .background(Color(.secondarySystemGroupedBackground))
                 .clipShape(RoundedRectangle(cornerRadius: Brand.radiusCard))
                 .brandCardShadow()
-                .padding(.horizontal, Brand.screenPadding)
+                .frame(maxWidth: .infinity)
+                .padding(.horizontal, adaptivePadding)
 
-                // 2x2 stat grid
-                LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 12) {
+                // Stat grid — 2 columns compact, 4 columns regular
+                LazyVGrid(
+                    columns: Array(
+                        repeating: GridItem(.flexible(), spacing: 12),
+                        count: Brand.Adaptive.statGridColumns(for: sizeClass)
+                    ),
+                    spacing: 12
+                ) {
                     StatCardView(icon: "figure.child", label: "Artists", value: "\(childCount)")
                     StatCardView(icon: "calendar", label: "This Month", value: "\(thisMonthCount)")
                     StatCardView(icon: "heart.fill", label: "Favorites", value: "\(artworks.filter(\.isFavorited).count)")
                     StatCardView(icon: "trophy.fill", label: "Badges", value: "\(achievements.filter(\.isUnlocked).count)/\(achievements.count)")
                 }
-                .padding(.horizontal, Brand.screenPadding)
+                .padding(.horizontal, adaptivePadding)
 
                 // Achievements
                 VStack(alignment: .leading, spacing: 12) {
                     Text("Achievements")
                         .font(Brand.title3Font)
-                        .padding(.horizontal, Brand.screenPadding)
+                        .padding(.horizontal, adaptivePadding)
 
                     ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 12) {
+                        HStack(spacing: 10) {
                             ForEach(achievements) { achievement in
                                 AchievementBadgeView(achievement: achievement)
                             }
                         }
-                        .padding(.horizontal, Brand.screenPadding)
+                        .padding(.horizontal, adaptivePadding)
+                        .padding(.vertical, 4)
                     }
                 }
 
@@ -153,7 +205,7 @@ struct MilestonesView: View {
                     VStack(alignment: .leading, spacing: 12) {
                         Text("Per Child")
                             .font(Brand.title3Font)
-                            .padding(.horizontal, Brand.screenPadding)
+                            .padding(.horizontal, adaptivePadding)
 
                         VStack(spacing: 0) {
                             ForEach(children) { child in
@@ -188,13 +240,15 @@ struct MilestonesView: View {
                                 }
                             }
                         }
+                        .frame(maxWidth: sizeClass == .regular ? Brand.Adaptive.maxContentWidth : .infinity)
                         .background(Color(.secondarySystemGroupedBackground))
                         .clipShape(RoundedRectangle(cornerRadius: Brand.radiusCard))
-                        .padding(.horizontal, Brand.screenPadding)
+                        .frame(maxWidth: .infinity)
+                        .padding(.horizontal, adaptivePadding)
                     }
                 }
             }
-            .padding(.vertical, Brand.screenPadding)
+            .padding(.vertical, adaptivePadding)
         }
     }
 }
