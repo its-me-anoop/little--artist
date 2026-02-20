@@ -156,7 +156,9 @@ final class CloudKitSharingService {
             ?? generateAvatarThumbnail(name: child.name, colorHex: child.avatarColor)
 
         // Clear any "stopped sharing" override for this child
-        stoppedSharingURLs.remove(child.objectIDURL.absoluteString)
+        if let urlString = child.objectIDURL?.absoluteString {
+            stoppedSharingURLs.remove(urlString)
+        }
 
         // Check for existing share — update metadata in case it changed
         if let existingShares = try? container.fetchShares(matching: [objectID]),
@@ -225,7 +227,8 @@ final class CloudKitSharingService {
     /// Returns whether the given child is currently being shared.
     func isShared(_ child: Child) -> Bool {
         // Check local override first (sharing was stopped but CloudKit hasn't synced)
-        if stoppedSharingURLs.contains(child.objectIDURL.absoluteString) {
+        if let urlString = child.objectIDURL?.absoluteString,
+           stoppedSharingURLs.contains(urlString) {
             return false
         }
         guard let container = persistentContainer,
@@ -269,7 +272,9 @@ final class CloudKitSharingService {
         logger.info("Share record deleted from CloudKit")
 
         // Mark locally so isShared() returns false immediately
-        stoppedSharingURLs.insert(child.objectIDURL.absoluteString)
+        if let urlString = child.objectIDURL?.absoluteString {
+            stoppedSharingURLs.insert(urlString)
+        }
 
         // Save local context so Core Data picks up the change
         if container.viewContext.hasChanges {
@@ -299,17 +304,42 @@ final class CloudKitSharingService {
     ///
     /// Both stacks use the same SQLite file, so the URI representation
     /// of the persistent identifier maps directly to a managed object ID.
+    ///
+    /// - Important: `NSPersistentStoreCoordinator.managedObjectID(forURIRepresentation:)`
+    ///   raises an Objective-C `NSException` (not a Swift `Error`) when the URI's
+    ///   store UUID doesn't match any loaded store. We validate the URI first to
+    ///   avoid the uncatchable exception.
     private func managedObjectID(for child: Child) throws -> NSManagedObjectID {
         guard let container = persistentContainer else {
             throw SharingError.notInitialised
         }
 
+        guard let url = child.objectIDURL else {
+            logger.warning("Could not extract objectIDURL from SwiftData model")
+            throw SharingError.objectIDNotFound
+        }
         let coordinator = container.persistentStoreCoordinator
 
-        // PersistentIdentifier uses the same x-coredata:// URI scheme
-        // as NSManagedObjectID, so we can bridge between the two stacks.
+        // The x-coredata:// URI format is:
+        //   x-coredata://<storeUUID>/<EntityName>/<primaryKey>
+        // The host component is the store's UUID. Validate it matches a
+        // loaded store before calling managedObjectID(forURIRepresentation:),
+        // which raises an uncatchable NSException on mismatch.
+        guard let storeUUID = url.host, !storeUUID.isEmpty else {
+            logger.warning("objectIDURL has no store UUID: \(url.absoluteString, privacy: .public)")
+            throw SharingError.objectIDNotFound
+        }
+
+        let knownStoreIDs = Set(
+            coordinator.persistentStores.compactMap { $0.identifier }
+        )
+        guard knownStoreIDs.contains(storeUUID) else {
+            logger.warning("Store UUID \(storeUUID, privacy: .public) not in loaded stores: \(knownStoreIDs.description, privacy: .public)")
+            throw SharingError.objectIDNotFound
+        }
+
         guard let objectID = coordinator.managedObjectID(
-            forURIRepresentation: child.objectIDURL
+            forURIRepresentation: url
         ) else {
             throw SharingError.objectIDNotFound
         }
@@ -337,23 +367,21 @@ final class CloudKitSharingService {
 // MARK: - PersistentModel URI Helper
 
 extension PersistentModel {
-    /// Returns the Core Data object URI for this SwiftData model.
+    /// Returns the Core Data object URI for this SwiftData model, or `nil`
+    /// if the identifier cannot be extracted.
     ///
-    /// SwiftData's `PersistentIdentifier` uses the same x-coredata:// URI scheme
+    /// SwiftData's `PersistentIdentifier` uses the same `x-coredata://` URI scheme
     /// as `NSManagedObjectID`, so we can bridge between the two stacks.
-    var objectIDURL: URL {
-        // PersistentIdentifier stores its URI in the id property.
-        // Mirror or Codable can extract it, but the simplest approach is
-        // encoding the identifier to JSON and parsing the URI string.
+    var objectIDURL: URL? {
         let encoder = JSONEncoder()
-        if let data = try? encoder.encode(persistentModelID),
-           let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-           let impl = json["implementation"] as? [String: Any],
-           let uriString = impl["uriRepresentation"] as? String,
-           let url = URL(string: uriString) {
-            return url
+        guard let data = try? encoder.encode(persistentModelID),
+              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let impl = json["implementation"] as? [String: Any],
+              let uriString = impl["uriRepresentation"] as? String,
+              let url = URL(string: uriString),
+              url.host != nil, url.host?.isEmpty == false else {
+            return nil
         }
-        // Fallback: construct from the entity name
-        return URL(string: "x-coredata:///\(type(of: self))")!
+        return url
     }
 }
