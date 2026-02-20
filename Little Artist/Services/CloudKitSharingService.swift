@@ -87,6 +87,8 @@ final class CloudKitSharingService {
         privateDesc.cloudKitContainerOptions?.databaseScope = .private
         privateDesc.setOption(true as NSNumber, forKey: NSPersistentHistoryTrackingKey)
         privateDesc.setOption(true as NSNumber, forKey: NSPersistentStoreRemoteChangeNotificationPostOptionKey)
+        privateDesc.shouldMigrateStoreAutomatically = true
+        privateDesc.shouldInferMappingModelAutomatically = true
 
         // Shared store — separate file for shared zone data
         let sharedURL = appSupport.appendingPathComponent("shared.store")
@@ -95,6 +97,8 @@ final class CloudKitSharingService {
             containerIdentifier: ckContainerIdentifier
         )
         sharedDesc.cloudKitContainerOptions?.databaseScope = .shared
+        sharedDesc.shouldMigrateStoreAutomatically = true
+        sharedDesc.shouldInferMappingModelAutomatically = true
         sharedDesc.setOption(true as NSNumber, forKey: NSPersistentHistoryTrackingKey)
         sharedDesc.setOption(true as NSNumber, forKey: NSPersistentStoreRemoteChangeNotificationPostOptionKey)
 
@@ -152,8 +156,10 @@ final class CloudKitSharingService {
         }
         #endif
 
-        // Run an initial sync in case shared data already exists
-        syncSharedDataToSwiftData()
+        // Defer initial sync to next run loop to avoid issues during setup
+        DispatchQueue.main.async { [weak self] in
+            self?.syncSharedDataToSwiftData()
+        }
     }
 
     // MARK: - Sharing
@@ -338,7 +344,8 @@ final class CloudKitSharingService {
     /// SwiftData so they appear alongside locally created data.
     ///
     /// Called automatically when remote change notifications arrive on the
-    /// shared store, and once at startup.
+    /// shared store, and once at startup. Wrapped in error handling to
+    /// prevent crashes from propagating.
     private func syncSharedDataToSwiftData() {
         guard let container = persistentContainer,
               let sharedStore,
@@ -346,59 +353,58 @@ final class CloudKitSharingService {
             return
         }
 
-        let context = container.viewContext
+        do {
+            let context = container.viewContext
 
-        // Fetch all Child objects from the shared store
-        let childRequest = NSFetchRequest<NSManagedObject>(entityName: "CD_Child")
-        childRequest.affectedStores = [sharedStore]
+            // Fetch all Child objects from the shared store
+            let childRequest = NSFetchRequest<NSManagedObject>(entityName: "CD_Child")
+            childRequest.affectedStores = [sharedStore]
 
-        guard let sharedChildren = try? context.fetch(childRequest), !sharedChildren.isEmpty else {
-            return
-        }
+            let sharedChildren = try context.fetch(childRequest)
+            guard !sharedChildren.isEmpty else { return }
 
-        logger.info("Found \(sharedChildren.count) shared children to mirror")
+            logger.info("Found \(sharedChildren.count) shared children to mirror")
 
-        let modelContext = ModelContext(modelContainer)
+            let modelContext = ModelContext(modelContainer)
 
-        for managedChild in sharedChildren {
-            let recordName = container.recordID(for: managedChild.objectID)?.recordName
-                ?? managedChild.objectID.uriRepresentation().absoluteString
+            for managedChild in sharedChildren {
+                let recordName = container.recordID(for: managedChild.objectID)?.recordName
+                    ?? managedChild.objectID.uriRepresentation().absoluteString
 
-            // Check if already mirrored
-            var existing = FetchDescriptor<Child>(
-                predicate: #Predicate { $0.sharedRecordName == recordName }
-            )
-            existing.fetchLimit = 1
-            if let found = try? modelContext.fetch(existing), !found.isEmpty {
-                // Update existing mirror
-                let mirror = found[0]
-                mirror.name = managedChild.value(forKey: "name") as? String ?? mirror.name
-                mirror.avatarColor = managedChild.value(forKey: "avatarColor") as? String ?? mirror.avatarColor
-                mirror.avatarImageData = managedChild.value(forKey: "avatarImageData") as? Data
-                syncArtworks(for: managedChild, into: mirror, container: container, modelContext: modelContext)
-                continue
+                // Check if already mirrored
+                var existing = FetchDescriptor<Child>(
+                    predicate: #Predicate { $0.sharedRecordName == recordName }
+                )
+                existing.fetchLimit = 1
+                if let found = try? modelContext.fetch(existing), !found.isEmpty {
+                    // Update existing mirror
+                    let mirror = found[0]
+                    mirror.name = managedChild.value(forKey: "name") as? String ?? mirror.name
+                    mirror.avatarColor = managedChild.value(forKey: "avatarColor") as? String ?? mirror.avatarColor
+                    mirror.avatarImageData = managedChild.value(forKey: "avatarImageData") as? Data
+                    syncArtworks(for: managedChild, into: mirror, modelContext: modelContext)
+                    continue
+                }
+
+                // Create new SwiftData child
+                let newChild = Child(
+                    name: managedChild.value(forKey: "name") as? String ?? "Shared Child",
+                    avatarColor: managedChild.value(forKey: "avatarColor") as? String ?? Brand.defaultAvatarColor,
+                    avatarImageData: managedChild.value(forKey: "avatarImageData") as? Data,
+                    createdAt: managedChild.value(forKey: "createdAt") as? Date ?? .now
+                )
+                newChild.sharedRecordName = recordName
+                modelContext.insert(newChild)
+
+                syncArtworks(for: managedChild, into: newChild, modelContext: modelContext)
+
+                logger.info("Mirrored shared child: \(newChild.name, privacy: .public)")
             }
 
-            // Create new SwiftData child
-            let newChild = Child(
-                name: managedChild.value(forKey: "name") as? String ?? "Shared Child",
-                avatarColor: managedChild.value(forKey: "avatarColor") as? String ?? Brand.defaultAvatarColor,
-                avatarImageData: managedChild.value(forKey: "avatarImageData") as? Data,
-                createdAt: managedChild.value(forKey: "createdAt") as? Date ?? .now
-            )
-            newChild.sharedRecordName = recordName
-            modelContext.insert(newChild)
-
-            syncArtworks(for: managedChild, into: newChild, container: container, modelContext: modelContext)
-
-            logger.info("Mirrored shared child: \(newChild.name, privacy: .public)")
-        }
-
-        do {
             try modelContext.save()
             logger.info("Shared data mirrored to SwiftData")
         } catch {
-            logger.error("Failed to save mirrored data: \(error.localizedDescription, privacy: .public)")
+            logger.error("syncSharedData failed: \(error.localizedDescription, privacy: .public)")
         }
     }
 
@@ -406,7 +412,6 @@ final class CloudKitSharingService {
     private func syncArtworks(
         for managedChild: NSManagedObject,
         into swiftDataChild: Child,
-        container: NSPersistentCloudKitContainer,
         modelContext: ModelContext
     ) {
         guard let artworkSet = managedChild.value(forKey: "artworks") as? NSSet else { return }

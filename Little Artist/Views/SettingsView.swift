@@ -75,7 +75,7 @@ struct SettingsView: View {
                                 Text(child.name)
                                     .font(Brand.bodyFont)
 
-                                if sharingService.isInitialised && sharingService.isShared(child) {
+                                if sharingService.isInitialised, child.sharedRecordName == nil, sharingService.isShared(child) {
                                     Image(systemName: "person.2.fill")
                                         .font(.system(size: 11, weight: .medium))
                                         .foregroundStyle(Brand.sky)
