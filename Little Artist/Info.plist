@@ -4,6 +4,8 @@
 <dict>
 	<key>NSCameraUsageDescription</key>
 	<string>Little Artist needs camera access to capture artwork and take profile photos.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Little Artist needs microphone access to record voice memos about artwork.</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>remote-notification</string>

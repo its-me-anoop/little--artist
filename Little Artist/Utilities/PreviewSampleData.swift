@@ -144,6 +144,16 @@ enum PreviewSampleData {
         )
     }
 
+    /// A sample artwork with a mock voice memo for preview testing.
+    static var artworkWithVoiceMemo: Artwork {
+        Artwork(
+            title: "My Dinosaur",
+            caption: "It's a T-Rex eating pizza",
+            voiceNoteData: Data(repeating: 0, count: 1024),
+            createdAt: date(year: 2026, month: 2, day: 18)
+        )
+    }
+
     // MARK: - Helpers
 
     /// Creates a `Date` from year, month, and day components.

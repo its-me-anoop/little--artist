@@ -163,7 +163,7 @@ struct TimelineView: View {
                             .onAppear {
                                 guard !appearedArtworkIDs.contains(artwork.persistentModelID) else { return }
                                 let stagger = Double(index) * 0.08
-                                withAnimation(.spring(duration: 0.45, bounce: 0.15).delay(stagger)) {
+                                let _ = withAnimation(.spring(duration: 0.45, bounce: 0.15).delay(stagger)) {
                                     appearedArtworkIDs.insert(artwork.persistentModelID)
                                 }
                             }

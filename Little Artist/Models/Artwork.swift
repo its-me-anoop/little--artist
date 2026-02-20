@@ -26,8 +26,9 @@ final class Artwork {
     @Attribute(.externalStorage)
     var imageData: Data?
 
-    /// File path or URL to an associated voice-note recording (future feature).
-    var voiceNoteURL: String?
+    /// Optional voice memo audio data stored externally for efficient storage.
+    @Attribute(.externalStorage)
+    var voiceNoteData: Data?
 
     /// Whether this artwork has been starred/favourited by the user.
     var isFavorited: Bool
@@ -42,7 +43,7 @@ final class Artwork {
         title: String,
         caption: String = "",
         imageData: Data? = nil,
-        voiceNoteURL: String? = nil,
+        voiceNoteData: Data? = nil,
         isFavorited: Bool = false,
         createdAt: Date = .now,
         child: Child? = nil
@@ -50,7 +51,7 @@ final class Artwork {
         self.title = title
         self.caption = caption
         self.imageData = imageData
-        self.voiceNoteURL = voiceNoteURL
+        self.voiceNoteData = voiceNoteData
         self.isFavorited = isFavorited
         self.createdAt = createdAt
         self.child = child

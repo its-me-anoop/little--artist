@@ -22,6 +22,7 @@ struct ArtworkDetailView: View {
     @State private var sharePayload: SharePayload?
     @State private var editTitle = ""
     @State private var editCaption = ""
+    @State private var editVoiceNoteData: Data?
     @State private var isGeneratingSuggestions = false
     @State private var suggestionErrorMessage: String?
     @State private var imageScale: CGFloat = 1.0
@@ -140,6 +141,16 @@ struct ArtworkDetailView: View {
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
 
+                // Voice memo playback
+                if let voiceData = artwork.voiceNoteData {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Label("Voice Memo", systemImage: "mic.fill")
+                            .font(Brand.captionFont.weight(.medium))
+                            .foregroundStyle(Brand.warmGray)
+                        VoiceMemoPlayerView(audioData: voiceData)
+                    }
+                }
+
                 Spacer().frame(height: 8)
 
                 // Action buttons row
@@ -187,6 +198,11 @@ struct ArtworkDetailView: View {
                         TextField("Artwork title (optional)", text: $editTitle)
                         TextField("Caption (optional)", text: $editCaption, axis: .vertical)
                             .lineLimit(2...5)
+                    }
+
+                    Section("Voice Memo") {
+                        VoiceMemoRecorderView(voiceNoteData: $editVoiceNoteData)
+                            .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
                     }
 
                     if aiSuggestionsEnabled {
@@ -247,6 +263,7 @@ struct ArtworkDetailView: View {
     private func startEditing() {
         editTitle = artwork.title
         editCaption = artwork.caption
+        editVoiceNoteData = artwork.voiceNoteData
         suggestionErrorMessage = nil
         showEditSheet = true
     }
@@ -254,6 +271,7 @@ struct ArtworkDetailView: View {
     private func saveEdits() {
         artwork.title = editTitle.trimmingCharacters(in: .whitespacesAndNewlines)
         artwork.caption = editCaption.trimmingCharacters(in: .whitespacesAndNewlines)
+        artwork.voiceNoteData = editVoiceNoteData
         HapticService.success()
         showEditSheet = false
     }

@@ -26,6 +26,7 @@ struct AddArtworkView: View {
     @State private var showCamera = false
     @State private var showDocumentScanner = false
     @State private var photoPickerItem: PhotosPickerItem?
+    @State private var voiceNoteData: Data?
     @State private var isGeneratingSuggestions = false
     @State private var suggestionErrorMessage: String?
 
@@ -104,6 +105,10 @@ struct AddArtworkView: View {
                             RoundedRectangle(cornerRadius: 14)
                                 .fill(Brand.surface)
                         )
+                        .padding(.horizontal, 32)
+
+                    // Voice memo (optional)
+                    VoiceMemoRecorderView(voiceNoteData: $voiceNoteData)
                         .padding(.horizontal, 32)
 
                     if aiSuggestionsEnabled {
@@ -297,6 +302,7 @@ struct AddArtworkView: View {
             title: title.trimmingCharacters(in: .whitespaces),
             caption: caption.trimmingCharacters(in: .whitespacesAndNewlines),
             imageData: capturedImageData,
+            voiceNoteData: voiceNoteData,
             child: child
         )
         modelContext.insert(artwork)

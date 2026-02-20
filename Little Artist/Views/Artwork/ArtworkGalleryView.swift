@@ -353,6 +353,17 @@ private struct GalleryTile: View {
         }
         .aspectRatio(1, contentMode: .fit)
         .clipShape(RoundedRectangle(cornerRadius: 4))
+        .overlay(alignment: .bottomLeading) {
+            if artwork.voiceNoteData != nil {
+                Image(systemName: "mic.fill")
+                    .font(.system(size: 9, weight: .bold))
+                    .foregroundStyle(.white)
+                    .padding(4)
+                    .background(Brand.primary.opacity(0.85))
+                    .clipShape(Circle())
+                    .padding(4)
+            }
+        }
         .accessibilityLabel("\(artwork.title.isEmpty ? "Untitled" : artwork.title) by \(artwork.child?.name ?? "unknown")")
         .accessibilityHint("Double tap to view details")
     }
