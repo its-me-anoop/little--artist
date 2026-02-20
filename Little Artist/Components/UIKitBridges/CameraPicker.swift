@@ -12,10 +12,13 @@ import SwiftUI
 struct CameraPicker: UIViewControllerRepresentable {
     /// Called with the captured image when the user takes a photo.
     let onImageCaptured: (UIImage) -> Void
+    /// Whether to use the rear camera. Reads from the "defaultCameraBack" preference.
+    var useBackCamera: Bool = UserDefaults.standard.bool(forKey: "defaultCameraBack")
 
     func makeUIViewController(context: Context) -> UIImagePickerController {
         let picker = UIImagePickerController()
         picker.sourceType = .camera
+        picker.cameraDevice = useBackCamera ? .rear : .front
         picker.delegate = context.coordinator
         return picker
     }

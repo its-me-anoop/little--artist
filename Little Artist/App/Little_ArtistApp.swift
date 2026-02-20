@@ -33,17 +33,26 @@ struct Little_ArtistApp: App {
             try? FileManager.default.createDirectory(at: appSupport, withIntermediateDirectories: true)
         }
 
+        #if DEBUG
+        // Enable premium + iCloud for testing via launch argument: -debugPremium
+        if ProcessInfo.processInfo.arguments.contains("-debugPremium") {
+            UserDefaults.standard.set(true, forKey: "isPremium")
+            UserDefaults.standard.set(true, forKey: "iCloudSyncEnabled")
+        }
+        #endif
+
         let schema = Schema(versionedSchema: SchemaV4.self)
         let isPremium = UserDefaults.standard.bool(forKey: "isPremium")
         let iCloudEnabled = UserDefaults.standard.bool(forKey: "iCloudSyncEnabled")
 
-        // Use explicit store URL so Core Data's NSPersistentCloudKitContainer
-        // can point at the same SQLite file for CloudKit sharing.
+        // SwiftData always uses cloudKitDatabase: .none — CloudKit sync is
+        // handled exclusively by CloudKitSharingService's NSPersistentCloudKitContainer
+        // to avoid two stacks fighting over the same store file.
         let storeURL = appSupport.appendingPathComponent("default.store")
         let modelConfiguration = ModelConfiguration(
             schema: schema,
             url: storeURL,
-            cloudKitDatabase: (isPremium && iCloudEnabled) ? .automatic : .none
+            cloudKitDatabase: .none
         )
 
         do {
@@ -77,11 +86,23 @@ struct Little_ArtistApp: App {
 
     var body: some Scene {
         WindowGroup {
-            if hasCompletedOnboarding {
-                ContentView()
-            } else {
-                OnboardingView(hasCompletedOnboarding: $hasCompletedOnboarding)
+            Group {
+                if hasCompletedOnboarding {
+                    ContentView()
+                } else {
+                    OnboardingView(hasCompletedOnboarding: $hasCompletedOnboarding)
+                }
             }
+            #if DEBUG
+            .onAppear {
+                // Activate debug premium override via launch argument:
+                //   -debugPremium YES
+                if ProcessInfo.processInfo.arguments.contains("-debugPremium") {
+                    PremiumManager._overrideIsPremium = true
+                    UserDefaults.standard.set(true, forKey: "isPremium")
+                }
+            }
+            #endif
         }
         .modelContainer(sharedModelContainer)
     }

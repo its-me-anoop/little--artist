@@ -49,7 +49,38 @@ struct CloudSharingView: UIViewControllerRepresentable {
         }
 
         func itemThumbnailData(for csc: UICloudSharingController) -> Data? {
-            child.avatarImageData
+            let size = CGSize(width: 120, height: 120)
+            let renderer = UIGraphicsImageRenderer(size: size)
+
+            if let data = child.avatarImageData,
+               let source = UIImage(data: data) {
+                // Render the custom photo clipped to a circle
+                let circularImage = renderer.image { _ in
+                    UIBezierPath(ovalIn: CGRect(origin: .zero, size: size)).addClip()
+                    source.draw(in: CGRect(origin: .zero, size: size))
+                }
+                return circularImage.pngData()
+            }
+
+            // Generate a thumbnail from the avatar color + initial
+            let image = renderer.image { _ in
+                UIColor(Color(hex: child.avatarColor)).setFill()
+                UIBezierPath(ovalIn: CGRect(origin: .zero, size: size)).fill()
+                let initial = String(child.name.prefix(1)).uppercased()
+                let attrs: [NSAttributedString.Key: Any] = [
+                    .font: UIFont.systemFont(ofSize: 52, weight: .bold),
+                    .foregroundColor: UIColor.white
+                ]
+                let textSize = initial.size(withAttributes: attrs)
+                let textRect = CGRect(
+                    x: (size.width - textSize.width) / 2,
+                    y: (size.height - textSize.height) / 2,
+                    width: textSize.width,
+                    height: textSize.height
+                )
+                initial.draw(in: textRect, withAttributes: attrs)
+            }
+            return image.pngData()
         }
 
         func cloudSharingControllerDidSaveShare(_ csc: UICloudSharingController) {

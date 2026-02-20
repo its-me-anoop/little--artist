@@ -34,8 +34,11 @@ struct EditChildView: View {
     @State private var showImagePlayground = false
     @State private var showDeleteConfirmation = false
     @State private var showCloudSharing = false
+    @State private var showShareManagement = false
     @State private var activeShare: CKShare?
     @State private var activeContainer: CKContainer?
+    @State private var sharingError: String?
+    @AppStorage("iCloudSyncEnabled") private var iCloudSyncEnabled = false
 
     private let presetColors = Brand.avatarColors
     private let sharingService = CloudKitSharingService.shared
@@ -108,11 +111,15 @@ struct EditChildView: View {
                         }
                     }
 
-                    // Sharing section (premium + iCloud only)
-                    if PremiumManager.isPremium && sharingService.isInitialised {
+                    // Sharing section (premium only)
+                    if PremiumManager.isPremium {
                         VStack(spacing: 8) {
                             Button {
-                                Task { await presentSharing() }
+                                if sharingService.isInitialised {
+                                    Task { await presentSharing() }
+                                } else {
+                                    sharingError = "Enable iCloud Sync in Settings to share profiles with another parent."
+                                }
                             } label: {
                                 HStack(spacing: 8) {
                                     Image(systemName: sharingService.isShared(child) ? "person.2.fill" : "person.badge.plus")
@@ -130,7 +137,9 @@ struct EditChildView: View {
                             }
                             .padding(.horizontal, 32)
 
-                            Text("Invite another parent to view and edit this profile")
+                            Text(iCloudSyncEnabled
+                                ? "Invite another parent to view and edit this profile"
+                                : "Requires iCloud Sync (enable in Settings)")
                                 .font(Brand.caption2Font)
                                 .foregroundStyle(Brand.warmGray)
                                 .multilineTextAlignment(.center)
@@ -210,6 +219,23 @@ struct EditChildView: View {
                         child: child
                     )
                 }
+            }
+            .sheet(isPresented: $showShareManagement) {
+                if let activeShare, let activeContainer {
+                    ShareManagementView(
+                        child: child,
+                        share: activeShare,
+                        ckContainer: activeContainer
+                    )
+                }
+            }
+            .alert("Sharing Unavailable", isPresented: Binding(
+                get: { sharingError != nil },
+                set: { if !$0 { sharingError = nil } }
+            )) {
+                Button("OK") { sharingError = nil }
+            } message: {
+                Text(sharingError ?? "")
             }
             .alert("Delete this child profile?", isPresented: $showDeleteConfirmation) {
                 Button("Cancel", role: .cancel) {}
@@ -314,9 +340,15 @@ struct EditChildView: View {
             let (share, container) = try await sharingService.shareChild(child)
             activeShare = share
             activeContainer = container
-            showCloudSharing = true
+            // Use custom management view for existing shares,
+            // UICloudSharingController for new shares (to send invitations)
+            if sharingService.isShared(child) {
+                showShareManagement = true
+            } else {
+                showCloudSharing = true
+            }
         } catch {
-            print("[EditChildView] Failed to create share: \(error)")
+            sharingError = error.localizedDescription
         }
     }
 

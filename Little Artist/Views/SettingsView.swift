@@ -30,7 +30,7 @@ struct SettingsView: View {
     @State private var isRestoring = false
     @State private var exportPayload: SharePayload?
     @State private var isExporting = false
-    @State private var showRestartAlert = false
+    @State private var showSyncEnabledConfirmation = false
 
     private var storageUsed: String {
         let bytes = artworks.compactMap(\.imageData).reduce(0) { $0 + $1.count }
@@ -197,8 +197,11 @@ struct SettingsView: View {
                             Label("iCloud Sync", systemImage: "icloud.fill")
                         }
                         .tint(Brand.primary)
-                        .onChange(of: iCloudSyncEnabled) {
-                            showRestartAlert = true
+                        .onChange(of: iCloudSyncEnabled) { _, enabled in
+                            if enabled {
+                                CloudKitSharingService.shared.setup()
+                                showSyncEnabledConfirmation = true
+                            }
                         }
                     } else {
                         Button {
@@ -295,10 +298,10 @@ struct SettingsView: View {
                     Text("This will permanently delete \(child.name) and all their \(child.artworks?.count ?? 0) artworks.")
                 }
             }
-            .alert("Restart Required", isPresented: $showRestartAlert) {
+            .alert("iCloud Sync Enabled", isPresented: $showSyncEnabledConfirmation) {
                 Button("OK") {}
             } message: {
-                Text("Please restart the app for the iCloud sync change to take effect.")
+                Text("Your data will now sync across your devices. You can share child profiles from the Edit Profile screen.")
             }
         }
     }

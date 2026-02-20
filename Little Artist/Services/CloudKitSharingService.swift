@@ -9,8 +9,11 @@
 
 import CloudKit
 import CoreData
+import os.log
 import SwiftData
 import SwiftUI
+
+private let logger = Logger(subsystem: "uk.co.flutterly.Little-Artist", category: "CloudKit")
 
 /// Manages CloudKit sharing using `NSPersistentCloudKitContainer`.
 ///
@@ -30,6 +33,9 @@ final class CloudKitSharingService {
     private(set) var persistentContainer: NSPersistentCloudKitContainer?
     private var privateStore: NSPersistentStore?
     private var sharedStore: NSPersistentStore?
+
+    /// Child object URLs whose sharing was stopped locally (pending CloudKit sync).
+    private var stoppedSharingURLs: Set<String> = []
 
     /// The CloudKit container identifier used by this app.
     let ckContainerIdentifier = "iCloud.uk.co.flutterly.Little-Artist"
@@ -56,9 +62,11 @@ final class CloudKitSharingService {
             Artwork.self,
             Tag.self
         ]) else {
-            print("[CloudKitSharingService] Failed to create managed object model from SwiftData types")
+            logger.error("Failed to create managed object model from SwiftData types")
             return
         }
+        let entityNames = model.entities.compactMap(\.name).joined(separator: ", ")
+        logger.info("Created managed object model with \(model.entities.count) entities: \(entityNames, privacy: .public)")
 
         let container = NSPersistentCloudKitContainer(name: "LittleArtist", managedObjectModel: model)
 
@@ -89,11 +97,20 @@ final class CloudKitSharingService {
 
         container.persistentStoreDescriptions = [privateDesc, sharedDesc]
 
+        var loadErrors: [String] = []
+
         container.loadPersistentStores { description, error in
             if let error {
-                print("[CloudKitSharingService] Failed to load store at \(description.url?.lastPathComponent ?? "?"): \(error)")
+                loadErrors.append("\(description.url?.lastPathComponent ?? "?"): \(error)")
+                logger.error("Failed to load store \(description.url?.lastPathComponent ?? "?", privacy: .public): \(error.localizedDescription, privacy: .public)")
                 return
             }
+            logger.info("Loaded store: \(description.url?.lastPathComponent ?? "?", privacy: .public) scope=\(description.cloudKitContainerOptions?.databaseScope.rawValue ?? -1)")
+        }
+
+        guard loadErrors.isEmpty else {
+            logger.error("Aborting setup — \(loadErrors.count) store(s) failed to load")
+            return
         }
 
         container.viewContext.automaticallyMergesChangesFromParent = true
@@ -109,6 +126,16 @@ final class CloudKitSharingService {
         }
 
         persistentContainer = container
+
+        // Force CloudKit schema initialization in debug builds
+        #if DEBUG
+        do {
+            try container.initializeCloudKitSchema()
+            logger.info("CloudKit schema initialized successfully")
+        } catch {
+            logger.error("Failed to initialize CloudKit schema: \(error.localizedDescription, privacy: .public)")
+        }
+        #endif
     }
 
     // MARK: - Sharing
@@ -125,10 +152,20 @@ final class CloudKitSharingService {
 
         let objectID = try managedObjectID(for: child)
         let managedObject = container.viewContext.object(with: objectID)
+        let thumbnail = circularThumbnail(from: child.avatarImageData)
+            ?? generateAvatarThumbnail(name: child.name, colorHex: child.avatarColor)
 
-        // Check for existing share
+        // Clear any "stopped sharing" override for this child
+        stoppedSharingURLs.remove(child.objectIDURL.absoluteString)
+
+        // Check for existing share — update metadata in case it changed
         if let existingShares = try? container.fetchShares(matching: [objectID]),
            let existing = existingShares[objectID] {
+            existing[CKShare.SystemFieldKey.title] = child.name
+            existing[CKShare.SystemFieldKey.thumbnailImageData] = thumbnail
+            if container.viewContext.hasChanges {
+                try container.viewContext.save()
+            }
             return (existing, CKContainer(identifier: ckContainerIdentifier))
         }
 
@@ -139,6 +176,7 @@ final class CloudKitSharingService {
         )
 
         share[CKShare.SystemFieldKey.title] = child.name
+        share[CKShare.SystemFieldKey.thumbnailImageData] = thumbnail
 
         // Save the context to persist the share
         if container.viewContext.hasChanges {
@@ -148,8 +186,48 @@ final class CloudKitSharingService {
         return (share, ckContainer)
     }
 
+    /// Clips a photo to a circle and returns PNG data.
+    private func circularThumbnail(from imageData: Data?) -> Data? {
+        guard let imageData, let source = UIImage(data: imageData) else { return nil }
+        let size = CGSize(width: 120, height: 120)
+        let renderer = UIGraphicsImageRenderer(size: size)
+        let image = renderer.image { _ in
+            UIBezierPath(ovalIn: CGRect(origin: .zero, size: size)).addClip()
+            source.draw(in: CGRect(origin: .zero, size: size))
+        }
+        return image.pngData()
+    }
+
+    /// Generates a circular thumbnail from the child's avatar color and name initial.
+    private func generateAvatarThumbnail(name: String, colorHex: String) -> Data? {
+        let size = CGSize(width: 120, height: 120)
+        let renderer = UIGraphicsImageRenderer(size: size)
+        let image = renderer.image { _ in
+            UIColor(Color(hex: colorHex)).setFill()
+            UIBezierPath(ovalIn: CGRect(origin: .zero, size: size)).fill()
+            let initial = String(name.prefix(1)).uppercased()
+            let attrs: [NSAttributedString.Key: Any] = [
+                .font: UIFont.systemFont(ofSize: 52, weight: .bold),
+                .foregroundColor: UIColor.white
+            ]
+            let textSize = initial.size(withAttributes: attrs)
+            let textRect = CGRect(
+                x: (size.width - textSize.width) / 2,
+                y: (size.height - textSize.height) / 2,
+                width: textSize.width,
+                height: textSize.height
+            )
+            initial.draw(in: textRect, withAttributes: attrs)
+        }
+        return image.pngData()
+    }
+
     /// Returns whether the given child is currently being shared.
     func isShared(_ child: Child) -> Bool {
+        // Check local override first (sharing was stopped but CloudKit hasn't synced)
+        if stoppedSharingURLs.contains(child.objectIDURL.absoluteString) {
+            return false
+        }
         guard let container = persistentContainer,
               let objectID = try? managedObjectID(for: child) else {
             return false
@@ -168,29 +246,34 @@ final class CloudKitSharingService {
         return shares?[objectID]
     }
 
-    /// Stops sharing the given child by purging the share zone.
+    /// Stops sharing the given child by deleting the CKShare record.
     func stopSharing(_ child: Child) async throws {
-        guard let share = existingShare(for: child) else { return }
+        guard let container = persistentContainer else {
+            throw SharingError.notInitialised
+        }
+
+        let objectID = try managedObjectID(for: child)
+        guard let existingShares = try? container.fetchShares(matching: [objectID]),
+              let share = existingShares[objectID] else {
+            logger.info("No share found for child — nothing to stop")
+            return
+        }
+
+        logger.info("Stopping share: recordID=\(share.recordID.recordName, privacy: .public)")
 
         let ckContainer = CKContainer(identifier: ckContainerIdentifier)
         let database = ckContainer.privateCloudDatabase
 
-        let operation = CKModifyRecordsOperation(
-            recordsToSave: nil,
-            recordIDsToDelete: [share.recordID]
-        )
-        operation.qualityOfService = QualityOfService.userInitiated
+        // Delete the share record from CloudKit
+        try await database.deleteRecord(withID: share.recordID)
+        logger.info("Share record deleted from CloudKit")
 
-        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-            operation.modifyRecordsResultBlock = { (result: Result<Void, Error>) in
-                switch result {
-                case .success:
-                    continuation.resume()
-                case .failure(let error):
-                    continuation.resume(throwing: error)
-                }
-            }
-            database.add(operation)
+        // Mark locally so isShared() returns false immediately
+        stoppedSharingURLs.insert(child.objectIDURL.absoluteString)
+
+        // Save local context so Core Data picks up the change
+        if container.viewContext.hasChanges {
+            try container.viewContext.save()
         }
     }
 
