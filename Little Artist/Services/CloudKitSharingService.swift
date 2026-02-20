@@ -357,7 +357,7 @@ final class CloudKitSharingService {
             let context = container.viewContext
 
             // Fetch all Child objects from the shared store
-            let childRequest = NSFetchRequest<NSManagedObject>(entityName: "CD_Child")
+            let childRequest = NSFetchRequest<NSManagedObject>(entityName: "Child")
             childRequest.affectedStores = [sharedStore]
 
             let sharedChildren = try context.fetch(childRequest)
