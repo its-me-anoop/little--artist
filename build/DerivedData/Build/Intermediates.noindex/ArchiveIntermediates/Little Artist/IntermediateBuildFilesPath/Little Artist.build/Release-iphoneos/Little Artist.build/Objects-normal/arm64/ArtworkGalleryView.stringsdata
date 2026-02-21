@@ -1,0 +1,120 @@
+{
+  "source": "/Users/anoopjose/Projects/Little Artist/Little Artist/Views/Artwork/ArtworkGalleryView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "%lld",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 99
+        }
+      },
+      {
+        "comment": "",
+        "key": "Show all",
+        "location": {
+          "startingColumn": 57,
+          "startingLine": 121
+        }
+      },
+      {
+        "comment": "",
+        "key": "Show favorites only",
+        "location": {
+          "startingColumn": 70,
+          "startingLine": 121
+        }
+      },
+      {
+        "comment": "",
+        "key": "Sort order",
+        "location": {
+          "startingColumn": 37,
+          "startingLine": 144
+        }
+      },
+      {
+        "comment": "",
+        "key": "Newest First",
+        "location": {
+          "startingColumn": 31,
+          "startingLine": 128
+        }
+      },
+      {
+        "comment": "",
+        "key": "Oldest First",
+        "location": {
+          "startingColumn": 31,
+          "startingLine": 134
+        }
+      },
+      {
+        "comment": "",
+        "key": "Smaller thumbnails",
+        "location": {
+          "startingColumn": 41,
+          "startingLine": 161
+        }
+      },
+      {
+        "comment": "",
+        "key": "Larger thumbnails",
+        "location": {
+          "startingColumn": 41,
+          "startingLine": 176
+        }
+      },
+      {
+        "comment": "",
+        "key": "No favorites yet",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 187
+        }
+      },
+      {
+        "comment": "",
+        "key": "Tap the heart on an artwork to favorite it",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 189
+        }
+      },
+      {
+        "comment": "",
+        "key": "Unfavorite",
+        "location": {
+          "startingColumn": 79,
+          "startingLine": 261
+        }
+      },
+      {
+        "comment": "",
+        "key": "Favorite",
+        "location": {
+          "startingColumn": 94,
+          "startingLine": 261
+        }
+      },
+      {
+        "comment": "",
+        "key": "%@ by %@",
+        "location": {
+          "startingColumn": 29,
+          "startingLine": 408
+        }
+      },
+      {
+        "comment": "",
+        "key": "Double tap to view details",
+        "location": {
+          "startingColumn": 28,
+          "startingLine": 409
+        }
+      }
+    ]
+  },
+  "version": 1
+}

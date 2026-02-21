@@ -1,0 +1,96 @@
+{
+  "source": "/Users/anoopjose/Projects/Little Artist/Little Artist/Views/Artwork/AddArtworkView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Adding for %@",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 61
+        }
+      },
+      {
+        "comment": "",
+        "key": "Artwork title (optional)",
+        "location": {
+          "startingColumn": 23,
+          "startingLine": 83
+        }
+      },
+      {
+        "comment": "",
+        "key": "Caption (optional)",
+        "location": {
+          "startingColumn": 23,
+          "startingLine": 96
+        }
+      },
+      {
+        "comment": "",
+        "key": "Date Created",
+        "location": {
+          "startingColumn": 17,
+          "startingLine": 110
+        }
+      },
+      {
+        "comment": "",
+        "key": "Creating magic...",
+        "location": {
+          "startingColumn": 60,
+          "startingLine": 147
+        }
+      },
+      {
+        "comment": "",
+        "key": "Suggest Title & Caption",
+        "location": {
+          "startingColumn": 82,
+          "startingLine": 147
+        }
+      },
+      {
+        "comment": "",
+        "key": "Save Artwork",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 178
+        }
+      },
+      {
+        "comment": "",
+        "key": "New Artwork",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 233
+        }
+      },
+      {
+        "comment": "",
+        "key": "Cancel",
+        "location": {
+          "startingColumn": 28,
+          "startingLine": 237
+        }
+      },
+      {
+        "comment": "",
+        "key": "Importing %lld artworks...",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 288
+        }
+      },
+      {
+        "comment": "",
+        "key": "Capture or select artwork",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 339
+        }
+      }
+    ]
+  },
+  "version": 1
+}

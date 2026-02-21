@@ -2,7 +2,7 @@
 //  SharedBadgeView.swift
 //  Little Artist
 //
-//  A small pill badge indicating a child profile is shared via CloudKit,
+//  A small pill badge indicating a child profile is shared,
 //  showing a person.2.fill icon and participant count.
 //
 

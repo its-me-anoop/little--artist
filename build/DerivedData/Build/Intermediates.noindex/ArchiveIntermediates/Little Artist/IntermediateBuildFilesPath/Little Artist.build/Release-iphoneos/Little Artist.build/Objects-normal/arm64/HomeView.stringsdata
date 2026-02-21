@@ -1,0 +1,48 @@
+{
+  "source": "/Users/anoopjose/Projects/Little Artist/Little Artist/Views/HomeView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "All",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 80
+        }
+      },
+      {
+        "comment": "",
+        "key": "Add",
+        "location": {
+          "startingColumn": 38,
+          "startingLine": 126
+        }
+      },
+      {
+        "comment": "",
+        "key": "On This Day",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 148
+        }
+      },
+      {
+        "comment": "",
+        "key": "Select an artwork",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 197
+        }
+      },
+      {
+        "comment": "",
+        "key": "Gallery",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 280
+        }
+      }
+    ]
+  },
+  "version": 1
+}

@@ -43,7 +43,7 @@ struct PaywallView: View {
         var message: String {
             switch self {
             case .children:
-                return "Add unlimited child profiles, iCloud sync, AI captions, and more with Little Artist Premium."
+                return "Add unlimited child profiles, cloud sync, AI captions, and more with Little Artist Premium."
             case .artworks:
                 return "Save unlimited artworks, sync across devices, and unlock AI-powered captions with Little Artist Premium."
             }
@@ -79,7 +79,7 @@ struct PaywallView: View {
             // Premium features list
             VStack(alignment: .leading, spacing: 14) {
                 featureRow(icon: "infinity", text: "Unlimited children & artworks")
-                featureRow(icon: "icloud.fill", text: "iCloud Backup & Sync")
+                featureRow(icon: "arrow.triangle.2.circlepath", text: "Cloud Backup & Sync")
                 featureRow(icon: "sparkles", text: "AI-Powered Captions")
                 featureRow(icon: "doc.richtext", text: "PDF Portfolio Export")
             }

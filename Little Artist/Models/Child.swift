@@ -31,18 +31,40 @@ final class Child {
     @Attribute(.externalStorage)
     var avatarImageData: Data?
 
-    /// CloudKit record name for children received via sharing.
+    /// Legacy CloudKit record name (deprecated — use `firestoreId` instead).
     /// `nil` for locally created children; set for mirrored shared children.
+    /// - Note: Deprecated in V7; replaced by ``firestoreId``. Kept for migration.
     var sharedRecordName: String?
+
+    /// Firestore document path (e.g. `"users/{uid}/children/{id}"`).
+    /// `nil` for children that have not yet been synced to Firebase.
+    var firestoreId: String?
+
+    /// Whether this child profile was received via sharing (not owned by the current user).
+    var isShared: Bool = false
+
+    /// Firebase UID of the profile owner. `nil` for locally owned children.
+    var ownerUserId: String?
 
     /// The artworks belonging to this child. Deletion cascades.
     @Relationship(deleteRule: .cascade, inverse: \Artwork.child)
     var artworks: [Artwork]?
 
-    init(name: String, avatarColor: String, avatarImageData: Data? = nil, createdAt: Date = .now) {
+    init(
+        name: String,
+        avatarColor: String,
+        avatarImageData: Data? = nil,
+        createdAt: Date = .now,
+        firestoreId: String? = nil,
+        isShared: Bool = false,
+        ownerUserId: String? = nil
+    ) {
         self.name = name
         self.avatarColor = avatarColor
         self.avatarImageData = avatarImageData
         self.createdAt = createdAt
+        self.firestoreId = firestoreId
+        self.isShared = isShared
+        self.ownerUserId = ownerUserId
     }
 }

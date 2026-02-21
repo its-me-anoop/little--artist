@@ -8,8 +8,9 @@
 //  Created by Anoop Jose on 13/02/2026.
 //
 
-import SwiftUI
+import FirebaseCore
 import SwiftData
+import SwiftUI
 
 /// The main application entry point for Little Artist.
 ///
@@ -21,7 +22,7 @@ struct Little_ArtistApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
-    @AppStorage("iCloudSyncEnabled") private var iCloudSyncEnabled = false
+    @AppStorage("firebaseSyncEnabled") private var firebaseSyncEnabled = false
 
     /// Reference to StoreKit manager so transaction listener starts early.
     private let storeKit = StoreKitManager.shared
@@ -34,20 +35,19 @@ struct Little_ArtistApp: App {
         }
 
         #if DEBUG
-        // Enable premium + iCloud for testing via launch argument: -debugPremium
+        // Enable premium + sync for testing via launch argument: -debugPremium
         if ProcessInfo.processInfo.arguments.contains("-debugPremium") {
             UserDefaults.standard.set(true, forKey: "isPremium")
-            UserDefaults.standard.set(true, forKey: "iCloudSyncEnabled")
+            UserDefaults.standard.set(true, forKey: "firebaseSyncEnabled")
         }
         #endif
 
-        let schema = Schema(versionedSchema: SchemaV5.self)
+        let schema = Schema(versionedSchema: SchemaV7.self)
         let isPremium = UserDefaults.standard.bool(forKey: "isPremium")
-        let iCloudEnabled = UserDefaults.standard.bool(forKey: "iCloudSyncEnabled")
+        let syncEnabled = UserDefaults.standard.bool(forKey: "firebaseSyncEnabled")
 
-        // SwiftData always uses cloudKitDatabase: .none — CloudKit sync is
-        // handled exclusively by CloudKitSharingService's NSPersistentCloudKitContainer
-        // to avoid two stacks fighting over the same store file.
+        // SwiftData uses local-only storage. Firebase handles cloud sync
+        // through FirestoreSyncService (replaces the old CloudKit dual-stack).
         let storeURL = appSupport.appendingPathComponent("default.store")
         let modelConfiguration = ModelConfiguration(
             schema: schema,
@@ -55,19 +55,22 @@ struct Little_ArtistApp: App {
             cloudKitDatabase: .none
         )
 
+        // Configure Firebase before creating the container
+        FirebaseApp.configure()
+        FirebaseAuthService.shared.setup()
+
         do {
             let container = try ModelContainer(
                 for: schema,
-                migrationPlan: LittleArtistMigrationPlan.self,
                 configurations: [modelConfiguration]
             )
 
-            // Always provide the model container for shared data mirroring
-            CloudKitSharingService.shared.modelContainer = container
+            // Provide model container to sync services
+            FirestoreSyncService.shared.modelContainer = container
 
-            // Initialise CloudKit sharing stack when premium + iCloud enabled
-            if isPremium && iCloudEnabled {
-                CloudKitSharingService.shared.setup()
+            // Start Firebase sync when premium + sync enabled
+            if isPremium && syncEnabled {
+                FirestoreSyncService.shared.start()
             }
 
             return container

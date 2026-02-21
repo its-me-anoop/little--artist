@@ -1,0 +1,40 @@
+{
+  "source": "/Users/anoopjose/Projects/Little Artist/Little Artist/Components/VoiceMemo/VoiceMemoPlayerView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Voice memo",
+        "location": {
+          "startingColumn": 29,
+          "startingLine": 93
+        }
+      },
+      {
+        "comment": "",
+        "key": "Double tap to play or stop",
+        "location": {
+          "startingColumn": 28,
+          "startingLine": 94
+        }
+      },
+      {
+        "comment": "",
+        "key": "Stop voice memo",
+        "location": {
+          "startingColumn": 58,
+          "startingLine": 58
+        }
+      },
+      {
+        "comment": "",
+        "key": "Play voice memo",
+        "location": {
+          "startingColumn": 78,
+          "startingLine": 58
+        }
+      }
+    ]
+  },
+  "version": 1
+}

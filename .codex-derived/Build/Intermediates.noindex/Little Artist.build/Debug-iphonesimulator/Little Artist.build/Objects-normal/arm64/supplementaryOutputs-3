@@ -1,0 +1,37 @@
+{
+  "/Users/anoopjose/Projects/Little Artist/Little Artist/Components/YearChipView.swift" : {
+    "const-values" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/YearChipView.swiftconstvalues",
+    "dependencies" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/YearChipView.d",
+    "diagnostics" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/YearChipView.dia",
+    "object" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/YearChipView.o",
+    "swift-dependencies" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/YearChipView.swiftdeps"
+  },
+  "/Users/anoopjose/Projects/Little Artist/Little Artist/Models/Artwork.swift" : {
+    "const-values" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/Artwork.swiftconstvalues",
+    "dependencies" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/Artwork.d",
+    "diagnostics" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/Artwork.dia",
+    "object" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/Artwork.o",
+    "swift-dependencies" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/Artwork.swiftdeps"
+  },
+  "/Users/anoopjose/Projects/Little Artist/Little Artist/Models/Child.swift" : {
+    "const-values" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/Child.swiftconstvalues",
+    "dependencies" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/Child.d",
+    "diagnostics" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/Child.dia",
+    "object" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/Child.o",
+    "swift-dependencies" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/Child.swiftdeps"
+  },
+  "/Users/anoopjose/Projects/Little Artist/Little Artist/Utilities/AISuggestionService.swift" : {
+    "const-values" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/AISuggestionService.swiftconstvalues",
+    "dependencies" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/AISuggestionService.d",
+    "diagnostics" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/AISuggestionService.dia",
+    "object" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/AISuggestionService.o",
+    "swift-dependencies" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/AISuggestionService.swiftdeps"
+  },
+  "/Users/anoopjose/Projects/Little Artist/Little Artist/Utilities/Color+Hex.swift" : {
+    "const-values" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/Color+Hex.swiftconstvalues",
+    "dependencies" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/Color+Hex.d",
+    "diagnostics" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/Color+Hex.dia",
+    "object" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/Color+Hex.o",
+    "swift-dependencies" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/Color+Hex.swiftdeps"
+  }
+}

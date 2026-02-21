@@ -1,0 +1,304 @@
+{
+  "source": "/Users/anoopjose/Projects/Little Artist/Little Artist/Views/SettingsView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Settings",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 312
+        }
+      },
+      {
+        "comment": "",
+        "key": "Delete Child?",
+        "location": {
+          "startingColumn": 20,
+          "startingLine": 322
+        }
+      },
+      {
+        "comment": "",
+        "key": "iCloud Sync Enabled",
+        "location": {
+          "startingColumn": 20,
+          "startingLine": 337
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld artworks",
+        "location": {
+          "startingColumn": 38,
+          "startingLine": 86
+        }
+      },
+      {
+        "comment": "",
+        "key": "Add Child",
+        "location": {
+          "startingColumn": 31,
+          "startingLine": 106
+        }
+      },
+      {
+        "comment": "",
+        "key": "Children",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 110
+        }
+      },
+      {
+        "comment": "",
+        "key": "AI Captions",
+        "location": {
+          "startingColumn": 31,
+          "startingLine": 116
+        }
+      },
+      {
+        "comment": "",
+        "key": "Default Camera",
+        "location": {
+          "startingColumn": 31,
+          "startingLine": 121
+        }
+      },
+      {
+        "comment": "",
+        "key": "",
+        "location": {
+          "startingColumn": 32,
+          "startingLine": 123
+        }
+      },
+      {
+        "comment": "",
+        "key": "Back",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 124
+        }
+      },
+      {
+        "comment": "",
+        "key": "Front",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 125
+        }
+      },
+      {
+        "comment": "",
+        "key": "Reminders",
+        "location": {
+          "startingColumn": 31,
+          "startingLine": 132
+        }
+      },
+      {
+        "comment": "",
+        "key": "Preferences",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 150
+        }
+      },
+      {
+        "comment": "",
+        "key": "Plan",
+        "location": {
+          "startingColumn": 31,
+          "startingLine": 156
+        }
+      },
+      {
+        "comment": "",
+        "key": "Premium",
+        "location": {
+          "startingColumn": 48,
+          "startingLine": 158
+        }
+      },
+      {
+        "comment": "",
+        "key": "Free",
+        "location": {
+          "startingColumn": 60,
+          "startingLine": 158
+        }
+      },
+      {
+        "comment": "",
+        "key": "Upgrade to Premium",
+        "location": {
+          "startingColumn": 35,
+          "startingLine": 167
+        }
+      },
+      {
+        "comment": "",
+        "key": "Restore Purchases",
+        "location": {
+          "startingColumn": 35,
+          "startingLine": 180
+        }
+      },
+      {
+        "comment": "",
+        "key": "Subscription",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 189
+        }
+      },
+      {
+        "comment": "",
+        "key": "iCloud Sync",
+        "location": {
+          "startingColumn": 35,
+          "startingLine": 197
+        }
+      },
+      {
+        "comment": "",
+        "key": "Premium",
+        "location": {
+          "startingColumn": 38,
+          "startingLine": 214
+        }
+      },
+      {
+        "comment": "",
+        "key": "iCloud Sync",
+        "location": {
+          "startingColumn": 39,
+          "startingLine": 211
+        }
+      },
+      {
+        "comment": "",
+        "key": "Storage",
+        "location": {
+          "startingColumn": 31,
+          "startingLine": 222
+        }
+      },
+      {
+        "comment": "",
+        "key": "Export %@'s Portfolio",
+        "location": {
+          "startingColumn": 39,
+          "startingLine": 238
+        }
+      },
+      {
+        "comment": "",
+        "key": "Data",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 249
+        }
+      },
+      {
+        "comment": "",
+        "key": "Event Log (%lld)",
+        "location": {
+          "startingColumn": 45,
+          "startingLine": 268
+        }
+      },
+      {
+        "comment": "",
+        "key": "Force Sync Now",
+        "location": {
+          "startingColumn": 35,
+          "startingLine": 280
+        }
+      },
+      {
+        "comment": "",
+        "key": "Sharing Diagnostics",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 284
+        }
+      },
+      {
+        "comment": "",
+        "key": "Version",
+        "location": {
+          "startingColumn": 31,
+          "startingLine": 291
+        }
+      },
+      {
+        "comment": "",
+        "key": "Privacy Policy",
+        "location": {
+          "startingColumn": 31,
+          "startingLine": 300
+        }
+      },
+      {
+        "comment": "",
+        "key": "Replay Onboarding",
+        "location": {
+          "startingColumn": 31,
+          "startingLine": 306
+        }
+      },
+      {
+        "comment": "",
+        "key": "About",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 309
+        }
+      },
+      {
+        "comment": "",
+        "key": "Cancel",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 323
+        }
+      },
+      {
+        "comment": "",
+        "key": "Delete",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 326
+        }
+      },
+      {
+        "comment": "",
+        "key": "This will permanently delete %@ and all their %lld artworks.",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 334
+        }
+      },
+      {
+        "comment": "",
+        "key": "OK",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 338
+        }
+      },
+      {
+        "comment": "",
+        "key": "Your data will now sync across your devices. You can share child profiles from the Edit Profile screen.",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 340
+        }
+      }
+    ]
+  },
+  "version": 1
+}

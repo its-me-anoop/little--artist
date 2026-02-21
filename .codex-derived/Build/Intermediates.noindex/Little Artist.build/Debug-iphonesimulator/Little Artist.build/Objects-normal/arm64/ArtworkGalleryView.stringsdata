@@ -1,0 +1,16 @@
+{
+  "source": "/Users/anoopjose/Projects/Little Artist/Little Artist/Views/ArtworkGalleryView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "%lld",
+        "location": {
+          "startingColumn": 38,
+          "startingLine": 131
+        }
+      }
+    ]
+  },
+  "version": 1
+}

@@ -1,0 +1,37 @@
+{
+  "/Users/anoopjose/Projects/Little Artist/Little Artist/App/ContentView.swift" : {
+    "const-values" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/ContentView.swiftconstvalues",
+    "dependencies" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/ContentView.d",
+    "diagnostics" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/ContentView.dia",
+    "object" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/ContentView.o",
+    "swift-dependencies" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/ContentView.swiftdeps"
+  },
+  "/Users/anoopjose/Projects/Little Artist/Little Artist/App/Little_ArtistApp.swift" : {
+    "const-values" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/Little_ArtistApp.swiftconstvalues",
+    "dependencies" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/Little_ArtistApp.d",
+    "diagnostics" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/Little_ArtistApp.dia",
+    "object" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/Little_ArtistApp.o",
+    "swift-dependencies" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/Little_ArtistApp.swiftdeps"
+  },
+  "/Users/anoopjose/Projects/Little Artist/Little Artist/Components/ActivityView.swift" : {
+    "const-values" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/ActivityView.swiftconstvalues",
+    "dependencies" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/ActivityView.d",
+    "diagnostics" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/ActivityView.dia",
+    "object" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/ActivityView.o",
+    "swift-dependencies" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/ActivityView.swiftdeps"
+  },
+  "/Users/anoopjose/Projects/Little Artist/Little Artist/Components/AddArtworkButton.swift" : {
+    "const-values" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/AddArtworkButton.swiftconstvalues",
+    "dependencies" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/AddArtworkButton.d",
+    "diagnostics" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/AddArtworkButton.dia",
+    "object" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/AddArtworkButton.o",
+    "swift-dependencies" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/AddArtworkButton.swiftdeps"
+  },
+  "/Users/anoopjose/Projects/Little Artist/Little Artist/Components/AddChildButton.swift" : {
+    "const-values" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/AddChildButton.swiftconstvalues",
+    "dependencies" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/AddChildButton.d",
+    "diagnostics" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/AddChildButton.dia",
+    "object" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/AddChildButton.o",
+    "swift-dependencies" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/AddChildButton.swiftdeps"
+  }
+}

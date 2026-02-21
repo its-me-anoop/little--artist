@@ -1,0 +1,232 @@
+//
+//  FirebaseAuthService.swift
+//  Little Artist
+//
+//  Manages Firebase Authentication — anonymous sign-in on launch,
+//  Sign in with Apple for sync/sharing, and account linking.
+//
+
+import AuthenticationServices
+import CryptoKit
+import FirebaseAuth
+import Foundation
+import os
+
+/// Manages Firebase Authentication lifecycle.
+///
+/// On first launch the user is signed in anonymously. When premium
+/// users enable sync, they upgrade to Sign in with Apple via
+/// ``linkAppleAccount(credential:)``, preserving their anonymous UID
+/// and any data already written to Firestore.
+@MainActor
+@Observable
+final class FirebaseAuthService: NSObject {
+
+    // MARK: - Singleton
+
+    static let shared = FirebaseAuthService()
+
+    // MARK: - Published State
+
+    /// The currently authenticated Firebase user (anonymous or Apple-linked).
+    private(set) var currentUser: FirebaseAuth.User?
+
+    /// `true` while an auth operation is in flight.
+    private(set) var isAuthenticating = false
+
+    /// Human-readable error from the last auth attempt, if any.
+    private(set) var authError: String?
+
+    /// `true` once the user has linked an Apple credential (persistent sync identity).
+    var isLinkedWithApple: Bool {
+        currentUser?.providerData.contains(where: { $0.providerID == "apple.com" }) ?? false
+    }
+
+    /// Convenience accessor for the Firebase UID.
+    var userId: String? { currentUser?.uid }
+
+    // MARK: - Private
+
+    private let logger = Logger(subsystem: "uk.co.flutterly.Little-Artist", category: "Auth")
+
+    /// Unhashed nonce used during the current Sign in with Apple flow.
+    private var currentNonce: String?
+
+    /// Continuation for the Sign in with Apple async bridge.
+    private var signInContinuation: CheckedContinuation<ASAuthorization, Error>?
+
+    private var authStateHandle: AuthStateDidChangeListenerHandle?
+
+    // MARK: - Init
+
+    private override init() {
+        super.init()
+    }
+
+    // MARK: - Lifecycle
+
+    /// Call once at app launch (after `FirebaseApp.configure()`).
+    /// Listens for auth state changes and signs in anonymously if needed.
+    func setup() {
+        authStateHandle = Auth.auth().addStateDidChangeListener { [weak self] _, user in
+            Task { @MainActor in
+                self?.currentUser = user
+            }
+        }
+
+        // If no user yet, sign in anonymously
+        if Auth.auth().currentUser == nil {
+            Task { await signInAnonymously() }
+        } else {
+            currentUser = Auth.auth().currentUser
+            logger.info("Existing user: \(self.currentUser?.uid ?? "nil", privacy: .public)")
+        }
+    }
+
+    // MARK: - Anonymous Auth
+
+    /// Signs in anonymously. Called automatically at first launch.
+    func signInAnonymously() async {
+        guard !isAuthenticating else { return }
+        isAuthenticating = true
+        authError = nil
+
+        do {
+            let result = try await Auth.auth().signInAnonymously()
+            currentUser = result.user
+            logger.info("Anonymous sign-in OK: \(result.user.uid, privacy: .public)")
+        } catch {
+            authError = error.localizedDescription
+            logger.error("Anonymous sign-in failed: \(error.localizedDescription, privacy: .public)")
+        }
+
+        isAuthenticating = false
+    }
+
+    // MARK: - Sign in with Apple
+
+    /// Starts the Sign in with Apple flow and links the credential to
+    /// the current anonymous account. Returns `true` on success.
+    @discardableResult
+    func signInWithApple() async throws -> Bool {
+        let nonce = randomNonceString()
+        currentNonce = nonce
+
+        let authorization = try await requestAppleAuthorization(nonce: nonce)
+
+        guard let appleCredential = authorization.credential as? ASAuthorizationAppleIDCredential,
+              let identityToken = appleCredential.identityToken,
+              let tokenString = String(data: identityToken, encoding: .utf8) else {
+            throw AuthError.missingToken
+        }
+
+        let firebaseCredential = OAuthProvider.appleCredential(
+            withIDToken: tokenString,
+            rawNonce: nonce,
+            fullName: appleCredential.fullName
+        )
+
+        // Link to existing anonymous account (preserves UID + data)
+        if let user = Auth.auth().currentUser, user.isAnonymous {
+            do {
+                let result = try await user.link(with: firebaseCredential)
+                currentUser = result.user
+                logger.info("Apple account linked to anonymous: \(result.user.uid, privacy: .public)")
+                return true
+            } catch let error as NSError where error.code == AuthErrorCode.credentialAlreadyInUse.rawValue {
+                // Apple credential already linked to a different account — sign in directly
+                logger.warning("Credential already in use — signing in instead of linking")
+                let result = try await Auth.auth().signIn(with: firebaseCredential)
+                currentUser = result.user
+                return true
+            }
+        }
+
+        // No anonymous user — sign in directly
+        let result = try await Auth.auth().signIn(with: firebaseCredential)
+        currentUser = result.user
+        logger.info("Apple sign-in OK: \(result.user.uid, privacy: .public)")
+        return true
+    }
+
+    // MARK: - Sign Out
+
+    func signOut() throws {
+        try Auth.auth().signOut()
+        currentUser = nil
+        logger.info("Signed out — will re-authenticate anonymously")
+        Task { await signInAnonymously() }
+    }
+
+    // MARK: - Apple Auth Helpers
+
+    /// Bridges `ASAuthorizationController` into async/await.
+    private func requestAppleAuthorization(nonce: String) async throws -> ASAuthorization {
+        try await withCheckedThrowingContinuation { continuation in
+            self.signInContinuation = continuation
+
+            let request = ASAuthorizationAppleIDProvider().createRequest()
+            request.requestedScopes = [.fullName, .email]
+            request.nonce = sha256(nonce)
+
+            let controller = ASAuthorizationController(authorizationRequests: [request])
+            controller.delegate = self
+            controller.performRequests()
+        }
+    }
+
+    /// Generates a random nonce string for Sign in with Apple.
+    private func randomNonceString(length: Int = 32) -> String {
+        precondition(length > 0)
+        var bytes = [UInt8](repeating: 0, count: length)
+        _ = SecRandomCopyBytes(kSecRandomDefault, bytes.count, &bytes)
+        let charset: [Character] = Array("0123456789ABCDEFGHIJKLMNOPQRSTUVXYZabcdefghijklmnopqrstuvwxyz-._")
+        return String(bytes.map { charset[Int($0) % charset.count] })
+    }
+
+    /// SHA-256 hash of the nonce for Apple's anti-replay check.
+    private func sha256(_ input: String) -> String {
+        let data = Data(input.utf8)
+        let hash = SHA256.hash(data: data)
+        return hash.compactMap { String(format: "%02x", $0) }.joined()
+    }
+
+    // MARK: - Errors
+
+    enum AuthError: LocalizedError {
+        case missingToken
+        case noCurrentUser
+
+        var errorDescription: String? {
+            switch self {
+            case .missingToken: "Apple sign-in did not return an identity token."
+            case .noCurrentUser: "No authenticated user."
+            }
+        }
+    }
+}
+
+// MARK: - ASAuthorizationControllerDelegate
+
+extension FirebaseAuthService: ASAuthorizationControllerDelegate {
+
+    nonisolated func authorizationController(
+        controller: ASAuthorizationController,
+        didCompleteWithAuthorization authorization: ASAuthorization
+    ) {
+        Task { @MainActor in
+            signInContinuation?.resume(returning: authorization)
+            signInContinuation = nil
+        }
+    }
+
+    nonisolated func authorizationController(
+        controller: ASAuthorizationController,
+        didCompleteWithError error: Error
+    ) {
+        Task { @MainActor in
+            signInContinuation?.resume(throwing: error)
+            signInContinuation = nil
+        }
+    }
+}

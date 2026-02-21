@@ -402,15 +402,17 @@ struct AddArtworkView: View {
     // MARK: - Batch Import
 
     private func batchImport(items: [PhotosPickerItem]) async {
-        for item in items {
+        let repo = FirestoreRepository.shared
+        for (index, item) in items.enumerated() {
             guard let data = try? await item.loadTransferable(type: Data.self) else { continue }
-            let artwork = Artwork(
+            // Offset each item's date by its index to avoid key collisions
+            repo.createArtwork(
                 title: "",
                 imageData: data,
-                createdAt: artworkDate,
-                child: child
+                createdAt: artworkDate.addingTimeInterval(Double(index)),
+                child: child,
+                in: modelContext
             )
-            modelContext.insert(artwork)
         }
         HapticService.success()
     }
@@ -419,16 +421,16 @@ struct AddArtworkView: View {
 
     private func saveArtwork() {
         guard let capturedImageData else { return }
-        let artwork = Artwork(
+        FirestoreRepository.shared.createArtwork(
             title: title.trimmingCharacters(in: .whitespaces),
             caption: caption.trimmingCharacters(in: .whitespacesAndNewlines),
             imageData: capturedImageData,
             voiceNoteData: voiceNoteData,
             createdAt: artworkDate,
             child: child,
-            tags: selectedTags
+            tags: selectedTags,
+            in: modelContext
         )
-        modelContext.insert(artwork)
         dismiss()
     }
 

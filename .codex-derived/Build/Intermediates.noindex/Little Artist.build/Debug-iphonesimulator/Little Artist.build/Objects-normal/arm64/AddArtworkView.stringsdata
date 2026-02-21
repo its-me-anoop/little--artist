@@ -1,0 +1,72 @@
+{
+  "source": "/Users/anoopjose/Projects/Little Artist/Little Artist/Views/AddArtworkView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "New Artwork",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 125
+        }
+      },
+      {
+        "comment": "",
+        "key": "Artwork title (optional)",
+        "location": {
+          "startingColumn": 31,
+          "startingLine": 50
+        }
+      },
+      {
+        "comment": "",
+        "key": "Caption (optional)",
+        "location": {
+          "startingColumn": 31,
+          "startingLine": 61
+        }
+      },
+      {
+        "comment": "",
+        "key": "Generating Suggestions...",
+        "location": {
+          "startingColumn": 64,
+          "startingLine": 83
+        }
+      },
+      {
+        "comment": "",
+        "key": "Suggest Title & Caption",
+        "location": {
+          "startingColumn": 94,
+          "startingLine": 83
+        }
+      },
+      {
+        "comment": "",
+        "key": "Save Artwork",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 110
+        }
+      },
+      {
+        "comment": "",
+        "key": "Cancel",
+        "location": {
+          "startingColumn": 28,
+          "startingLine": 129
+        }
+      },
+      {
+        "comment": "",
+        "key": "Capture or select artwork",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 202
+        }
+      }
+    ]
+  },
+  "version": 1
+}

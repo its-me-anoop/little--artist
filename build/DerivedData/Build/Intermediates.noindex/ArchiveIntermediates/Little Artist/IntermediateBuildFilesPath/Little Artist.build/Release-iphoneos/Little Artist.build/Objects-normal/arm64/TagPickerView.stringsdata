@@ -1,0 +1,40 @@
+{
+  "source": "/Users/anoopjose/Projects/Little Artist/Little Artist/Components/Chips/TagPickerView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Tags",
+        "location": {
+          "startingColumn": 19,
+          "startingLine": 29
+        }
+      },
+      {
+        "comment": "",
+        "key": "New",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 50
+        }
+      },
+      {
+        "comment": "",
+        "key": "Tag name",
+        "location": {
+          "startingColumn": 31,
+          "startingLine": 65
+        }
+      },
+      {
+        "comment": "",
+        "key": "Add",
+        "location": {
+          "startingColumn": 28,
+          "startingLine": 70
+        }
+      }
+    ]
+  },
+  "version": 1
+}

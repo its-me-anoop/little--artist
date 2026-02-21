@@ -1,0 +1,24 @@
+{
+  "source": "/Users/anoopjose/Projects/Little Artist/Little Artist/Components/Buttons/AddArtworkButton.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Add new artwork",
+        "location": {
+          "startingColumn": 29,
+          "startingLine": 31
+        }
+      },
+      {
+        "comment": "",
+        "key": "Double tap to capture artwork",
+        "location": {
+          "startingColumn": 28,
+          "startingLine": 32
+        }
+      }
+    ]
+  },
+  "version": 1
+}

@@ -1,0 +1,37 @@
+{
+  "/Users/anoopjose/Projects/Little Artist/Little Artist/Components/ArtworkThumbnailView.swift" : {
+    "const-values" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/ArtworkThumbnailView.swiftconstvalues",
+    "dependencies" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/ArtworkThumbnailView.d",
+    "diagnostics" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/ArtworkThumbnailView.dia",
+    "object" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/ArtworkThumbnailView.o",
+    "swift-dependencies" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/ArtworkThumbnailView.swiftdeps"
+  },
+  "/Users/anoopjose/Projects/Little Artist/Little Artist/Components/CameraPicker.swift" : {
+    "const-values" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/CameraPicker.swiftconstvalues",
+    "dependencies" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/CameraPicker.d",
+    "diagnostics" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/CameraPicker.dia",
+    "object" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/CameraPicker.o",
+    "swift-dependencies" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/CameraPicker.swiftdeps"
+  },
+  "/Users/anoopjose/Projects/Little Artist/Little Artist/Components/ChildAvatarView.swift" : {
+    "const-values" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/ChildAvatarView.swiftconstvalues",
+    "dependencies" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/ChildAvatarView.d",
+    "diagnostics" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/ChildAvatarView.dia",
+    "object" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/ChildAvatarView.o",
+    "swift-dependencies" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/ChildAvatarView.swiftdeps"
+  },
+  "/Users/anoopjose/Projects/Little Artist/Little Artist/Components/ChildSliderView.swift" : {
+    "const-values" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/ChildSliderView.swiftconstvalues",
+    "dependencies" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/ChildSliderView.d",
+    "diagnostics" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/ChildSliderView.dia",
+    "object" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/ChildSliderView.o",
+    "swift-dependencies" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/ChildSliderView.swiftdeps"
+  },
+  "/Users/anoopjose/Projects/Little Artist/Little Artist/Components/DocumentScannerPicker.swift" : {
+    "const-values" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/DocumentScannerPicker.swiftconstvalues",
+    "dependencies" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/DocumentScannerPicker.d",
+    "diagnostics" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/DocumentScannerPicker.dia",
+    "object" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/DocumentScannerPicker.o",
+    "swift-dependencies" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/DocumentScannerPicker.swiftdeps"
+  }
+}

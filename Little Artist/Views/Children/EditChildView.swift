@@ -8,7 +8,6 @@
 //  Created by Codex on 19/02/2026.
 //
 
-import CloudKit
 import SwiftUI
 import SwiftData
 import PhotosUI
@@ -33,15 +32,15 @@ struct EditChildView: View {
     @State private var showCamera = false
     @State private var showImagePlayground = false
     @State private var showDeleteConfirmation = false
-    @State private var showCloudSharing = false
+    @State private var showLeaveConfirmation = false
+    @State private var showFirebaseShare = false
     @State private var showShareManagement = false
-    @State private var activeShare: CKShare?
-    @State private var activeContainer: CKContainer?
+    @State private var activeShareId: String?
     @State private var sharingError: String?
-    @AppStorage("iCloudSyncEnabled") private var iCloudSyncEnabled = false
+    @State private var isLeavingShare = false
+    @AppStorage("firebaseSyncEnabled") private var firebaseSyncEnabled = false
 
     private let presetColors = Brand.avatarColors
-    private let sharingService = CloudKitSharingService.shared
 
     init(child: Child, onDelete: (() -> Void)? = nil) {
         self.child = child
@@ -115,16 +114,16 @@ struct EditChildView: View {
                     if PremiumManager.isPremium {
                         VStack(spacing: 8) {
                             Button {
-                                if sharingService.isInitialised {
+                                if firebaseSyncEnabled {
                                     Task { await presentSharing() }
                                 } else {
-                                    sharingError = "Enable iCloud Sync in Settings to share profiles with another parent."
+                                    sharingError = "Enable Sync in Settings to share profiles with another parent."
                                 }
                             } label: {
                                 HStack(spacing: 8) {
-                                    Image(systemName: sharingService.isShared(child) ? "person.2.fill" : "person.badge.plus")
+                                    Image(systemName: isChildShared ? "person.2.fill" : "person.badge.plus")
                                         .font(.system(size: 16, weight: .medium))
-                                    Text(sharingService.isShared(child) ? "Manage Sharing" : "Share Profile")
+                                    Text(isChildShared ? "Manage Sharing" : "Share Profile")
                                         .font(Brand.headlineFont)
                                 }
                                 .foregroundStyle(Brand.sky)
@@ -137,9 +136,9 @@ struct EditChildView: View {
                             }
                             .padding(.horizontal, 32)
 
-                            Text(iCloudSyncEnabled
+                            Text(firebaseSyncEnabled
                                 ? "Invite another parent to view and edit this profile"
-                                : "Requires iCloud Sync (enable in Settings)")
+                                : "Requires Sync (enable in Settings)")
                                 .font(Brand.caption2Font)
                                 .foregroundStyle(Brand.warmGray)
                                 .multilineTextAlignment(.center)
@@ -148,12 +147,23 @@ struct EditChildView: View {
 
                     Spacer().frame(height: 8)
 
-                    // Delete button
-                    Button(role: .destructive) {
-                        showDeleteConfirmation = true
-                    } label: {
-                        Text("Delete Profile")
-                            .font(Brand.headlineFont)
+                    // Delete or Leave button — owner can delete, participant can leave
+                    if isChildShared && !isCurrentUserOwner {
+                        // Participant: show Leave Profile
+                        Button(role: .destructive) {
+                            showLeaveConfirmation = true
+                        } label: {
+                            HStack(spacing: 8) {
+                                if isLeavingShare {
+                                    ProgressView()
+                                        .tint(Brand.dustyRose)
+                                } else {
+                                    Image(systemName: "person.badge.minus")
+                                        .font(.system(size: 16, weight: .medium))
+                                    Text("Leave Profile")
+                                        .font(Brand.headlineFont)
+                                }
+                            }
                             .foregroundStyle(Brand.dustyRose)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 16)
@@ -161,8 +171,26 @@ struct EditChildView: View {
                                 Capsule()
                                     .stroke(Brand.dustyRose, lineWidth: 1.5)
                             }
+                        }
+                        .disabled(isLeavingShare)
+                        .padding(.horizontal, 32)
+                    } else {
+                        // Owner or unshared: show Delete Profile
+                        Button(role: .destructive) {
+                            showDeleteConfirmation = true
+                        } label: {
+                            Text("Delete Profile")
+                                .font(Brand.headlineFont)
+                                .foregroundStyle(Brand.dustyRose)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 16)
+                                .overlay {
+                                    Capsule()
+                                        .stroke(Brand.dustyRose, lineWidth: 1.5)
+                                }
+                        }
+                        .padding(.horizontal, 32)
                     }
-                    .padding(.horizontal, 32)
 
                     // Save button
                     Button {
@@ -211,21 +239,20 @@ struct EditChildView: View {
                     }
                 }
             }
-            .sheet(isPresented: $showCloudSharing) {
-                if let activeShare, let activeContainer {
-                    CloudSharingView(
-                        share: activeShare,
-                        container: activeContainer,
-                        child: child
+            .sheet(isPresented: $showFirebaseShare) {
+                if let activeShareId {
+                    ShareManagementView(
+                        child: child,
+                        shareId: activeShareId,
+                        isNewShare: true
                     )
                 }
             }
             .sheet(isPresented: $showShareManagement) {
-                if let activeShare, let activeContainer {
+                if let activeShareId {
                     ShareManagementView(
                         child: child,
-                        share: activeShare,
-                        ckContainer: activeContainer
+                        shareId: activeShareId
                     )
                 }
             }
@@ -243,7 +270,26 @@ struct EditChildView: View {
                     deleteChild()
                 }
             } message: {
-                Text("All artworks for \(child.name) will be permanently removed.")
+                if isChildShared {
+                    Text("This will permanently delete \(child.name) and all their artworks for everyone this profile is shared with.")
+                } else {
+                    Text("All artworks for \(child.name) will be permanently removed.")
+                }
+            }
+            .task {
+                // Check if this child is already shared
+                if let existingShare = await FirestoreRepository.shared.findShare(for: child),
+                   existingShare.status == "active" {
+                    activeShareId = existingShare.shareId
+                }
+            }
+            .alert("Leave this shared profile?", isPresented: $showLeaveConfirmation) {
+                Button("Cancel", role: .cancel) {}
+                Button("Leave", role: .destructive) {
+                    Task { await leaveSharedProfile() }
+                }
+            } message: {
+                Text("\(child.name)'s profile and all artworks will be removed from your device. The owner will keep their copy.")
             }
         }
     }
@@ -324,29 +370,41 @@ struct EditChildView: View {
         }
     }
 
+    // MARK: - Sharing State
+
+    private var isChildShared: Bool {
+        child.isShared || child.firestoreId != nil && activeShareId != nil
+    }
+
+    private var isCurrentUserOwner: Bool {
+        !child.isShared
+    }
+
     // MARK: - Actions
 
     private func saveChanges() {
         let trimmedName = name.trimmingCharacters(in: .whitespaces)
         guard !trimmedName.isEmpty else { return }
-        child.name = trimmedName
-        child.avatarColor = selectedColor
-        child.avatarImageData = avatarImageData
+        FirestoreRepository.shared.updateChild(
+            child,
+            name: trimmedName,
+            avatarColor: selectedColor,
+            avatarImageData: avatarImageData,
+            in: modelContext
+        )
         dismiss()
     }
 
     private func presentSharing() async {
-        // Check if already shared BEFORE creating/fetching the share,
-        // because shareChild() always results in a share existing.
-        let wasAlreadyShared = sharingService.isShared(child)
         do {
-            let (share, container) = try await sharingService.shareChild(child)
-            activeShare = share
-            activeContainer = container
-            if wasAlreadyShared {
+            let shareId = try await FirestoreRepository.shared.shareChild(child)
+            activeShareId = shareId
+            // Check if already shared to decide which sheet to show
+            if let existingShare = await FirestoreRepository.shared.findShare(for: child),
+               existingShare.status == "active" {
                 showShareManagement = true
             } else {
-                showCloudSharing = true
+                showFirebaseShare = true
             }
         } catch {
             sharingError = error.localizedDescription
@@ -354,9 +412,26 @@ struct EditChildView: View {
     }
 
     private func deleteChild() {
-        modelContext.delete(child)
+        // Delete via repository (handles both local + Firestore)
+        FirestoreRepository.shared.deleteChild(child, in: modelContext)
         onDelete?()
         dismiss()
+    }
+
+    private func leaveSharedProfile() async {
+        isLeavingShare = true
+        do {
+            if let shareId = activeShareId {
+                try await FirestoreRepository.shared.leaveShare(shareId: shareId)
+            }
+            // Remove local mirror
+            modelContext.delete(child)
+            onDelete?()
+            dismiss()
+        } catch {
+            sharingError = "Failed to leave: \(error.localizedDescription)"
+            isLeavingShare = false
+        }
     }
 }
 

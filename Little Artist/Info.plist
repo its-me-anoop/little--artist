@@ -18,5 +18,12 @@
 	<array>
 		<string>arm64</string>
 	</array>
+	<key>UILaunchScreen</key>
+	<dict>
+		<key>UIColorName</key>
+		<string>LaunchBackground</string>
+		<key>UIImageName</key>
+		<string>paintpalette.fill</string>
+	</dict>
 </dict>
 </plist>

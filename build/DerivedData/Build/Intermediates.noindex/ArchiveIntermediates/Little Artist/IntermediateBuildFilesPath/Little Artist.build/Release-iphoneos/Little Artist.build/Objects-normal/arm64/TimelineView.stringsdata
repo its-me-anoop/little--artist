@@ -1,0 +1,56 @@
+{
+  "source": "/Users/anoopjose/Projects/Little Artist/Little Artist/Views/TimelineView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Timeline",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 117
+        }
+      },
+      {
+        "comment": "",
+        "key": "Select an artwork",
+        "location": {
+          "startingColumn": 42,
+          "startingLine": 103
+        }
+      },
+      {
+        "comment": "",
+        "key": "No artwork yet",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 128
+        }
+      },
+      {
+        "comment": "",
+        "key": "Capture your first artwork\nto start building your timeline.",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 130
+        }
+      },
+      {
+        "comment": "",
+        "key": "Show Less",
+        "location": {
+          "startingColumn": 59,
+          "startingLine": 251
+        }
+      },
+      {
+        "comment": "",
+        "key": "Show All (%lld)",
+        "location": {
+          "startingColumn": 73,
+          "startingLine": 251
+        }
+      }
+    ]
+  },
+  "version": 1
+}

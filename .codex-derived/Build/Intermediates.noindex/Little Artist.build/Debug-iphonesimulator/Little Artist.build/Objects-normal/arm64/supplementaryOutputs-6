@@ -1,0 +1,30 @@
+{
+  "/Users/anoopjose/Projects/Little Artist/Little Artist/Views/AddArtworkView.swift" : {
+    "const-values" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/AddArtworkView.swiftconstvalues",
+    "dependencies" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/AddArtworkView.d",
+    "diagnostics" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/AddArtworkView.dia",
+    "object" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/AddArtworkView.o",
+    "swift-dependencies" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/AddArtworkView.swiftdeps"
+  },
+  "/Users/anoopjose/Projects/Little Artist/Little Artist/Views/AddChildView.swift" : {
+    "const-values" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/AddChildView.swiftconstvalues",
+    "dependencies" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/AddChildView.d",
+    "diagnostics" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/AddChildView.dia",
+    "object" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/AddChildView.o",
+    "swift-dependencies" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/AddChildView.swiftdeps"
+  },
+  "/Users/anoopjose/Projects/Little Artist/Little Artist/Views/Onboarding/PulseCardsView.swift" : {
+    "const-values" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/PulseCardsView.swiftconstvalues",
+    "dependencies" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/PulseCardsView.d",
+    "diagnostics" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/PulseCardsView.dia",
+    "object" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/PulseCardsView.o",
+    "swift-dependencies" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/PulseCardsView.swiftdeps"
+  },
+  "/Users/anoopjose/Projects/Little Artist/Little Artist/Views/Onboarding/ScatterCardsView.swift" : {
+    "const-values" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/ScatterCardsView.swiftconstvalues",
+    "dependencies" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/ScatterCardsView.d",
+    "diagnostics" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/ScatterCardsView.dia",
+    "object" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/ScatterCardsView.o",
+    "swift-dependencies" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/ScatterCardsView.swiftdeps"
+  }
+}

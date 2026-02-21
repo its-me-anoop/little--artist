@@ -1,0 +1,72 @@
+{
+  "source": "/Users/anoopjose/Projects/Little Artist/Little Artist/Views/SearchView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Search",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 224
+        }
+      },
+      {
+        "comment": "",
+        "key": "Search artwork...",
+        "location": {
+          "startingColumn": 48,
+          "startingLine": 226
+        }
+      },
+      {
+        "comment": "",
+        "key": "Results (%lld)",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 182
+        }
+      },
+      {
+        "comment": "",
+        "key": "Recent Searches",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 84
+        }
+      },
+      {
+        "comment": "",
+        "key": "Filter By",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 112
+        }
+      },
+      {
+        "comment": "",
+        "key": "Starred",
+        "location": {
+          "startingColumn": 42,
+          "startingLine": 142
+        }
+      },
+      {
+        "comment": "",
+        "key": "No artwork found",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 192
+        }
+      },
+      {
+        "comment": "",
+        "key": "Try a different search or adjust filters",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 194
+        }
+      }
+    ]
+  },
+  "version": 1
+}

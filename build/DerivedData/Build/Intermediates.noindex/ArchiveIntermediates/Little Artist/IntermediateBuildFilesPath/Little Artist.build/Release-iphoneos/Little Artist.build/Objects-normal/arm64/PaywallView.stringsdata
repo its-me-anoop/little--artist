@@ -1,0 +1,72 @@
+{
+  "source": "/Users/anoopjose/Projects/Little Artist/Little Artist/Views/PaywallView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Processing...",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 146
+        }
+      },
+      {
+        "comment": "",
+        "key": "Yearly — %@",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 103
+        }
+      },
+      {
+        "comment": "",
+        "key": "Monthly — %@",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 124
+        }
+      },
+      {
+        "comment": "",
+        "key": "Restore",
+        "location": {
+          "startingColumn": 28,
+          "startingLine": 161
+        }
+      },
+      {
+        "comment": "",
+        "key": "Not Now",
+        "location": {
+          "startingColumn": 28,
+          "startingLine": 167
+        }
+      },
+      {
+        "comment": "",
+        "key": "Subscription automatically renews unless cancelled at least 24 hours before the end of the current period. Manage subscriptions in Settings > Apple ID.",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 177
+        }
+      },
+      {
+        "comment": "",
+        "key": "Privacy Policy",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 183
+        }
+      },
+      {
+        "comment": "",
+        "key": "Terms of Use",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 184
+        }
+      }
+    ]
+  },
+  "version": 1
+}

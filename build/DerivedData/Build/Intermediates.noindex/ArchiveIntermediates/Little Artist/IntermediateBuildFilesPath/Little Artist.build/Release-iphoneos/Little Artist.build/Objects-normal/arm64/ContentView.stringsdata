@@ -1,0 +1,40 @@
+{
+  "source": "/Users/anoopjose/Projects/Little Artist/Little Artist/App/ContentView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Gallery",
+        "location": {
+          "startingColumn": 17,
+          "startingLine": 20
+        }
+      },
+      {
+        "comment": "",
+        "key": "Timeline",
+        "location": {
+          "startingColumn": 17,
+          "startingLine": 24
+        }
+      },
+      {
+        "comment": "",
+        "key": "Milestones",
+        "location": {
+          "startingColumn": 17,
+          "startingLine": 28
+        }
+      },
+      {
+        "comment": "",
+        "key": "Settings",
+        "location": {
+          "startingColumn": 17,
+          "startingLine": 32
+        }
+      }
+    ]
+  },
+  "version": 1
+}

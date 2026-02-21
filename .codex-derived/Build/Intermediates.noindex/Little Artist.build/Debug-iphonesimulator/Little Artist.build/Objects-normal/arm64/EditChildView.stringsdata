@@ -1,0 +1,88 @@
+{
+  "source": "/Users/anoopjose/Projects/Little Artist/Little Artist/Views/EditChildView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Edit Profile",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 148
+        }
+      },
+      {
+        "comment": "",
+        "key": "Delete this child profile?",
+        "location": {
+          "startingColumn": 20,
+          "startingLine": 178
+        }
+      },
+      {
+        "comment": "",
+        "key": "Child's name",
+        "location": {
+          "startingColumn": 31,
+          "startingLine": 72
+        }
+      },
+      {
+        "comment": "",
+        "key": "Pick a color",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 85
+        }
+      },
+      {
+        "comment": "",
+        "key": "Delete Profile",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 119
+        }
+      },
+      {
+        "comment": "",
+        "key": "Save Changes",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 135
+        }
+      },
+      {
+        "comment": "",
+        "key": "Cancel",
+        "location": {
+          "startingColumn": 28,
+          "startingLine": 152
+        }
+      },
+      {
+        "comment": "",
+        "key": "Cancel",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 179
+        }
+      },
+      {
+        "comment": "",
+        "key": "Delete",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 180
+        }
+      },
+      {
+        "comment": "",
+        "key": "All artworks for %@ will be permanently removed.",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 184
+        }
+      }
+    ]
+  },
+  "version": 1
+}

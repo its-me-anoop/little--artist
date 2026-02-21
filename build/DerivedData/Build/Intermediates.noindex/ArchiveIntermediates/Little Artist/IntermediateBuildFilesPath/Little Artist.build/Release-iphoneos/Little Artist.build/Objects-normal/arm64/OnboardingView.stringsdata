@@ -1,0 +1,32 @@
+{
+  "source": "/Users/anoopjose/Projects/Little Artist/Little Artist/Views/Onboarding/OnboardingView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Skip",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 75
+        }
+      },
+      {
+        "comment": "",
+        "key": "Next",
+        "location": {
+          "startingColumn": 54,
+          "startingLine": 131
+        }
+      },
+      {
+        "comment": "",
+        "key": "Get Started",
+        "location": {
+          "startingColumn": 63,
+          "startingLine": 131
+        }
+      }
+    ]
+  },
+  "version": 1
+}
