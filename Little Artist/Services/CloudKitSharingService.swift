@@ -489,6 +489,7 @@ final class CloudKitSharingService {
             // duplicates created by private CloudKit sync (same-account).
             if sharedChildren.isEmpty {
                 removeDuplicateMirrors(modelContext: modelContext)
+                deduplicateArtworks(modelContext: modelContext)
                 if modelContext.hasChanges {
                     try modelContext.save()
                     diag("sync: dedup-only pass saved")
@@ -552,6 +553,7 @@ final class CloudKitSharingService {
 
             // --- Dedup pass: remove stale duplicates ---
             removeDuplicateMirrors(modelContext: modelContext)
+            deduplicateArtworks(modelContext: modelContext)
 
             try modelContext.save()
             diag("sync: SAVED to SwiftData successfully")
@@ -623,18 +625,71 @@ final class CloudKitSharingService {
     }
 
     /// Transfers artworks from `source` to `target` that don't already
-    /// exist on the target (matched by title + creation date).
+    /// exist on the target (matched by title + rounded creation date).
     private func transferArtworks(from source: Child, to target: Child, modelContext: ModelContext) {
         guard let sourceArtworks = source.artworks, !sourceArtworks.isEmpty else { return }
         let targetKeys = Set(
-            (target.artworks ?? []).map { "\($0.title)|\($0.createdAt.timeIntervalSince1970)" }
+            (target.artworks ?? []).map { artworkKey($0) }
         )
         for art in sourceArtworks {
-            let key = "\(art.title)|\(art.createdAt.timeIntervalSince1970)"
-            if !targetKeys.contains(key) {
+            if !targetKeys.contains(artworkKey(art)) {
                 art.child = target
             }
         }
+    }
+
+    /// Removes duplicate artworks within each child profile.
+    ///
+    /// Core Data's private CloudKit sync can copy artwork records between
+    /// same-account devices, creating duplicates in `default.store`.
+    /// This pass groups artworks by a stable key (title + rounded date)
+    /// and keeps only the one with the most data (image, caption, etc.).
+    private func deduplicateArtworks(modelContext: ModelContext) {
+        guard let allChildren = try? modelContext.fetch(FetchDescriptor<Child>()) else { return }
+
+        var totalRemoved = 0
+        for child in allChildren {
+            guard let artworks = child.artworks, artworks.count > 1 else { continue }
+
+            var seen: [String: Artwork] = [:]
+            for art in artworks {
+                let key = artworkKey(art)
+                if let existing = seen[key] {
+                    // Keep the one with more data (image > no image, longer caption wins)
+                    let existingScore = artworkDataScore(existing)
+                    let thisScore = artworkDataScore(art)
+                    if thisScore > existingScore {
+                        modelContext.delete(existing)
+                        seen[key] = art
+                    } else {
+                        modelContext.delete(art)
+                    }
+                    totalRemoved += 1
+                } else {
+                    seen[key] = art
+                }
+            }
+        }
+        if totalRemoved > 0 {
+            diag("dedup: removed \(totalRemoved) duplicate artwork(s)")
+        }
+    }
+
+    /// Stable key for an artwork: title + creation date rounded to the
+    /// nearest second. Rounding avoids floating-point mismatches when
+    /// the same date is stored by Core Data and SwiftData independently.
+    private func artworkKey(_ art: Artwork) -> String {
+        "\(art.title)|\(Int(art.createdAt.timeIntervalSince1970))"
+    }
+
+    /// Score indicating how much data an artwork carries — higher is better.
+    private func artworkDataScore(_ art: Artwork) -> Int {
+        var score = 0
+        if art.imageData != nil { score += 10 }
+        score += art.caption.count
+        if art.voiceNoteData != nil { score += 5 }
+        if art.isFavorited { score += 1 }
+        return score
     }
 
     /// Mirrors artworks from a shared Core Data child into a SwiftData child.
@@ -645,17 +700,18 @@ final class CloudKitSharingService {
     ) {
         guard let artworkSet = managedChild.value(forKey: "artworks") as? NSSet else { return }
 
-        let existingTitlesAndDates = Set(
-            (swiftDataChild.artworks ?? []).map { "\($0.title)|\($0.createdAt.timeIntervalSince1970)" }
+        // Use rounded timestamps for matching (avoids floating-point drift)
+        let existingKeys = Set(
+            (swiftDataChild.artworks ?? []).map { artworkKey($0) }
         )
 
         for case let managedArtwork as NSManagedObject in artworkSet {
             let title = managedArtwork.value(forKey: "title") as? String ?? ""
             let createdAt = managedArtwork.value(forKey: "createdAt") as? Date ?? .now
-            let key = "\(title)|\(createdAt.timeIntervalSince1970)"
+            let key = "\(title)|\(Int(createdAt.timeIntervalSince1970))"
 
-            // Skip if already mirrored (by title+date combination)
-            if existingTitlesAndDates.contains(key) { continue }
+            // Skip if already mirrored (by title + rounded date)
+            if existingKeys.contains(key) { continue }
 
             let artwork = Artwork(
                 title: title,
