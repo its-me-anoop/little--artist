@@ -26,6 +26,11 @@ final class Artwork {
     @Attribute(.externalStorage)
     var imageData: Data?
 
+    /// A smaller version of the artwork image for gallery/card views.
+    /// Generated at ingest time. `nil` for artworks created before this feature.
+    @Attribute(.externalStorage)
+    var thumbnailData: Data?
+
     /// Optional voice memo audio data stored externally for efficient storage.
     @Attribute(.externalStorage)
     var voiceNoteData: Data?
@@ -63,6 +68,7 @@ final class Artwork {
         title: String,
         caption: String = "",
         imageData: Data? = nil,
+        thumbnailData: Data? = nil,
         voiceNoteData: Data? = nil,
         isFavorited: Bool = false,
         createdAt: Date = .now,
@@ -76,6 +82,7 @@ final class Artwork {
         self.title = title
         self.caption = caption
         self.imageData = imageData
+        self.thumbnailData = thumbnailData
         self.voiceNoteData = voiceNoteData
         self.isFavorited = isFavorited
         self.createdAt = createdAt

@@ -81,12 +81,25 @@ final class FirestoreRepository {
             avatarColor: avatarColor,
             avatarImageData: avatarImageData
         )
+
+        // Pre-generate Firestore ID and register in localWriteIds BEFORE insert
+        // to prevent the snapshot listener from creating a duplicate.
+        var preGeneratedRef: DocumentReference?
+        if isSyncActive, let userId = auth.userId {
+            let childRef = db.collection("users").document(userId).collection("children").document()
+            let childDocId = childRef.documentID
+            let firestoreId = "users/\(userId)/children/\(childDocId)"
+            child.firestoreId = firestoreId
+            localWriteIds.insert(childDocId)
+            preGeneratedRef = childRef
+        }
+
         modelContext.insert(child)
 
-        // Async Firestore sync
-        if isSyncActive, let userId = auth.userId {
+        // Async Firestore sync using the pre-generated document reference
+        if let childRef = preGeneratedRef, let userId = auth.userId {
             Task {
-                await syncChildToFirestore(child, userId: userId, avatarImageData: avatarImageData)
+                await syncChildToFirestore(child, userId: userId, avatarImageData: avatarImageData, docRef: childRef)
             }
         }
 
@@ -143,6 +156,7 @@ final class FirestoreRepository {
         title: String,
         caption: String = "",
         imageData: Data? = nil,
+        thumbnailData: Data? = nil,
         voiceNoteData: Data? = nil,
         isFavorited: Bool = false,
         createdAt: Date = .now,
@@ -154,6 +168,7 @@ final class FirestoreRepository {
             title: title,
             caption: caption,
             imageData: imageData,
+            thumbnailData: thumbnailData,
             voiceNoteData: voiceNoteData,
             isFavorited: isFavorited,
             createdAt: createdAt,
@@ -161,17 +176,34 @@ final class FirestoreRepository {
             tags: tags,
             syncIdentifier: UUID().uuidString
         )
+
+        // Pre-generate Firestore ID and register in localWriteIds BEFORE insert
+        // to prevent the snapshot listener from creating a duplicate.
+        var preGeneratedRef: DocumentReference?
+        if isSyncActive, let userId = auth.userId, let childFirestoreId = child.firestoreId {
+            let childDocId = childFirestoreId.components(separatedBy: "/").last ?? childFirestoreId
+            let artworkRef = db.collection("users").document(userId)
+                .collection("children").document(childDocId)
+                .collection("artworks").document()
+            let artworkDocId = artworkRef.documentID
+            let firestoreId = "users/\(userId)/children/\(childDocId)/artworks/\(artworkDocId)"
+            artwork.firestoreId = firestoreId
+            localWriteIds.insert(artworkDocId)
+            preGeneratedRef = artworkRef
+        }
+
         modelContext.insert(artwork)
 
-        // Async Firestore sync
-        if isSyncActive, let userId = auth.userId, let childFirestoreId = child.firestoreId {
+        // Async Firestore sync using the pre-generated document reference
+        if let artworkRef = preGeneratedRef, let userId = auth.userId, let childFirestoreId = child.firestoreId {
             Task {
                 await syncArtworkToFirestore(
                     artwork,
                     userId: userId,
                     childFirestoreId: childFirestoreId,
                     imageData: imageData,
-                    voiceNoteData: voiceNoteData
+                    voiceNoteData: voiceNoteData,
+                    docRef: artworkRef
                 )
             }
         }
@@ -403,8 +435,14 @@ final class FirestoreRepository {
 
     // MARK: - Private Firestore Write Helpers
 
-    private func syncChildToFirestore(_ child: Child, userId: String, avatarImageData: Data?) async {
-        let childRef = db.collection("users").document(userId).collection("children").document()
+    private func syncChildToFirestore(
+        _ child: Child,
+        userId: String,
+        avatarImageData: Data?,
+        docRef: DocumentReference? = nil
+    ) async {
+        // Use pre-generated reference if available, otherwise create a new one
+        let childRef = docRef ?? db.collection("users").document(userId).collection("children").document()
         let childDocId = childRef.documentID
 
         // Upload avatar if present
@@ -427,10 +465,14 @@ final class FirestoreRepository {
 
         do {
             try await childRef.setData(data)
-            let firestoreId = "users/\(userId)/children/\(childDocId)"
-            child.firestoreId = firestoreId
+            // firestoreId and localWriteIds already set upfront in createChild()
+            // but ensure they're set for any legacy call path without a pre-generated ref
+            if child.firestoreId == nil {
+                let firestoreId = "users/\(userId)/children/\(childDocId)"
+                child.firestoreId = firestoreId
+            }
             localWriteIds.insert(childDocId)
-            logger.info("Child synced: \(firestoreId, privacy: .public)")
+            logger.info("Child synced: \(childRef.path, privacy: .public)")
         } catch {
             logger.error("Child sync failed: \(error.localizedDescription, privacy: .public)")
         }
@@ -490,10 +532,12 @@ final class FirestoreRepository {
         userId: String,
         childFirestoreId: String,
         imageData: Data?,
-        voiceNoteData: Data?
+        voiceNoteData: Data?,
+        docRef: DocumentReference? = nil
     ) async {
         let childDocId = childFirestoreId.components(separatedBy: "/").last ?? childFirestoreId
-        let artworkRef = db.collection("users").document(userId)
+        // Use pre-generated reference if available, otherwise create a new one
+        let artworkRef = docRef ?? db.collection("users").document(userId)
             .collection("children").document(childDocId)
             .collection("artworks").document()
         let artworkDocId = artworkRef.documentID
@@ -531,12 +575,16 @@ final class FirestoreRepository {
 
         do {
             try await artworkRef.setData(data)
-            let firestoreId = "users/\(userId)/children/\(childDocId)/artworks/\(artworkDocId)"
-            artwork.firestoreId = firestoreId
+            // firestoreId and localWriteIds already set upfront in createArtwork()
+            // but ensure they're set for any legacy call path without a pre-generated ref
+            if artwork.firestoreId == nil {
+                let firestoreId = "users/\(userId)/children/\(childDocId)/artworks/\(artworkDocId)"
+                artwork.firestoreId = firestoreId
+            }
             artwork.imageURL = imageURL
             artwork.voiceNoteURL = voiceNoteURL
             localWriteIds.insert(artworkDocId)
-            logger.info("Artwork synced: \(firestoreId, privacy: .public)")
+            logger.info("Artwork synced: \(artworkRef.path, privacy: .public)")
         } catch {
             logger.error("Artwork sync failed: \(error.localizedDescription, privacy: .public)")
         }

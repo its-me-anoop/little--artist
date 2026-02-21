@@ -102,7 +102,7 @@ struct ArtworkComparisonView: View {
         VStack(spacing: 10) {
             Button(action: onTap) {
                 Group {
-                    if let artwork, let data = artwork.imageData,
+                    if let artwork, let data = artwork.thumbnailData ?? artwork.imageData,
                        let uiImage = UIImage(data: data) {
                         Image(uiImage: uiImage)
                             .resizable()
@@ -236,7 +236,7 @@ struct ArtworkComparisonView: View {
     private func pickerThumbnail(artwork: Artwork, isExcluded: Bool) -> some View {
         VStack(spacing: 6) {
             Group {
-                if let data = artwork.imageData,
+                if let data = artwork.thumbnailData ?? artwork.imageData,
                    let uiImage = UIImage(data: data) {
                     Image(uiImage: uiImage)
                         .resizable()

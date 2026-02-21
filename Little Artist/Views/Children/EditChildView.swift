@@ -244,7 +244,8 @@ struct EditChildView: View {
                     ShareManagementView(
                         child: child,
                         shareId: activeShareId,
-                        isNewShare: true
+                        isNewShare: true,
+                        onStoppedSharing: { self.activeShareId = nil }
                     )
                 }
             }
@@ -252,7 +253,8 @@ struct EditChildView: View {
                 if let activeShareId {
                     ShareManagementView(
                         child: child,
-                        shareId: activeShareId
+                        shareId: activeShareId,
+                        onStoppedSharing: { self.activeShareId = nil }
                     )
                 }
             }
@@ -396,16 +398,25 @@ struct EditChildView: View {
     }
 
     private func presentSharing() async {
+        // If we already know about an active share, just show management
+        if activeShareId != nil {
+            showShareManagement = true
+            return
+        }
+
+        // Check Firestore for an existing active share before creating one
+        if let existingShare = await FirestoreRepository.shared.findShare(for: child),
+           existingShare.status == "active" {
+            activeShareId = existingShare.shareId
+            showShareManagement = true
+            return
+        }
+
+        // No existing share — create a new one and auto-present the share link
         do {
             let shareId = try await FirestoreRepository.shared.shareChild(child)
             activeShareId = shareId
-            // Check if already shared to decide which sheet to show
-            if let existingShare = await FirestoreRepository.shared.findShare(for: child),
-               existingShare.status == "active" {
-                showShareManagement = true
-            } else {
-                showFirebaseShare = true
-            }
+            showFirebaseShare = true
         } catch {
             sharingError = error.localizedDescription
         }

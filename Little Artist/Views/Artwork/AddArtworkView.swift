@@ -24,6 +24,7 @@ struct AddArtworkView: View {
     @State private var title = ""
     @State private var caption = ""
     @State private var capturedImageData: Data?
+    @State private var capturedThumbnailData: Data?
     @State private var showCamera = false
     @State private var showDocumentScanner = false
     @State private var photoPickerItem: PhotosPickerItem?
@@ -239,27 +240,29 @@ struct AddArtworkView: View {
             }
             .fullScreenCover(isPresented: $showCamera) {
                 CameraPicker { image in
-                    if let data = image.jpegData(compressionQuality: 0.85) {
-                        capturedImageData = data
-                        suggestionErrorMessage = nil
-                    }
+                    let processed = ImageProcessingService.processForStorage(image: image)
+                    capturedImageData = processed.imageData
+                    capturedThumbnailData = processed.thumbnailData
+                    suggestionErrorMessage = nil
                 }
                 .ignoresSafeArea()
             }
             .fullScreenCover(isPresented: $showDocumentScanner) {
                 DocumentScannerPicker { image in
-                    if let data = image.jpegData(compressionQuality: 0.85) {
-                        capturedImageData = data
-                        suggestionErrorMessage = nil
-                    }
+                    let processed = ImageProcessingService.processForStorage(image: image)
+                    capturedImageData = processed.imageData
+                    capturedThumbnailData = processed.thumbnailData
+                    suggestionErrorMessage = nil
                 }
                 .ignoresSafeArea()
             }
             .onChange(of: photoPickerItem) { _, newItem in
                 if let newItem {
                     Task {
-                        if let data = try? await newItem.loadTransferable(type: Data.self) {
-                            capturedImageData = data
+                        if let rawData = try? await newItem.loadTransferable(type: Data.self),
+                           let processed = ImageProcessingService.processForStorage(data: rawData) {
+                            capturedImageData = processed.imageData
+                            capturedThumbnailData = processed.thumbnailData
                             suggestionErrorMessage = nil
                         }
                         photoPickerItem = nil
@@ -404,11 +407,13 @@ struct AddArtworkView: View {
     private func batchImport(items: [PhotosPickerItem]) async {
         let repo = FirestoreRepository.shared
         for (index, item) in items.enumerated() {
-            guard let data = try? await item.loadTransferable(type: Data.self) else { continue }
+            guard let rawData = try? await item.loadTransferable(type: Data.self),
+                  let processed = ImageProcessingService.processForStorage(data: rawData) else { continue }
             // Offset each item's date by its index to avoid key collisions
             repo.createArtwork(
                 title: "",
-                imageData: data,
+                imageData: processed.imageData,
+                thumbnailData: processed.thumbnailData,
                 createdAt: artworkDate.addingTimeInterval(Double(index)),
                 child: child,
                 in: modelContext
@@ -425,6 +430,7 @@ struct AddArtworkView: View {
             title: title.trimmingCharacters(in: .whitespaces),
             caption: caption.trimmingCharacters(in: .whitespacesAndNewlines),
             imageData: capturedImageData,
+            thumbnailData: capturedThumbnailData,
             voiceNoteData: voiceNoteData,
             createdAt: artworkDate,
             child: child,

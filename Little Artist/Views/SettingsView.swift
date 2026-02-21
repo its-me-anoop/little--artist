@@ -34,6 +34,11 @@ struct SettingsView: View {
     @State private var isExporting = false
     @State private var showSyncEnabledConfirmation = false
     @State private var syncError: String?
+    @State private var showJoinShare = false
+    @State private var shareCodeInput = ""
+    @State private var isJoiningShare = false
+    @State private var joinShareError: String?
+    @State private var joinShareSuccess = false
 
     private var storageUsed: String {
         let bytes = artworks.compactMap(\.imageData).reduce(0) { $0 + $1.count }
@@ -249,6 +254,15 @@ struct SettingsView: View {
                         }
                     }
 
+                    // Join Shared Profile (requires sync)
+                    if firebaseSyncEnabled {
+                        Button {
+                            showJoinShare = true
+                        } label: {
+                            Label("Join Shared Profile", systemImage: "person.badge.plus")
+                        }
+                    }
+
                     HStack {
                         Label("Storage", systemImage: "externaldrive.fill")
                         Spacer()
@@ -399,8 +413,52 @@ struct SettingsView: View {
             } message: {
                 Text(syncError ?? "")
             }
+            .alert("Join Shared Profile", isPresented: $showJoinShare) {
+                TextField("Paste share code", text: $shareCodeInput)
+                    .autocorrectionDisabled()
+                    .textInputAutocapitalization(.never)
+                Button("Cancel", role: .cancel) {
+                    shareCodeInput = ""
+                }
+                Button("Join") {
+                    Task { await joinSharedProfile() }
+                }
+                .disabled(shareCodeInput.trimmingCharacters(in: .whitespaces).isEmpty)
+            } message: {
+                Text("Enter the share code you received from another parent.")
+            }
+            .alert("Joined!", isPresented: $joinShareSuccess) {
+                Button("OK") {}
+            } message: {
+                Text("The shared profile will appear shortly.")
+            }
+            .alert("Join Failed", isPresented: Binding(
+                get: { joinShareError != nil },
+                set: { if !$0 { joinShareError = nil } }
+            )) {
+                Button("OK") { joinShareError = nil }
+            } message: {
+                Text(joinShareError ?? "")
+            }
         }
     }
+    private func joinSharedProfile() async {
+        let code = shareCodeInput.trimmingCharacters(in: .whitespaces)
+        guard !code.isEmpty else { return }
+        isJoiningShare = true
+        do {
+            try await FirestoreRepository.shared.acceptShare(shareId: code)
+            // Restart sync to pick up the shared data
+            FirestoreSyncService.shared.stop()
+            FirestoreSyncService.shared.start()
+            shareCodeInput = ""
+            joinShareSuccess = true
+        } catch {
+            joinShareError = "Could not join: \(error.localizedDescription)"
+        }
+        isJoiningShare = false
+    }
+
     private func exportPortfolio(for child: Child) {
         isExporting = true
         let childArtworks = child.artworks ?? []

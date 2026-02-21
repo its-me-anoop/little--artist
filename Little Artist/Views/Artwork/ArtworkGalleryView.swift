@@ -357,7 +357,7 @@ private struct GalleryTile: View {
     var body: some View {
         GeometryReader { geo in
             ZStack(alignment: .bottomTrailing) {
-                if let data = artwork.imageData, let uiImage = UIImage(data: data) {
+                if let data = artwork.thumbnailData ?? artwork.imageData, let uiImage = UIImage(data: data) {
                     Image(uiImage: uiImage)
                         .resizable()
                         .scaledToFill()

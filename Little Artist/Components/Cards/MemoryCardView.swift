@@ -16,7 +16,7 @@ struct MemoryCardView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             // Artwork thumbnail
-            if let imageData = artwork.imageData, let uiImage = UIImage(data: imageData) {
+            if let imageData = artwork.thumbnailData ?? artwork.imageData, let uiImage = UIImage(data: imageData) {
                 Image(uiImage: uiImage)
                     .resizable()
                     .scaledToFill()

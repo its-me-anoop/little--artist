@@ -35,10 +35,8 @@ struct ShareManagementView: View {
         !child.isShared
     }
 
-    private var shareURL: URL? {
-        // Generate the Universal Link for this share
-        URL(string: "https://littleartist.app/share/\(shareId)")
-    }
+    /// The share code that the recipient enters in their app to join.
+    private var shareCode: String { shareId }
 
     // MARK: - Body
 
@@ -342,8 +340,7 @@ struct ShareManagementView: View {
     }
 
     private func presentShareLink() {
-        guard let url = shareURL else { return }
-        let text = "Join me on Little Artist to see \(child.name)'s artwork! \(url.absoluteString)"
+        let text = "Join me on Little Artist to see \(child.name)'s artwork! Open the app, go to Settings → Join Shared Profile, and enter this code:\n\n\(shareCode)"
         sharePayload = SharePayload(items: [text])
     }
 

@@ -29,7 +29,7 @@ struct ArtworkThumbnailView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             // Artwork image — flexible width, fixed aspect ratio
-            if let data = artwork.imageData, let uiImage = UIImage(data: data) {
+            if let data = artwork.thumbnailData ?? artwork.imageData, let uiImage = UIImage(data: data) {
                 Image(uiImage: uiImage)
                     .resizable()
                     .scaledToFill()

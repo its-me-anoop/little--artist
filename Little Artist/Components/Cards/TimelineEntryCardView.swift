@@ -20,7 +20,7 @@ struct TimelineEntryCardView: View {
     var body: some View {
         HStack(spacing: sizeClass == .regular ? 16 : 12) {
             // Thumbnail
-            if let data = artwork.imageData, let uiImage = UIImage(data: data) {
+            if let data = artwork.thumbnailData ?? artwork.imageData, let uiImage = UIImage(data: data) {
                 Image(uiImage: uiImage)
                     .resizable()
                     .scaledToFill()

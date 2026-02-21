@@ -430,6 +430,10 @@ final class FirestoreSyncService {
         if let imgURL = imageURL, targetArtwork?.imageData == nil {
             if let imgData = await storage.download(url: imgURL) {
                 targetArtwork?.imageData = imgData
+                // Generate thumbnail from downloaded image
+                if targetArtwork?.thumbnailData == nil {
+                    targetArtwork?.thumbnailData = ImageProcessingService.generateThumbnail(from: imgData)
+                }
             }
         }
         if let audioURL = voiceNoteURL, targetArtwork?.voiceNoteData == nil {
