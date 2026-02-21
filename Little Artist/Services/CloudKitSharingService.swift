@@ -52,7 +52,7 @@ final class CloudKitSharingService {
     var diagnosticLog: [String] = []
 
     /// Records a timestamped diagnostic entry visible in Settings.
-    private func diag(_ message: String) {
+    func diag(_ message: String) {
         let ts = DateFormatter.localizedString(from: .now, dateStyle: .none, timeStyle: .medium)
         let entry = "[\(ts)] \(message)"
         diagnosticLog.append(entry)
