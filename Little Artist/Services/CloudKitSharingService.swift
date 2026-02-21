@@ -386,7 +386,10 @@ final class CloudKitSharingService {
 
             logger.info("Found \(sharedChildren.count) shared children to mirror")
 
-            let modelContext = ModelContext(modelContainer)
+            // CRITICAL: Use the container's mainContext so @Query in SwiftUI
+            // views observes the changes. A throwaway ModelContext(container)
+            // writes to disk but doesn't notify @Query watchers.
+            let modelContext = modelContainer.mainContext
 
             for managedChild in sharedChildren {
                 let recordName = container.recordID(for: managedChild.objectID)?.recordName
