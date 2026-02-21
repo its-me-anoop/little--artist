@@ -17,37 +17,48 @@ import SwiftData
 @Model
 final class Artwork {
     /// A short title for the artwork (may be empty).
-    var title: String
+    var title: String = ""
 
     /// An optional longer description or caption.
-    var caption: String
+    var caption: String = ""
 
     /// The artwork photograph stored externally for efficient storage.
     @Attribute(.externalStorage)
     var imageData: Data?
 
-    /// File path or URL to an associated voice-note recording (future feature).
-    var voiceNoteURL: String?
+    /// Optional voice memo audio data stored externally for efficient storage.
+    @Attribute(.externalStorage)
+    var voiceNoteData: Data?
+
+    /// Whether this artwork has been starred/favourited by the user.
+    var isFavorited: Bool = false
 
     /// The date this artwork was captured.
-    var createdAt: Date
+    var createdAt: Date = Date.now
 
     /// The child who created this artwork.
     var child: Child?
+
+    /// Tags applied to this artwork for categorization.
+    var tags: [Tag]?
 
     init(
         title: String,
         caption: String = "",
         imageData: Data? = nil,
-        voiceNoteURL: String? = nil,
+        voiceNoteData: Data? = nil,
+        isFavorited: Bool = false,
         createdAt: Date = .now,
-        child: Child? = nil
+        child: Child? = nil,
+        tags: [Tag]? = nil
     ) {
         self.title = title
         self.caption = caption
         self.imageData = imageData
-        self.voiceNoteURL = voiceNoteURL
+        self.voiceNoteData = voiceNoteData
+        self.isFavorited = isFavorited
         self.createdAt = createdAt
         self.child = child
+        self.tags = tags
     }
 }

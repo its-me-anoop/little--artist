@@ -2,7 +2,7 @@
 //  Little_ArtistTests.swift
 //  Little ArtistTests
 //
-//  Unit tests for the Little Artist data models and utilities.
+//  Unit tests for the Little Artist data models, utilities, and services.
 //
 //  Created by Anoop Jose on 13/02/2026.
 //
@@ -15,28 +15,32 @@ import UIKit
 #endif
 @testable import Little_Artist
 
-/// Unit tests covering model initialisation and the `Color(hex:)` utility.
-struct Little_ArtistTests {
+// MARK: - Artwork Model Tests
+
+struct ArtworkModelTests {
 
     @Test("Artwork initializer stores provided values")
     func artworkInitializerStoresProvidedValues() {
         let createdAt = Date(timeIntervalSince1970: 1_700_000_000)
         let child = Child(name: "Mia", avatarColor: "FF8000")
-        let data = Data([0xDE, 0xAD, 0xBE, 0xEF])
+        let imageData = Data([0xDE, 0xAD, 0xBE, 0xEF])
+        let voiceData = Data([0x01, 0x02, 0x03])
 
         let artwork = Artwork(
             title: "Sunset",
             caption: "By the beach",
-            imageData: data,
-            voiceNoteURL: "voice.m4a",
+            imageData: imageData,
+            voiceNoteData: voiceData,
+            isFavorited: true,
             createdAt: createdAt,
             child: child
         )
 
         #expect(artwork.title == "Sunset")
         #expect(artwork.caption == "By the beach")
-        #expect(artwork.imageData == data)
-        #expect(artwork.voiceNoteURL == "voice.m4a")
+        #expect(artwork.imageData == imageData)
+        #expect(artwork.voiceNoteData == voiceData)
+        #expect(artwork.isFavorited == true)
         #expect(artwork.createdAt == createdAt)
         #expect(artwork.child === child)
     }
@@ -49,10 +53,16 @@ struct Little_ArtistTests {
 
         #expect(artwork.caption == "")
         #expect(artwork.imageData == nil)
-        #expect(artwork.voiceNoteURL == nil)
+        #expect(artwork.voiceNoteData == nil)
+        #expect(artwork.isFavorited == false)
         #expect(artwork.child == nil)
         #expect(artwork.createdAt >= before && artwork.createdAt <= after)
     }
+}
+
+// MARK: - Child Model Tests
+
+struct ChildModelTests {
 
     @Test("Child initializer stores values")
     func childInitializerStoresValues() {
@@ -71,6 +81,21 @@ struct Little_ArtistTests {
         #expect(child.avatarImageData == avatarData)
         #expect(child.createdAt == createdAt)
     }
+
+    @Test("Child initializer applies defaults")
+    func childInitializerAppliesDefaults() {
+        let before = Date()
+        let child = Child(name: "Lily", avatarColor: "FF0000")
+        let after = Date()
+
+        #expect(child.avatarImageData == nil)
+        #expect(child.createdAt >= before && child.createdAt <= after)
+    }
+}
+
+// MARK: - Color Hex Tests
+
+struct ColorHexTests {
 
     @Test("Color init(hex:) parses 6-digit RGB")
     func colorHexParsesSixDigitRGB() {
@@ -108,5 +133,56 @@ struct Little_ArtistTests {
         #expect(abs(blue - 1.0) < 0.001)
         #expect(abs(alpha - 1.0) < 0.001)
         #endif
+    }
+}
+
+// MARK: - PremiumManager Tests
+
+struct PremiumManagerTests {
+
+    @Test("canAddChild returns true when under limit")
+    func canAddChildUnderLimit() {
+        #expect(PremiumManager.canAddChild(currentCount: 0) == true)
+        #expect(PremiumManager.canAddChild(currentCount: 1) == true)
+    }
+
+    @Test("canAddChild returns false when at limit")
+    func canAddChildAtLimit() {
+        // Ensure we're testing free tier (isPremium defaults to false)
+        UserDefaults.standard.removeObject(forKey: "isPremium")
+        #expect(PremiumManager.canAddChild(currentCount: 2) == false)
+        #expect(PremiumManager.canAddChild(currentCount: 5) == false)
+    }
+
+    @Test("canAddArtwork returns true when under limit")
+    func canAddArtworkUnderLimit() {
+        #expect(PremiumManager.canAddArtwork(currentCount: 0) == true)
+        #expect(PremiumManager.canAddArtwork(currentCount: 49) == true)
+    }
+
+    @Test("canAddArtwork returns false when at limit")
+    func canAddArtworkAtLimit() {
+        UserDefaults.standard.removeObject(forKey: "isPremium")
+        #expect(PremiumManager.canAddArtwork(currentCount: 50) == false)
+        #expect(PremiumManager.canAddArtwork(currentCount: 100) == false)
+    }
+
+    @Test("Free tier limits are correct")
+    func freeTierLimitsAreCorrect() {
+        #expect(PremiumManager.freeChildLimit == 2)
+        #expect(PremiumManager.freeArtworkLimit == 50)
+    }
+
+    @Test("Premium user bypasses limits")
+    func premiumUserBypassesLimits() {
+        PremiumManager._overrideIsPremium = true
+
+        let canAddChild = PremiumManager.canAddChild(currentCount: 100)
+        let canAddArtwork = PremiumManager.canAddArtwork(currentCount: 1000)
+
+        PremiumManager._overrideIsPremium = nil
+
+        #expect(canAddChild == true)
+        #expect(canAddArtwork == true)
     }
 }

@@ -18,29 +18,94 @@ import SwiftData
 /// ``ContentView`` based on whether the user has completed onboarding.
 @main
 struct Little_ArtistApp: App {
+    @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
+
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
+    @AppStorage("iCloudSyncEnabled") private var iCloudSyncEnabled = false
+
+    /// Reference to StoreKit manager so transaction listener starts early.
+    private let storeKit = StoreKitManager.shared
 
     var sharedModelContainer: ModelContainer = {
-        let schema = Schema([
-            Child.self,
-            Artwork.self,
-        ])
-        let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
+        // Ensure the Application Support directory exists before SwiftData tries to write.
+        let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+        if !FileManager.default.fileExists(atPath: appSupport.path) {
+            try? FileManager.default.createDirectory(at: appSupport, withIntermediateDirectories: true)
+        }
+
+        #if DEBUG
+        // Enable premium + iCloud for testing via launch argument: -debugPremium
+        if ProcessInfo.processInfo.arguments.contains("-debugPremium") {
+            UserDefaults.standard.set(true, forKey: "isPremium")
+            UserDefaults.standard.set(true, forKey: "iCloudSyncEnabled")
+        }
+        #endif
+
+        let schema = Schema(versionedSchema: SchemaV5.self)
+        let isPremium = UserDefaults.standard.bool(forKey: "isPremium")
+        let iCloudEnabled = UserDefaults.standard.bool(forKey: "iCloudSyncEnabled")
+
+        // SwiftData always uses cloudKitDatabase: .none — CloudKit sync is
+        // handled exclusively by CloudKitSharingService's NSPersistentCloudKitContainer
+        // to avoid two stacks fighting over the same store file.
+        let storeURL = appSupport.appendingPathComponent("default.store")
+        let modelConfiguration = ModelConfiguration(
+            schema: schema,
+            url: storeURL,
+            cloudKitDatabase: .none
+        )
 
         do {
-            return try ModelContainer(for: schema, configurations: [modelConfiguration])
+            let container = try ModelContainer(
+                for: schema,
+                migrationPlan: LittleArtistMigrationPlan.self,
+                configurations: [modelConfiguration]
+            )
+
+            // Always provide the model container for shared data mirroring
+            CloudKitSharingService.shared.modelContainer = container
+
+            // Initialise CloudKit sharing stack when premium + iCloud enabled
+            if isPremium && iCloudEnabled {
+                CloudKitSharingService.shared.setup()
+            }
+
+            return container
         } catch {
-            fatalError("Could not create ModelContainer: \(error)")
+            // If migration fails, delete the old store and create fresh.
+            try? FileManager.default.removeItem(at: storeURL)
+            let storeDir = storeURL.deletingLastPathComponent()
+            for suffix in ["-shm", "-wal"] {
+                let related = storeDir.appendingPathComponent(storeURL.lastPathComponent + suffix)
+                try? FileManager.default.removeItem(at: related)
+            }
+            do {
+                return try ModelContainer(for: schema, configurations: [modelConfiguration])
+            } catch {
+                fatalError("Could not create ModelContainer: \(error)")
+            }
         }
     }()
 
     var body: some Scene {
         WindowGroup {
-            if hasCompletedOnboarding {
-                ContentView()
-            } else {
-                OnboardingView(hasCompletedOnboarding: $hasCompletedOnboarding)
+            Group {
+                if hasCompletedOnboarding {
+                    ContentView()
+                } else {
+                    OnboardingView(hasCompletedOnboarding: $hasCompletedOnboarding)
+                }
             }
+            #if DEBUG
+            .onAppear {
+                // Activate debug premium override via launch argument:
+                //   -debugPremium YES
+                if ProcessInfo.processInfo.arguments.contains("-debugPremium") {
+                    PremiumManager._overrideIsPremium = true
+                    UserDefaults.standard.set(true, forKey: "isPremium")
+                }
+            }
+            #endif
         }
         .modelContainer(sharedModelContainer)
     }

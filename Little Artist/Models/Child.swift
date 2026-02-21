@@ -19,17 +19,21 @@ import SwiftData
 @Model
 final class Child {
     /// The child's display name.
-    var name: String
+    var name: String = ""
 
     /// Hex colour string (e.g. `"FF8C00"`) used for the default avatar circle.
-    var avatarColor: String
+    var avatarColor: String = "F2784B"
 
     /// Timestamp when this profile was created.
-    var createdAt: Date
+    var createdAt: Date = Date.now
 
     /// Optional custom avatar photo stored externally.
     @Attribute(.externalStorage)
     var avatarImageData: Data?
+
+    /// CloudKit record name for children received via sharing.
+    /// `nil` for locally created children; set for mirrored shared children.
+    var sharedRecordName: String?
 
     /// The artworks belonging to this child. Deletion cascades.
     @Relationship(deleteRule: .cascade, inverse: \Artwork.child)
