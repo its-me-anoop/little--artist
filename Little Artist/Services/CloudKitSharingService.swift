@@ -217,6 +217,16 @@ final class CloudKitSharingService: CloudKitSyncEngine {
         let entityNames = model.entities.compactMap(\.name).joined(separator: ", ")
         logger.info("Created managed object model with \(model.entities.count) entities: \(entityNames, privacy: .public)")
 
+        // Log full model details for diagnostics — helps identify relationship mismatches
+        for entity in model.entities {
+            let attrNames = entity.attributesByName.keys.sorted().joined(separator: ", ")
+            let relDetails = entity.relationshipsByName.map { name, rel in
+                "\(name)→\(rel.destinationEntity?.name ?? "?")(toMany=\(rel.isToMany), inverse=\(rel.inverseRelationship?.name ?? "nil"))"
+            }.joined(separator: ", ")
+            logger.info("  Entity '\(entity.name ?? "?", privacy: .public)': attrs=[\(attrNames, privacy: .public)] rels=[\(relDetails, privacy: .public)]")
+        }
+        diag("setup: model has \(model.entities.count) entities: \(entityNames)")
+
         let container = NSPersistentCloudKitContainer(name: "LittleArtist", managedObjectModel: model)
 
         let appSupport = FileManager.default.urls(
@@ -383,22 +393,44 @@ final class CloudKitSharingService: CloudKitSyncEngine {
             stoppedSharingURLs.remove(urlString)
         }
 
-        // Check for existing share — update metadata in case it changed
+        // Check for existing share — update metadata and ensure new artworks are included
         if let existingShares = try? container.fetchShares(matching: [objectID]),
            let existing = existingShares[objectID] {
             existing[CKShare.SystemFieldKey.title] = child.name
             existing[CKShare.SystemFieldKey.thumbnailImageData] = thumbnail
+
+            // Ensure any artworks added AFTER the original share are also shared.
+            // Artworks not yet in the shared zone need to be explicitly added.
+            try await ensureArtworksInShare(for: managedObject, share: existing, container: container)
+
             if container.viewContext.hasChanges {
                 try container.viewContext.save()
             }
             return (existing, CKContainer(identifier: ckContainerIdentifier))
         }
 
-        // Create new share
-        let (_, share, ckContainer) = try await container.share(
-            [managedObject],
+        // Collect the child AND all its artworks for explicit sharing.
+        // Core Data should follow relationships automatically, but being
+        // explicit ensures artworks are always included in the shared zone.
+        var objectsToShare: [NSManagedObject] = [managedObject]
+
+        if let artworkSet = managedObject.value(forKey: "artworks") as? NSSet {
+            let artworkMOs = artworkSet.compactMap { $0 as? NSManagedObject }
+            objectsToShare.append(contentsOf: artworkMOs)
+            diag("shareChild: explicitly including \(artworkMOs.count) artwork(s) in share")
+        } else {
+            // Relationship may be nil — log available relationship names for debugging
+            let relNames = managedObject.entity.relationshipsByName.keys.sorted()
+            diag("shareChild: WARNING — 'artworks' relationship returned nil. Available: \(relNames)")
+        }
+
+        // Create new share with child + all artworks
+        let (sharedIDs, share, ckContainer) = try await container.share(
+            objectsToShare,
             to: nil
         )
+
+        diag("shareChild: shared \(sharedIDs.count) object(s) total (child + \(sharedIDs.count - 1) related)")
 
         share[CKShare.SystemFieldKey.title] = child.name
         share[CKShare.SystemFieldKey.thumbnailImageData] = thumbnail
@@ -406,6 +438,12 @@ final class CloudKitSharingService: CloudKitSyncEngine {
         // Save the context to persist the share
         if container.viewContext.hasChanges {
             try container.viewContext.save()
+        }
+
+        // Record that this child is now shared so dedup can identify it
+        if let recordID = container.recordID(for: managedObject.objectID) {
+            child.sharedRecordName = recordID.recordName
+            diag("shareChild: set sharedRecordName=\(recordID.recordName.prefix(30))...")
         }
 
         return (share, ckContainer)
@@ -505,6 +543,40 @@ final class CloudKitSharingService: CloudKitSyncEngine {
         }
     }
 
+    /// Ensures all artworks belonging to a shared child are in the shared zone.
+    ///
+    /// When new artworks are added to a child AFTER the initial share was created,
+    /// they live in the private zone by default. This method moves any un-shared
+    /// artworks into the existing share so the recipient can see them.
+    private func ensureArtworksInShare(
+        for managedChild: NSManagedObject,
+        share: CKShare,
+        container: NSPersistentCloudKitContainer
+    ) async throws {
+        guard let artworkSet = managedChild.value(forKey: "artworks") as? NSSet else {
+            diag("ensureArtworksInShare: no artworks relationship — skipping")
+            return
+        }
+
+        var unsharedArtworks: [NSManagedObject] = []
+        for case let artwork as NSManagedObject in artworkSet {
+            // Check if this artwork already has a share
+            let artworkShares = try? container.fetchShares(matching: [artwork.objectID])
+            if artworkShares?[artwork.objectID] == nil {
+                unsharedArtworks.append(artwork)
+            }
+        }
+
+        guard !unsharedArtworks.isEmpty else {
+            diag("ensureArtworksInShare: all \(artworkSet.count) artworks already shared")
+            return
+        }
+
+        diag("ensureArtworksInShare: adding \(unsharedArtworks.count) new artwork(s) to existing share")
+        let (sharedIDs, _, _) = try await container.share(unsharedArtworks, to: share)
+        diag("ensureArtworksInShare: \(sharedIDs.count) object(s) added to share")
+    }
+
     /// Accepts an incoming share invitation.
     ///
     /// Automatically initialises the CloudKit stack if needed so that
@@ -538,17 +610,39 @@ final class CloudKitSharingService: CloudKitSyncEngine {
                     return
                 }
                 self.diag("acceptShare: SUCCESS — scheduling sync retries")
-                // CloudKit needs a moment to download shared records after
-                // acceptance. Run a few sync attempts with increasing delays.
-                // The remote-change notification will also trigger syncs, but
-                // these retries ensure we catch the data even if the
-                // notification arrives before the records are fully imported.
-                for delay in [3.0, 10.0, 30.0] {
+                // CloudKit needs time to download shared records after
+                // acceptance. Retry with increasing delays, checking if data
+                // has actually appeared in the shared store each time.
+                for delay in [2.0, 5.0, 10.0, 20.0, 40.0, 60.0] {
                     guard !Task.isCancelled else { break }
                     try? await Task.sleep(for: .seconds(delay))
-                    self.diag("acceptShare: retry sync after \(Int(delay))s")
+
+                    // Check if shared data has appeared
+                    var sharedChildCount = 0
+                    var sharedArtworkCount = 0
+                    if let container = self.persistentContainer, let sharedStore = self.sharedStore {
+                        container.viewContext.refreshAllObjects()
+                        let childReq = NSFetchRequest<NSManagedObject>(entityName: "Child")
+                        childReq.affectedStores = [sharedStore]
+                        sharedChildCount = (try? container.viewContext.count(for: childReq)) ?? 0
+
+                        let artReq = NSFetchRequest<NSManagedObject>(entityName: "Artwork")
+                        artReq.affectedStores = [sharedStore]
+                        sharedArtworkCount = (try? container.viewContext.count(for: artReq)) ?? 0
+                    }
+
+                    self.diag("acceptShare: retry after \(Int(delay))s — \(sharedChildCount) children, \(sharedArtworkCount) artworks in shared store")
+
                     self.refreshSwiftDataContext()
                     self.syncSharedDataToSwiftData()
+
+                    // If we found data, run one final sync after a short delay and stop
+                    if sharedChildCount > 0 {
+                        try? await Task.sleep(for: .seconds(3))
+                        self.syncSharedDataToSwiftData()
+                        self.diag("acceptShare: shared data found — sync complete")
+                        break
+                    }
                 }
             }
         }
@@ -626,6 +720,12 @@ final class CloudKitSharingService: CloudKitSyncEngine {
             let sharedChildren = try context.fetch(childRequest)
 
             diag("sync: \(sharedChildren.count) children in shared store")
+
+            // Also count artworks in shared store for diagnostics
+            let artworkReq = NSFetchRequest<NSManagedObject>(entityName: "Artwork")
+            artworkReq.affectedStores = [sharedStore]
+            let sharedArtworkCount = (try? context.count(for: artworkReq)) ?? -1
+            diag("sync: \(sharedArtworkCount) artworks in shared store")
 
             let modelContext = modelContainer.mainContext
 
@@ -838,12 +938,47 @@ final class CloudKitSharingService: CloudKitSyncEngine {
     /// For existing artworks (matched by key), updates text fields and fills in
     /// missing binary data from the canonical shared version (owner's data).
     /// For new artworks, creates a SwiftData copy.
+    ///
+    /// Uses a two-pass strategy:
+    /// 1. Access artworks via the Core Data relationship (`child.artworks`)
+    /// 2. Fallback: query all artworks in the shared store and match by child
+    ///    object ID — catches cases where the relationship isn't populated yet
     private func syncArtworks(
         for managedChild: NSManagedObject,
         into swiftDataChild: Child,
         modelContext: ModelContext
     ) {
-        guard let artworkSet = managedChild.value(forKey: "artworks") as? NSSet else { return }
+        // --- Pass 1: try the Core Data relationship ---
+        var artworkObjects: [NSManagedObject] = []
+
+        if let artworkSet = managedChild.value(forKey: "artworks") as? NSSet {
+            artworkObjects = artworkSet.compactMap { $0 as? NSManagedObject }
+            diag("syncArtworks: \(artworkObjects.count) artwork(s) via relationship for '\(swiftDataChild.name)'")
+        } else {
+            // Log available relationship names so we can debug model mismatches
+            let relNames = managedChild.entity.relationshipsByName.keys.sorted()
+            diag("syncArtworks: 'artworks' relationship returned nil for '\(swiftDataChild.name)'. Available: \(relNames)")
+        }
+
+        // --- Pass 2: fallback direct fetch from shared store ---
+        if artworkObjects.isEmpty, let container = persistentContainer, let sharedStore {
+            let artworkRequest = NSFetchRequest<NSManagedObject>(entityName: "Artwork")
+            artworkRequest.affectedStores = [sharedStore]
+            if let allSharedArtworks = try? container.viewContext.fetch(artworkRequest) {
+                for artwork in allSharedArtworks {
+                    if let artworkChild = artwork.value(forKey: "child") as? NSManagedObject,
+                       artworkChild.objectID == managedChild.objectID {
+                        artworkObjects.append(artwork)
+                    }
+                }
+                diag("syncArtworks: \(artworkObjects.count) artwork(s) via direct fetch for '\(swiftDataChild.name)' (total shared: \(allSharedArtworks.count))")
+            }
+        }
+
+        guard !artworkObjects.isEmpty else {
+            diag("syncArtworks: no artworks found for '\(swiftDataChild.name)'")
+            return
+        }
 
         // Build lookup of existing SwiftData artworks by key
         var existingByKey: [String: Artwork] = [:]
@@ -854,7 +989,7 @@ final class CloudKitSharingService: CloudKitSyncEngine {
         var insertCount = 0
         var updateCount = 0
 
-        for case let managedArtwork as NSManagedObject in artworkSet {
+        for managedArtwork in artworkObjects {
             let title = managedArtwork.value(forKey: "title") as? String ?? ""
             let createdAt = managedArtwork.value(forKey: "createdAt") as? Date ?? .now
             let key = ArtworkMatchStrategy.key(title: title, createdAt: createdAt)
