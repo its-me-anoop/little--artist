@@ -249,6 +249,42 @@ struct SettingsView: View {
                     Text("Data")
                 }
 
+                // SHARING DIAGNOSTICS (visible when CloudKit is active)
+                if sharingService.isInitialised || !sharingService.diagnosticLog.isEmpty {
+                    Section {
+                        let snapshot = sharingService.diagnosticSnapshot()
+                        ForEach(Array(snapshot.sorted(by: { $0.key < $1.key })), id: \.key) { key, value in
+                            HStack {
+                                Text(key)
+                                    .font(Brand.captionFont)
+                                Spacer()
+                                Text(value)
+                                    .font(Brand.captionFont)
+                                    .foregroundStyle(value.contains("Missing") || value.contains("N/A") ? Brand.dustyRose : Brand.sage)
+                            }
+                        }
+
+                        if !sharingService.diagnosticLog.isEmpty {
+                            DisclosureGroup("Event Log (\(sharingService.diagnosticLog.count))") {
+                                ForEach(sharingService.diagnosticLog.reversed(), id: \.self) { entry in
+                                    Text(entry)
+                                        .font(.system(size: 10, design: .monospaced))
+                                        .foregroundStyle(Brand.warmGray)
+                                }
+                            }
+                        }
+
+                        Button {
+                            sharingService.runManualSync()
+                        } label: {
+                            Label("Force Sync Now", systemImage: "arrow.triangle.2.circlepath")
+                                .foregroundStyle(Brand.primary)
+                        }
+                    } header: {
+                        Text("Sharing Diagnostics")
+                    }
+                }
+
                 // ABOUT
                 Section {
                     HStack {

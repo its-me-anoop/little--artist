@@ -46,6 +46,53 @@ final class CloudKitSharingService {
     /// Whether the Core Data + CloudKit stack has been initialised.
     var isInitialised: Bool { persistentContainer != nil }
 
+    // MARK: - Diagnostics
+
+    /// Rolling log of sharing events for on-device diagnosis.
+    var diagnosticLog: [String] = []
+
+    /// Records a timestamped diagnostic entry visible in Settings.
+    private func diag(_ message: String) {
+        let ts = DateFormatter.localizedString(from: .now, dateStyle: .none, timeStyle: .medium)
+        let entry = "[\(ts)] \(message)"
+        diagnosticLog.append(entry)
+        // Keep last 50 entries
+        if diagnosticLog.count > 50 { diagnosticLog.removeFirst(diagnosticLog.count - 50) }
+        logger.info("\(entry, privacy: .public)")
+    }
+
+    /// Returns a snapshot of the current sharing stack state for display in Settings.
+    func diagnosticSnapshot() -> [String: String] {
+        var info: [String: String] = [:]
+        info["Container"] = persistentContainer != nil ? "Ready" : "Not initialised"
+        info["Private Store"] = privateStore != nil ? "Loaded" : "Missing"
+        info["Shared Store"] = sharedStore != nil ? "Loaded" : "Missing"
+        info["Model Container"] = modelContainer != nil ? "Set" : "Missing"
+
+        // Count children in shared Core Data store
+        if let container = persistentContainer, let sharedStore {
+            let req = NSFetchRequest<NSManagedObject>(entityName: "Child")
+            req.affectedStores = [sharedStore]
+            let count = (try? container.viewContext.count(for: req)) ?? -1
+            info["Shared Store Children"] = "\(count)"
+        } else {
+            info["Shared Store Children"] = "N/A"
+        }
+
+        // Count mirrored children in SwiftData
+        if let mc = modelContainer {
+            let desc = FetchDescriptor<Child>(
+                predicate: #Predicate<Child> { $0.sharedRecordName != nil }
+            )
+            let count = (try? mc.mainContext.fetchCount(desc)) ?? -1
+            info["Mirrored Children"] = "\(count)"
+        } else {
+            info["Mirrored Children"] = "N/A"
+        }
+
+        return info
+    }
+
     // MARK: - Init
 
     private init() {}
@@ -58,7 +105,11 @@ final class CloudKitSharingService {
     /// The private store points to the same SQLite file SwiftData uses so both
     /// stacks stay in sync via persistent history tracking.
     func setup() {
-        guard persistentContainer == nil else { return }
+        guard persistentContainer == nil else {
+            diag("setup: already initialised — skipping")
+            return
+        }
+        diag("setup: starting CloudKit stack init")
 
         guard let model = NSManagedObjectModel.makeManagedObjectModel(for: [
             Child.self,
@@ -133,6 +184,7 @@ final class CloudKitSharingService {
         }
 
         persistentContainer = container
+        diag("setup: stores loaded — private=\(privateStore != nil) shared=\(sharedStore != nil)")
 
         // Listen for remote changes on the shared store so we can
         // mirror shared children/artworks into SwiftData.
@@ -312,39 +364,49 @@ final class CloudKitSharingService {
     /// share acceptance works even when the user hasn't enabled iCloud
     /// sync in Settings (e.g. recipient opening a share link for the first time).
     func acceptShare(metadata: CKShare.Metadata) {
+        diag("acceptShare: CALLED with record=\(metadata.share.recordID.recordName)")
+
         // Ensure the CloudKit stack is ready before accepting
         if persistentContainer == nil {
-            logger.info("Initialising CloudKit stack for share acceptance")
+            diag("acceptShare: container nil — calling setup()")
             setup()
         }
 
         guard let container = persistentContainer,
               let sharedStore else {
-            logger.error("Cannot accept share — CloudKit stack failed to initialise")
+            diag("acceptShare: FAILED — stack not initialised")
             return
         }
 
-        logger.info("Accepting share invitation: \(metadata.share.recordID.recordName, privacy: .public)")
+        diag("acceptShare: calling acceptShareInvitations")
 
         container.acceptShareInvitations(
             from: [metadata],
             into: sharedStore
         ) { [weak self] _, error in
             if let error {
-                logger.error("Failed to accept share: \(error.localizedDescription, privacy: .public)")
+                Task { @MainActor in
+                    self?.diag("acceptShare: FAILED — \(error.localizedDescription)")
+                }
                 return
             }
-            logger.info("Share accepted — scheduling sync retries for data download")
-            // CloudKit needs time to download shared records after acceptance.
-            // Schedule multiple sync attempts with increasing delays.
             Task { @MainActor in
+                self?.diag("acceptShare: SUCCESS — scheduling sync retries")
+                // CloudKit needs time to download shared records after acceptance.
+                // Schedule multiple sync attempts with increasing delays.
                 for delay in [2.0, 5.0, 10.0, 20.0, 30.0] {
                     try? await Task.sleep(for: .seconds(delay))
-                    logger.info("Running post-accept sync attempt after \(delay, privacy: .public)s")
+                    self?.diag("acceptShare: retry sync after \(Int(delay))s")
                     self?.syncSharedDataToSwiftData()
                 }
             }
         }
+    }
+
+    /// Manually triggers a sync of shared data — available for diagnostic use.
+    func runManualSync() {
+        diag("manual sync: triggered by user")
+        syncSharedDataToSwiftData()
     }
 
     // MARK: - Shared Data Sync
@@ -357,15 +419,15 @@ final class CloudKitSharingService {
     /// prevent crashes from propagating.
     private func syncSharedDataToSwiftData() {
         guard let container = persistentContainer else {
-            logger.debug("syncShared: skipped — no persistent container")
+            diag("sync: SKIP — no container")
             return
         }
         guard let sharedStore else {
-            logger.debug("syncShared: skipped — no shared store")
+            diag("sync: SKIP — no shared store")
             return
         }
         guard let modelContainer else {
-            logger.debug("syncShared: skipped — no model container")
+            diag("sync: SKIP — no model container")
             return
         }
 
@@ -380,20 +442,18 @@ final class CloudKitSharingService {
 
             let sharedChildren = try context.fetch(childRequest)
 
-            logger.info("syncShared: found \(sharedChildren.count, privacy: .public) children in shared store")
+            diag("sync: \(sharedChildren.count) children in shared store")
 
             guard !sharedChildren.isEmpty else { return }
 
-            logger.info("Found \(sharedChildren.count) shared children to mirror")
-
-            // CRITICAL: Use the container's mainContext so @Query in SwiftUI
-            // views observes the changes. A throwaway ModelContext(container)
-            // writes to disk but doesn't notify @Query watchers.
             let modelContext = modelContainer.mainContext
 
             for managedChild in sharedChildren {
                 let recordName = container.recordID(for: managedChild.objectID)?.recordName
                     ?? managedChild.objectID.uriRepresentation().absoluteString
+                let childName = managedChild.value(forKey: "name") as? String ?? "?"
+
+                diag("sync: processing '\(childName)' record=\(recordName.prefix(30))…")
 
                 // Check if already mirrored
                 var existing = FetchDescriptor<Child>(
@@ -401,18 +461,18 @@ final class CloudKitSharingService {
                 )
                 existing.fetchLimit = 1
                 if let found = try? modelContext.fetch(existing), !found.isEmpty {
-                    // Update existing mirror
                     let mirror = found[0]
                     mirror.name = managedChild.value(forKey: "name") as? String ?? mirror.name
                     mirror.avatarColor = managedChild.value(forKey: "avatarColor") as? String ?? mirror.avatarColor
                     mirror.avatarImageData = managedChild.value(forKey: "avatarImageData") as? Data
                     syncArtworks(for: managedChild, into: mirror, modelContext: modelContext)
+                    diag("sync: updated existing mirror for '\(mirror.name)'")
                     continue
                 }
 
                 // Create new SwiftData child
                 let newChild = Child(
-                    name: managedChild.value(forKey: "name") as? String ?? "Shared Child",
+                    name: childName == "?" ? "Shared Child" : childName,
                     avatarColor: managedChild.value(forKey: "avatarColor") as? String ?? Brand.defaultAvatarColor,
                     avatarImageData: managedChild.value(forKey: "avatarImageData") as? Data,
                     createdAt: managedChild.value(forKey: "createdAt") as? Date ?? .now
@@ -422,13 +482,13 @@ final class CloudKitSharingService {
 
                 syncArtworks(for: managedChild, into: newChild, modelContext: modelContext)
 
-                logger.info("Mirrored shared child: \(newChild.name, privacy: .public)")
+                diag("sync: CREATED mirror for '\(newChild.name)'")
             }
 
             try modelContext.save()
-            logger.info("Shared data mirrored to SwiftData")
+            diag("sync: SAVED to SwiftData successfully")
         } catch {
-            logger.error("syncSharedData failed: \(error.localizedDescription, privacy: .public)")
+            diag("sync: FAILED — \(error.localizedDescription)")
         }
     }
 
