@@ -24,6 +24,9 @@ struct Little_ArtistApp: App {
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
     @AppStorage("firebaseSyncEnabled") private var firebaseSyncEnabled = false
 
+    /// Controls the splash-to-content transition.
+    @State private var showSplash = true
+
     /// Reference to StoreKit manager so transaction listener starts early.
     private let storeKit = StoreKitManager.shared
 
@@ -92,11 +95,24 @@ struct Little_ArtistApp: App {
 
     var body: some Scene {
         WindowGroup {
-            Group {
-                if hasCompletedOnboarding {
-                    ContentView()
-                } else {
-                    OnboardingView(hasCompletedOnboarding: $hasCompletedOnboarding)
+            ZStack {
+                Group {
+                    if hasCompletedOnboarding {
+                        ContentView()
+                    } else {
+                        OnboardingView(hasCompletedOnboarding: $hasCompletedOnboarding)
+                    }
+                }
+                .opacity(showSplash ? 0 : 1)
+
+                if showSplash {
+                    SplashView {
+                        withAnimation(.easeInOut(duration: 0.4)) {
+                            showSplash = false
+                        }
+                    }
+                    .transition(.opacity)
+                    .zIndex(1)
                 }
             }
             #if DEBUG

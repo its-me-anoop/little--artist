@@ -22,8 +22,6 @@
 	<dict>
 		<key>UIColorName</key>
 		<string>LaunchBackground</string>
-		<key>UIImageName</key>
-		<string>paintpalette.fill</string>
 	</dict>
 </dict>
 </plist>
