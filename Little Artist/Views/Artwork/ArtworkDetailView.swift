@@ -31,6 +31,8 @@ struct ArtworkDetailView: View {
     @State private var isGeneratingSuggestions = false
     @State private var suggestionErrorMessage: String?
     @State private var imageScale: CGFloat = 1.0
+    @State private var imageOffset: CGSize = .zero
+    @State private var lastScale: CGFloat = 1.0
 
     private var displayTitle: String {
         let trimmed = artwork.title.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -50,27 +52,22 @@ struct ArtworkDetailView: View {
                 Image(uiImage: uiImage)
                     .resizable()
                     .scaledToFit()
-                    .scaleEffect(imageScale)
-                    .frame(maxWidth: .infinity)
                     .clipShape(RoundedRectangle(cornerRadius: 20))
-                    .gesture(
-                        MagnifyGesture()
-                            .onChanged { value in
-                                imageScale = min(max(value.magnification, 1.0), 5.0)
-                            }
-                            .onEnded { _ in
-                                withAnimation(.spring(duration: 0.3)) {
-                                    if imageScale < 1.2 {
-                                        imageScale = 1.0
-                                    }
-                                }
-                            }
-                    )
+                    .scaleEffect(imageScale)
+                    .offset(imageOffset)
+                    .gesture(zoomGesture)
+                    .simultaneousGesture(panGesture)
                     .onTapGesture(count: 2) {
-                        withAnimation(.spring(duration: 0.3)) {
-                            imageScale = imageScale > 1.5 ? 1.0 : 2.0
+                        withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) {
+                            if imageScale > 1.0 {
+                                imageScale = 1.0
+                                imageOffset = .zero
+                            } else {
+                                imageScale = 2.5
+                            }
                         }
                     }
+                    .frame(maxWidth: .infinity)
             } else {
                 RoundedRectangle(cornerRadius: 20)
                     .fill(Color(.tertiarySystemBackground))
@@ -96,6 +93,38 @@ struct ArtworkDetailView: View {
             }
             .padding(12)
         }
+    }
+
+    // MARK: - Zoom Gestures
+
+    /// Pinch-to-zoom with spring-back to original size on release.
+    private var zoomGesture: some Gesture {
+        MagnifyGesture()
+            .onChanged { value in
+                let newScale = lastScale * value.magnification
+                imageScale = min(max(newScale, 0.5), 5.0)
+            }
+            .onEnded { _ in
+                withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) {
+                    imageScale = 1.0
+                    imageOffset = .zero
+                    lastScale = 1.0
+                }
+            }
+    }
+
+    /// Drag-to-pan while zoomed, springs back on release.
+    private var panGesture: some Gesture {
+        DragGesture()
+            .onChanged { value in
+                guard imageScale > 1.0 else { return }
+                imageOffset = value.translation
+            }
+            .onEnded { _ in
+                withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) {
+                    imageOffset = .zero
+                }
+            }
     }
 
     // MARK: - Metadata Section
