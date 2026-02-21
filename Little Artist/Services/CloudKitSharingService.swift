@@ -40,6 +40,15 @@ final class CloudKitSharingService {
     /// Child object URLs whose sharing was stopped locally (pending CloudKit sync).
     private var stoppedSharingURLs: Set<String> = []
 
+    /// Throttle: last time `syncSharedDataToSwiftData` actually executed.
+    private var lastSyncDate: Date = .distantPast
+
+    /// Minimum interval between successive syncs (seconds).
+    private let syncThrottleInterval: TimeInterval = 5.0
+
+    /// Whether a throttled sync is already scheduled.
+    private var pendingThrottledSync = false
+
     /// The CloudKit container identifier used by this app.
     let ckContainerIdentifier = "iCloud.uk.co.flutterly.Little-Artist"
 
@@ -194,7 +203,7 @@ final class CloudKitSharingService {
             queue: .main
         ) { [weak self] _ in
             Task { @MainActor in
-                self?.syncSharedDataToSwiftData()
+                self?.scheduleThrottledSync()
             }
         }
 
@@ -392,9 +401,12 @@ final class CloudKitSharingService {
             }
             Task { @MainActor in
                 self?.diag("acceptShare: SUCCESS — scheduling sync retries")
-                // CloudKit needs time to download shared records after acceptance.
-                // Schedule multiple sync attempts with increasing delays.
-                for delay in [2.0, 5.0, 10.0, 20.0, 30.0] {
+                // CloudKit needs a moment to download shared records after
+                // acceptance. Run a few sync attempts with increasing delays.
+                // The remote-change notification will also trigger syncs, but
+                // these retries ensure we catch the data even if the
+                // notification arrives before the records are fully imported.
+                for delay in [3.0, 10.0, 30.0] {
                     try? await Task.sleep(for: .seconds(delay))
                     self?.diag("acceptShare: retry sync after \(Int(delay))s")
                     self?.syncSharedDataToSwiftData()
@@ -411,13 +423,40 @@ final class CloudKitSharingService {
 
     // MARK: - Shared Data Sync
 
+    /// Schedules a throttled sync — prevents the sync from running more
+    /// than once every `syncThrottleInterval` seconds.
+    private func scheduleThrottledSync() {
+        let elapsed = Date.now.timeIntervalSince(lastSyncDate)
+        if elapsed >= syncThrottleInterval {
+            // Enough time has passed — sync immediately
+            syncSharedDataToSwiftData()
+        } else if !pendingThrottledSync {
+            // Schedule a deferred sync
+            pendingThrottledSync = true
+            let remaining = syncThrottleInterval - elapsed
+            DispatchQueue.main.asyncAfter(deadline: .now() + remaining) { [weak self] in
+                self?.pendingThrottledSync = false
+                self?.syncSharedDataToSwiftData()
+            }
+        }
+        // else: a throttled sync is already pending — ignore
+    }
+
     /// Mirrors children and artworks from the Core Data shared store into
     /// SwiftData so they appear alongside locally created data.
+    ///
+    /// Deduplication strategy (in order):
+    /// 1. Match by `sharedRecordName` — already mirrored, update fields
+    /// 2. Match by name (case-insensitive) — local child on same-account device,
+    ///    adopt it as mirror rather than creating a duplicate
+    /// 3. No match — create a new mirror
     ///
     /// Called automatically when remote change notifications arrive on the
     /// shared store, and once at startup. Wrapped in error handling to
     /// prevent crashes from propagating.
     private func syncSharedDataToSwiftData() {
+        lastSyncDate = .now
+
         guard let container = persistentContainer else {
             diag("sync: SKIP — no container")
             return
@@ -455,13 +494,12 @@ final class CloudKitSharingService {
 
                 diag("sync: processing '\(childName)' record=\(recordName.prefix(30))…")
 
-                // Check if already mirrored
-                var existing = FetchDescriptor<Child>(
+                // --- Dedup Step 1: match by sharedRecordName ---
+                var byRecord = FetchDescriptor<Child>(
                     predicate: #Predicate { $0.sharedRecordName == recordName }
                 )
-                existing.fetchLimit = 1
-                if let found = try? modelContext.fetch(existing), !found.isEmpty {
-                    let mirror = found[0]
+                byRecord.fetchLimit = 1
+                if let found = try? modelContext.fetch(byRecord), let mirror = found.first {
                     mirror.name = managedChild.value(forKey: "name") as? String ?? mirror.name
                     mirror.avatarColor = managedChild.value(forKey: "avatarColor") as? String ?? mirror.avatarColor
                     mirror.avatarImageData = managedChild.value(forKey: "avatarImageData") as? Data
@@ -470,7 +508,25 @@ final class CloudKitSharingService {
                     continue
                 }
 
-                // Create new SwiftData child
+                // --- Dedup Step 2: match by name (catches same-account duplicates) ---
+                let nameToMatch = childName.lowercased()
+                var byName = FetchDescriptor<Child>(
+                    predicate: #Predicate { child in
+                        child.sharedRecordName == nil
+                    }
+                )
+                let localChildren = (try? modelContext.fetch(byName)) ?? []
+                if let match = localChildren.first(where: { $0.name.lowercased() == nameToMatch }) {
+                    // Adopt the existing local child as the mirror
+                    match.sharedRecordName = recordName
+                    match.avatarColor = managedChild.value(forKey: "avatarColor") as? String ?? match.avatarColor
+                    match.avatarImageData = managedChild.value(forKey: "avatarImageData") as? Data
+                    syncArtworks(for: managedChild, into: match, modelContext: modelContext)
+                    diag("sync: adopted local '\(match.name)' as mirror (same name)")
+                    continue
+                }
+
+                // --- Step 3: create new mirror ---
                 let newChild = Child(
                     name: childName == "?" ? "Shared Child" : childName,
                     avatarColor: managedChild.value(forKey: "avatarColor") as? String ?? Brand.defaultAvatarColor,
@@ -482,13 +538,73 @@ final class CloudKitSharingService {
 
                 syncArtworks(for: managedChild, into: newChild, modelContext: modelContext)
 
-                diag("sync: CREATED mirror for '\(newChild.name)'")
+                diag("sync: CREATED new mirror for '\(newChild.name)'")
             }
+
+            // --- Dedup pass: remove stale duplicates ---
+            removeDuplicateMirrors(modelContext: modelContext)
 
             try modelContext.save()
             diag("sync: SAVED to SwiftData successfully")
         } catch {
             diag("sync: FAILED — \(error.localizedDescription)")
+        }
+    }
+
+    /// Removes duplicate children that share the same `sharedRecordName`
+    /// (keeping the one with more artworks) and merges children with the
+    /// same name where one is a mirror and one is local.
+    private func removeDuplicateMirrors(modelContext: ModelContext) {
+        guard let allChildren = try? modelContext.fetch(FetchDescriptor<Child>()) else { return }
+
+        // Group mirrored children by sharedRecordName — remove exact duplicates
+        var seenRecords: [String: Child] = [:]
+        for child in allChildren {
+            guard let rn = child.sharedRecordName else { continue }
+            if let existing = seenRecords[rn] {
+                // Keep the one with more artworks
+                let existingCount = existing.artworks?.count ?? 0
+                let thisCount = child.artworks?.count ?? 0
+                if thisCount > existingCount {
+                    diag("dedup: removing duplicate mirror '\(existing.name)' (fewer artworks)")
+                    modelContext.delete(existing)
+                    seenRecords[rn] = child
+                } else {
+                    diag("dedup: removing duplicate mirror '\(child.name)' (fewer artworks)")
+                    modelContext.delete(child)
+                }
+            } else {
+                seenRecords[rn] = child
+            }
+        }
+
+        // Merge local + mirrored children with the same name
+        let remaining = (try? modelContext.fetch(FetchDescriptor<Child>())) ?? []
+        var byName: [String: [Child]] = [:]
+        for child in remaining {
+            let key = child.name.lowercased().trimmingCharacters(in: .whitespaces)
+            byName[key, default: []].append(child)
+        }
+        for (_, group) in byName where group.count > 1 {
+            // If the group has both a mirror and a local, keep the mirror and delete the local
+            let mirrors = group.filter { $0.sharedRecordName != nil }
+            let locals = group.filter { $0.sharedRecordName == nil }
+            if let mirror = mirrors.first, !locals.isEmpty {
+                for local in locals {
+                    // Transfer any artworks that only exist on the local copy
+                    if let localArtworks = local.artworks {
+                        let mirrorTitles = Set((mirror.artworks ?? []).map { "\($0.title)|\($0.createdAt.timeIntervalSince1970)" })
+                        for art in localArtworks {
+                            let key = "\(art.title)|\(art.createdAt.timeIntervalSince1970)"
+                            if !mirrorTitles.contains(key) {
+                                art.child = mirror
+                            }
+                        }
+                    }
+                    diag("dedup: merged local '\(local.name)' into mirror and deleted local")
+                    modelContext.delete(local)
+                }
+            }
         }
     }
 
