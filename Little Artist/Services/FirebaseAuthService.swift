@@ -11,6 +11,7 @@ import CryptoKit
 import FirebaseAuth
 import Foundation
 import os
+import UIKit
 
 /// Manages Firebase Authentication lifecycle.
 ///
@@ -171,6 +172,7 @@ final class FirebaseAuthService: NSObject {
 
             let controller = ASAuthorizationController(authorizationRequests: [request])
             controller.delegate = self
+            controller.presentationContextProvider = self
             controller.performRequests()
         }
     }
@@ -203,6 +205,20 @@ final class FirebaseAuthService: NSObject {
             case .noCurrentUser: "No authenticated user."
             }
         }
+    }
+}
+
+// MARK: - ASAuthorizationControllerPresentationContextProviding
+
+extension FirebaseAuthService: ASAuthorizationControllerPresentationContextProviding {
+
+    nonisolated func presentationAnchor(for controller: ASAuthorizationController) -> ASPresentationAnchor {
+        // Return the key window for the Sign in with Apple sheet to present in
+        guard let scene = UIApplication.shared.connectedScenes.first(where: { $0.activationState == .foregroundActive }) as? UIWindowScene,
+              let window = scene.windows.first(where: { $0.isKeyWindow }) else {
+            return UIWindow()
+        }
+        return window
     }
 }
 

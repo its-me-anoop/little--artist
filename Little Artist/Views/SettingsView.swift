@@ -33,6 +33,7 @@ struct SettingsView: View {
     @State private var exportPayload: SharePayload?
     @State private var isExporting = false
     @State private var showSyncEnabledConfirmation = false
+    @State private var syncError: String?
 
     private var storageUsed: String {
         let bytes = artworks.compactMap(\.imageData).reduce(0) { $0 + $1.count }
@@ -222,6 +223,7 @@ struct SettingsView: View {
                                             showSyncEnabledConfirmation = true
                                         } catch {
                                             firebaseSyncEnabled = false
+                                            syncError = "Sign in with Apple failed. Please try again."
                                         }
                                     }
                                 } else {
@@ -388,6 +390,14 @@ struct SettingsView: View {
                 Button("OK") {}
             } message: {
                 Text("Your data will now sync across your devices. You can share child profiles from the Edit Profile screen.")
+            }
+            .alert("Sync Unavailable", isPresented: Binding(
+                get: { syncError != nil },
+                set: { if !$0 { syncError = nil } }
+            )) {
+                Button("OK") { syncError = nil }
+            } message: {
+                Text(syncError ?? "")
             }
         }
     }
