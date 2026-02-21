@@ -483,9 +483,18 @@ final class CloudKitSharingService {
 
             diag("sync: \(sharedChildren.count) children in shared store")
 
-            guard !sharedChildren.isEmpty else { return }
-
             let modelContext = modelContainer.mainContext
+
+            // Always run dedup even if shared store is empty — catches
+            // duplicates created by private CloudKit sync (same-account).
+            if sharedChildren.isEmpty {
+                removeDuplicateMirrors(modelContext: modelContext)
+                if modelContext.hasChanges {
+                    try modelContext.save()
+                    diag("sync: dedup-only pass saved")
+                }
+                return
+            }
 
             for managedChild in sharedChildren {
                 let recordName = container.recordID(for: managedChild.objectID)?.recordName
@@ -551,26 +560,28 @@ final class CloudKitSharingService {
         }
     }
 
-    /// Removes duplicate children that share the same `sharedRecordName`
-    /// (keeping the one with more artworks) and merges children with the
-    /// same name where one is a mirror and one is local.
+    /// Removes duplicate children across three scenarios:
+    /// 1. Same `sharedRecordName` — exact mirror duplicates
+    /// 2. Mirror + local with same name — adopt local into mirror
+    /// 3. Two+ locals with same name — merge into one (same-account sync dupes)
     private func removeDuplicateMirrors(modelContext: ModelContext) {
         guard let allChildren = try? modelContext.fetch(FetchDescriptor<Child>()) else { return }
 
-        // Group mirrored children by sharedRecordName — remove exact duplicates
+        // --- Pass 1: same sharedRecordName duplicates ---
         var seenRecords: [String: Child] = [:]
         for child in allChildren {
             guard let rn = child.sharedRecordName else { continue }
             if let existing = seenRecords[rn] {
-                // Keep the one with more artworks
                 let existingCount = existing.artworks?.count ?? 0
                 let thisCount = child.artworks?.count ?? 0
                 if thisCount > existingCount {
                     diag("dedup: removing duplicate mirror '\(existing.name)' (fewer artworks)")
+                    transferArtworks(from: existing, to: child, modelContext: modelContext)
                     modelContext.delete(existing)
                     seenRecords[rn] = child
                 } else {
                     diag("dedup: removing duplicate mirror '\(child.name)' (fewer artworks)")
+                    transferArtworks(from: child, to: existing, modelContext: modelContext)
                     modelContext.delete(child)
                 }
             } else {
@@ -578,32 +589,50 @@ final class CloudKitSharingService {
             }
         }
 
-        // Merge local + mirrored children with the same name
+        // --- Pass 2: group ALL remaining children by name ---
         let remaining = (try? modelContext.fetch(FetchDescriptor<Child>())) ?? []
         var byName: [String: [Child]] = [:]
         for child in remaining {
             let key = child.name.lowercased().trimmingCharacters(in: .whitespaces)
             byName[key, default: []].append(child)
         }
-        for (_, group) in byName where group.count > 1 {
-            // If the group has both a mirror and a local, keep the mirror and delete the local
+
+        for (name, group) in byName where group.count > 1 {
             let mirrors = group.filter { $0.sharedRecordName != nil }
             let locals = group.filter { $0.sharedRecordName == nil }
-            if let mirror = mirrors.first, !locals.isEmpty {
-                for local in locals {
-                    // Transfer any artworks that only exist on the local copy
-                    if let localArtworks = local.artworks {
-                        let mirrorTitles = Set((mirror.artworks ?? []).map { "\($0.title)|\($0.createdAt.timeIntervalSince1970)" })
-                        for art in localArtworks {
-                            let key = "\(art.title)|\(art.createdAt.timeIntervalSince1970)"
-                            if !mirrorTitles.contains(key) {
-                                art.child = mirror
-                            }
-                        }
-                    }
-                    diag("dedup: merged local '\(local.name)' into mirror and deleted local")
-                    modelContext.delete(local)
-                }
+
+            // Pick the "keeper": prefer a mirror, otherwise the local with the most artworks
+            let keeper: Child
+            if let mirror = mirrors.first {
+                keeper = mirror
+            } else {
+                keeper = locals.sorted { ($0.artworks?.count ?? 0) > ($1.artworks?.count ?? 0) }.first!
+            }
+
+            // Merge all others into the keeper
+            for child in group where child !== keeper {
+                transferArtworks(from: child, to: keeper, modelContext: modelContext)
+                diag("dedup: merged '\(child.name)' into keeper (shared=\(keeper.sharedRecordName != nil)) and deleted duplicate")
+                modelContext.delete(child)
+            }
+
+            if group.count > 1 {
+                diag("dedup: '\(name)' — kept 1, removed \(group.count - 1) duplicate(s)")
+            }
+        }
+    }
+
+    /// Transfers artworks from `source` to `target` that don't already
+    /// exist on the target (matched by title + creation date).
+    private func transferArtworks(from source: Child, to target: Child, modelContext: ModelContext) {
+        guard let sourceArtworks = source.artworks, !sourceArtworks.isEmpty else { return }
+        let targetKeys = Set(
+            (target.artworks ?? []).map { "\($0.title)|\($0.createdAt.timeIntervalSince1970)" }
+        )
+        for art in sourceArtworks {
+            let key = "\(art.title)|\(art.createdAt.timeIntervalSince1970)"
+            if !targetKeys.contains(key) {
+                art.child = target
             }
         }
     }
