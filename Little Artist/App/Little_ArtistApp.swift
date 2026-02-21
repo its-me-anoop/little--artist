@@ -68,6 +68,9 @@ struct Little_ArtistApp: App {
             // Initialise CloudKit sharing stack when premium + iCloud enabled
             if isPremium && iCloudEnabled {
                 CloudKitSharingService.shared.setup()
+            } else {
+                // Ensure sync is paused when not enabled at launch
+                CloudKitSharingService.shared.isSyncEnabled = false
             }
 
             return container

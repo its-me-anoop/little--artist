@@ -200,7 +200,14 @@ struct SettingsView: View {
                         .onChange(of: iCloudSyncEnabled) { _, enabled in
                             if enabled {
                                 CloudKitSharingService.shared.setup()
+                                CloudKitSharingService.shared.isSyncEnabled = true
                                 showSyncEnabledConfirmation = true
+                            } else {
+                                // Pause sync operations without tearing down the
+                                // Core Data stack (which risks data loss). The stack
+                                // stays alive but won't process new remote changes
+                                // until re-enabled.
+                                CloudKitSharingService.shared.isSyncEnabled = false
                             }
                         }
                     } else {

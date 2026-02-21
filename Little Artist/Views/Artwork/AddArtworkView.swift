@@ -402,12 +402,16 @@ struct AddArtworkView: View {
     // MARK: - Batch Import
 
     private func batchImport(items: [PhotosPickerItem]) async {
-        for item in items {
+        for (index, item) in items.enumerated() {
             guard let data = try? await item.loadTransferable(type: Data.self) else { continue }
+            // Offset each item's date by its index so that the deduplication
+            // key (title + rounded timestamp) is unique per artwork. Without
+            // this, all batch items share the same key and dedup deletes all
+            // but one.
             let artwork = Artwork(
                 title: "",
                 imageData: data,
-                createdAt: artworkDate,
+                createdAt: artworkDate.addingTimeInterval(Double(index)),
                 child: child
             )
             modelContext.insert(artwork)

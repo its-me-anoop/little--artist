@@ -3,7 +3,8 @@
 //  Little Artist
 //
 //  UIApplicationDelegate + UIWindowSceneDelegate for handling
-//  CloudKit share acceptance callbacks in SwiftUI scene-based apps.
+//  CloudKit share acceptance callbacks and remote notification
+//  delivery in SwiftUI scene-based apps.
 //
 
 import CloudKit
@@ -17,6 +18,9 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         _ application: UIApplication,
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
     ) -> Bool {
+        // Register for remote notifications so CloudKit can deliver
+        // silent pushes when data changes on another device.
+        application.registerForRemoteNotifications()
         return true
     }
 
@@ -43,6 +47,29 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         CloudKitSharingService.shared.diag("AppDelegate: userDidAcceptCloudKitShareWith CALLED")
         Task { @MainActor in
             CloudKitSharingService.shared.acceptShare(metadata: cloudKitShareMetadata)
+        }
+    }
+
+    /// Handles background remote notifications from CloudKit.
+    ///
+    /// `NSPersistentCloudKitContainer` processes the CloudKit data automatically,
+    /// but SwiftData's `@Query` results won't refresh until its context processes
+    /// the new persistent history. This handler triggers that refresh.
+    func application(
+        _ application: UIApplication,
+        didReceiveRemoteNotification userInfo: [AnyHashable: Any],
+        fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void
+    ) {
+        Task { @MainActor in
+            let service = CloudKitSharingService.shared
+            guard service.isInitialised, service.isSyncEnabled else {
+                completionHandler(.noData)
+                return
+            }
+            service.diag("AppDelegate: didReceiveRemoteNotification — refreshing")
+            service.refreshSwiftDataContext()
+            service.syncSharedDataToSwiftData()
+            completionHandler(.newData)
         }
     }
 }

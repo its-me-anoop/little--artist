@@ -15,14 +15,85 @@ import SwiftUI
 
 private let logger = Logger(subsystem: "uk.co.flutterly.Little-Artist", category: "CloudKit")
 
+// MARK: - Sync Engine Protocol
+
+/// Abstraction for the sync engine so the service can be tested
+/// and its responsibilities are clearly separated (Dependency Inversion).
+protocol CloudKitSyncEngine: Sendable {
+    @MainActor func refreshSwiftDataContext()
+    @MainActor func syncSharedDataToSwiftData()
+}
+
+// MARK: - Artwork Matching Strategy
+
+/// Encapsulates the logic for matching artworks across stacks (Single Responsibility).
+/// Used by both the shared-data mirror and the deduplication passes.
+enum ArtworkMatchStrategy {
+    /// Stable key for an artwork: title + creation date rounded to the
+    /// nearest second. Rounding avoids floating-point mismatches when
+    /// the same date is stored by Core Data and SwiftData independently.
+    static func key(for artwork: Artwork) -> String {
+        "\(artwork.title)|\(Int(artwork.createdAt.timeIntervalSince1970))"
+    }
+
+    /// Builds a key from raw managed-object values (shared store mirroring).
+    static func key(title: String, createdAt: Date) -> String {
+        "\(title)|\(Int(createdAt.timeIntervalSince1970))"
+    }
+
+    /// Score indicating how much data an artwork carries — higher is better.
+    /// Used to decide which duplicate to keep when merging.
+    static func dataScore(for artwork: Artwork) -> Int {
+        var score = 0
+        if artwork.imageData != nil { score += 10 }
+        score += artwork.caption.count
+        if artwork.voiceNoteData != nil { score += 5 }
+        if artwork.isFavorited { score += 1 }
+        return score
+    }
+
+    /// Returns true when two artworks with the same key are genuinely
+    /// duplicates rather than distinct artworks that happen to share a
+    /// title and creation second (e.g. batch imports with different images).
+    static func areLikelyDuplicates(_ a: Artwork, _ b: Artwork) -> Bool {
+        // If either is missing image data, fall back to key-only matching
+        guard let aSize = a.imageData?.count, let bSize = b.imageData?.count else {
+            return true
+        }
+        // Images within 1 KB are considered the same (compression variance)
+        return abs(aSize - bSize) <= 1024
+    }
+}
+
 /// Manages CloudKit sharing using `NSPersistentCloudKitContainer`.
 ///
 /// SwiftData (as of iOS 18) lacks a shared-database API, so this service
 /// provides a parallel Core Data stack that owns CloudKit sync for both
 /// the private and shared databases. SwiftData reads from the same private
 /// SQLite file with `cloudKitDatabase: .none`.
+///
+/// ## Architecture
+///
+/// ```
+/// SwiftData (.none)  ──writes──>  default.store  <──reads/writes──  NSPersistentCloudKitContainer
+///                                                                        │
+///                                shared.store   <────────────────────────┘
+///                                (shared zone)       (private + shared zones)
+///                                     │
+///                             syncSharedDataToSwiftData()
+///                                     │
+///                                     v
+///                              SwiftData @Query
+/// ```
+///
+/// **Private sync:** Core Data writes CloudKit data to `default.store`.
+/// SwiftData reads the same file but needs an explicit refresh to pick up
+/// external writes (see ``refreshSwiftDataContext()``).
+///
+/// **Shared sync:** Shared-zone data lands in `shared.store`. This service
+/// mirrors it into SwiftData via ``syncSharedDataToSwiftData()``.
 @MainActor @Observable
-final class CloudKitSharingService {
+final class CloudKitSharingService: CloudKitSyncEngine {
 
     // MARK: - Singleton
 
@@ -43,11 +114,25 @@ final class CloudKitSharingService {
     /// Throttle: last time `syncSharedDataToSwiftData` actually executed.
     private var lastSyncDate: Date = .distantPast
 
-    /// Minimum interval between successive syncs (seconds).
+    /// Throttle: last time `refreshSwiftDataContext` actually executed.
+    private var lastRefreshDate: Date = .distantPast
+
+    /// Minimum interval between successive shared-store syncs (seconds).
     private let syncThrottleInterval: TimeInterval = 5.0
+
+    /// Minimum interval between successive SwiftData refreshes (seconds).
+    private let refreshThrottleInterval: TimeInterval = 2.0
 
     /// Whether a throttled sync is already scheduled.
     private var pendingThrottledSync = false
+
+    /// Whether a throttled refresh is already scheduled.
+    private var pendingThrottledRefresh = false
+
+    /// Whether sync operations should run. Set to `false` when the user
+    /// disables iCloud Sync in Settings (Open/Closed principle — the stack
+    /// stays alive but sync is paused, avoiding a risky teardown).
+    var isSyncEnabled: Bool = true
 
     /// The CloudKit container identifier used by this app.
     let ckContainerIdentifier = "iCloud.uk.co.flutterly.Little-Artist"
@@ -77,6 +162,7 @@ final class CloudKitSharingService {
         info["Private Store"] = privateStore != nil ? "Loaded" : "Missing"
         info["Shared Store"] = sharedStore != nil ? "Loaded" : "Missing"
         info["Model Container"] = modelContainer != nil ? "Set" : "Missing"
+        info["Sync Enabled"] = isSyncEnabled ? "Yes" : "Paused"
 
         // Count children in shared Core Data store
         if let container = persistentContainer, let sharedStore {
@@ -125,7 +211,7 @@ final class CloudKitSharingService {
             Artwork.self,
             Tag.self
         ]) else {
-            logger.error("Failed to create managed object model from SwiftData types")
+            diag("setup: FAILED — could not create managed object model")
             return
         }
         let entityNames = model.entities.compactMap(\.name).joined(separator: ", ")
@@ -176,7 +262,7 @@ final class CloudKitSharingService {
         }
 
         guard loadErrors.isEmpty else {
-            logger.error("Aborting setup — \(loadErrors.count) store(s) failed to load")
+            diag("setup: FAILED — \(loadErrors.count) store(s) failed to load: \(loadErrors.joined(separator: "; "))")
             return
         }
 
@@ -193,17 +279,23 @@ final class CloudKitSharingService {
         }
 
         persistentContainer = container
+        isSyncEnabled = true
         diag("setup: stores loaded — private=\(privateStore != nil) shared=\(sharedStore != nil)")
 
-        // Listen for remote changes on the shared store so we can
-        // mirror shared children/artworks into SwiftData.
+        // Listen for remote changes from CloudKit on EITHER store.
+        // - Private store changes → refresh SwiftData so @Query picks up new data
+        // - Shared store changes  → mirror shared children/artworks into SwiftData
         NotificationCenter.default.addObserver(
             forName: .NSPersistentStoreRemoteChange,
             object: container.persistentStoreCoordinator,
             queue: .main
         ) { [weak self] _ in
-            Task { @MainActor in
-                self?.scheduleThrottledSync()
+            Task { @MainActor [weak self] in
+                guard let self, self.isSyncEnabled else { return }
+                // Refresh SwiftData context so @Query sees private-zone changes
+                self.scheduleThrottledRefresh()
+                // Mirror shared-zone data into SwiftData
+                self.scheduleThrottledSync()
             }
         }
 
@@ -219,7 +311,53 @@ final class CloudKitSharingService {
 
         // Defer initial sync to next run loop to avoid issues during setup
         DispatchQueue.main.async { [weak self] in
+            self?.refreshSwiftDataContext()
             self?.syncSharedDataToSwiftData()
+        }
+    }
+
+    // MARK: - SwiftData Refresh (Private Sync)
+
+    /// Forces SwiftData to process persistent history written by the Core Data
+    /// coordinator, ensuring `@Query` results reflect CloudKit private-zone changes.
+    ///
+    /// When `NSPersistentCloudKitContainer` writes remote data to `default.store`,
+    /// SwiftData's `ModelContext` doesn't automatically pick it up because it uses
+    /// a separate `NSPersistentStoreCoordinator`. Performing a fetch triggers
+    /// SwiftData to read the latest persistent history and update live queries.
+    func refreshSwiftDataContext() {
+        lastRefreshDate = .now
+
+        guard let modelContainer else {
+            diag("refresh: SKIP — no model container")
+            return
+        }
+
+        let context = modelContainer.mainContext
+        // Fetch forces SwiftData to process persistent history transactions
+        // from the Core Data coordinator, causing @Query to refresh.
+        var childFetch = FetchDescriptor<Child>()
+        childFetch.fetchLimit = 1
+        let _ = try? context.fetch(childFetch)
+        var artworkFetch = FetchDescriptor<Artwork>()
+        artworkFetch.fetchLimit = 1
+        let _ = try? context.fetch(artworkFetch)
+        diag("refresh: SwiftData context refreshed for private-zone changes")
+    }
+
+    /// Schedules a throttled SwiftData refresh — prevents excessive re-fetching
+    /// when multiple remote change notifications arrive in quick succession.
+    private func scheduleThrottledRefresh() {
+        let elapsed = Date.now.timeIntervalSince(lastRefreshDate)
+        if elapsed >= refreshThrottleInterval {
+            refreshSwiftDataContext()
+        } else if !pendingThrottledRefresh {
+            pendingThrottledRefresh = true
+            let remaining = refreshThrottleInterval - elapsed
+            DispatchQueue.main.asyncAfter(deadline: .now() + remaining) { [weak self] in
+                self?.pendingThrottledRefresh = false
+                self?.refreshSwiftDataContext()
+            }
         }
     }
 
@@ -393,31 +531,33 @@ final class CloudKitSharingService {
             from: [metadata],
             into: sharedStore
         ) { [weak self] _, error in
-            if let error {
-                Task { @MainActor in
-                    self?.diag("acceptShare: FAILED — \(error.localizedDescription)")
-                }
-                return
-            }
             Task { @MainActor in
-                self?.diag("acceptShare: SUCCESS — scheduling sync retries")
+                guard let self else { return }
+                if let error {
+                    self.diag("acceptShare: FAILED — \(error.localizedDescription)")
+                    return
+                }
+                self.diag("acceptShare: SUCCESS — scheduling sync retries")
                 // CloudKit needs a moment to download shared records after
                 // acceptance. Run a few sync attempts with increasing delays.
                 // The remote-change notification will also trigger syncs, but
                 // these retries ensure we catch the data even if the
                 // notification arrives before the records are fully imported.
                 for delay in [3.0, 10.0, 30.0] {
+                    guard !Task.isCancelled else { break }
                     try? await Task.sleep(for: .seconds(delay))
-                    self?.diag("acceptShare: retry sync after \(Int(delay))s")
-                    self?.syncSharedDataToSwiftData()
+                    self.diag("acceptShare: retry sync after \(Int(delay))s")
+                    self.refreshSwiftDataContext()
+                    self.syncSharedDataToSwiftData()
                 }
             }
         }
     }
 
-    /// Manually triggers a sync of shared data — available for diagnostic use.
+    /// Manually triggers a full sync — available for diagnostic use.
     func runManualSync() {
         diag("manual sync: triggered by user")
+        refreshSwiftDataContext()
         syncSharedDataToSwiftData()
     }
 
@@ -454,9 +594,13 @@ final class CloudKitSharingService {
     /// Called automatically when remote change notifications arrive on the
     /// shared store, and once at startup. Wrapped in error handling to
     /// prevent crashes from propagating.
-    private func syncSharedDataToSwiftData() {
+    func syncSharedDataToSwiftData() {
         lastSyncDate = .now
 
+        guard isSyncEnabled else {
+            diag("sync: SKIP — sync is paused")
+            return
+        }
         guard let container = persistentContainer else {
             diag("sync: SKIP — no container")
             return
@@ -502,7 +646,7 @@ final class CloudKitSharingService {
                     ?? managedChild.objectID.uriRepresentation().absoluteString
                 let childName = managedChild.value(forKey: "name") as? String ?? "?"
 
-                diag("sync: processing '\(childName)' record=\(recordName.prefix(30))…")
+                diag("sync: processing '\(childName)' record=\(recordName.prefix(30))...")
 
                 // --- Dedup Step 1: match by sharedRecordName ---
                 var byRecord = FetchDescriptor<Child>(
@@ -520,7 +664,7 @@ final class CloudKitSharingService {
 
                 // --- Dedup Step 2: match by name (catches same-account duplicates) ---
                 let nameToMatch = childName.lowercased()
-                var byName = FetchDescriptor<Child>(
+                let byName = FetchDescriptor<Child>(
                     predicate: #Predicate { child in
                         child.sharedRecordName == nil
                     }
@@ -562,6 +706,8 @@ final class CloudKitSharingService {
         }
     }
 
+    // MARK: - Deduplication
+
     /// Removes duplicate children across three scenarios:
     /// 1. Same `sharedRecordName` — exact mirror duplicates
     /// 2. Mirror + local with same name — adopt local into mirror
@@ -592,10 +738,12 @@ final class CloudKitSharingService {
         }
 
         // --- Pass 2: group ALL remaining children by name ---
+        // Re-fetch to ensure we only see live (non-deleted) objects.
         let remaining = (try? modelContext.fetch(FetchDescriptor<Child>())) ?? []
         var byName: [String: [Child]] = [:]
         for child in remaining {
             let key = child.name.lowercased().trimmingCharacters(in: .whitespaces)
+            guard !key.isEmpty else { continue }
             byName[key, default: []].append(child)
         }
 
@@ -629,10 +777,10 @@ final class CloudKitSharingService {
     private func transferArtworks(from source: Child, to target: Child, modelContext: ModelContext) {
         guard let sourceArtworks = source.artworks, !sourceArtworks.isEmpty else { return }
         let targetKeys = Set(
-            (target.artworks ?? []).map { artworkKey($0) }
+            (target.artworks ?? []).map { ArtworkMatchStrategy.key(for: $0) }
         )
         for art in sourceArtworks {
-            if !targetKeys.contains(artworkKey(art)) {
+            if !targetKeys.contains(ArtworkMatchStrategy.key(for: art)) {
                 art.child = target
             }
         }
@@ -644,6 +792,10 @@ final class CloudKitSharingService {
     /// same-account devices, creating duplicates in `default.store`.
     /// This pass groups artworks by a stable key (title + rounded date)
     /// and keeps only the one with the most data (image, caption, etc.).
+    ///
+    /// To avoid false positives (e.g. batch imports with different images
+    /// but the same title and timestamp), we additionally check that the
+    /// image data sizes are similar before treating two artworks as duplicates.
     private func deduplicateArtworks(modelContext: ModelContext) {
         guard let allChildren = try? modelContext.fetch(FetchDescriptor<Child>()) else { return }
 
@@ -653,11 +805,15 @@ final class CloudKitSharingService {
 
             var seen: [String: Artwork] = [:]
             for art in artworks {
-                let key = artworkKey(art)
+                let key = ArtworkMatchStrategy.key(for: art)
                 if let existing = seen[key] {
+                    // Guard against false positives: only dedup if images are similar
+                    guard ArtworkMatchStrategy.areLikelyDuplicates(existing, art) else {
+                        continue
+                    }
                     // Keep the one with more data (image > no image, longer caption wins)
-                    let existingScore = artworkDataScore(existing)
-                    let thisScore = artworkDataScore(art)
+                    let existingScore = ArtworkMatchStrategy.dataScore(for: existing)
+                    let thisScore = ArtworkMatchStrategy.dataScore(for: art)
                     if thisScore > existingScore {
                         modelContext.delete(existing)
                         seen[key] = art
@@ -675,24 +831,13 @@ final class CloudKitSharingService {
         }
     }
 
-    /// Stable key for an artwork: title + creation date rounded to the
-    /// nearest second. Rounding avoids floating-point mismatches when
-    /// the same date is stored by Core Data and SwiftData independently.
-    private func artworkKey(_ art: Artwork) -> String {
-        "\(art.title)|\(Int(art.createdAt.timeIntervalSince1970))"
-    }
-
-    /// Score indicating how much data an artwork carries — higher is better.
-    private func artworkDataScore(_ art: Artwork) -> Int {
-        var score = 0
-        if art.imageData != nil { score += 10 }
-        score += art.caption.count
-        if art.voiceNoteData != nil { score += 5 }
-        if art.isFavorited { score += 1 }
-        return score
-    }
+    // MARK: - Artwork Sync (Shared Store → SwiftData)
 
     /// Mirrors artworks from a shared Core Data child into a SwiftData child.
+    ///
+    /// For existing artworks (matched by key), updates text fields and fills in
+    /// missing binary data from the canonical shared version (owner's data).
+    /// For new artworks, creates a SwiftData copy.
     private func syncArtworks(
         for managedChild: NSManagedObject,
         into swiftDataChild: Child,
@@ -700,29 +845,69 @@ final class CloudKitSharingService {
     ) {
         guard let artworkSet = managedChild.value(forKey: "artworks") as? NSSet else { return }
 
-        // Use rounded timestamps for matching (avoids floating-point drift)
-        let existingKeys = Set(
-            (swiftDataChild.artworks ?? []).map { artworkKey($0) }
-        )
+        // Build lookup of existing SwiftData artworks by key
+        var existingByKey: [String: Artwork] = [:]
+        for art in (swiftDataChild.artworks ?? []) {
+            existingByKey[ArtworkMatchStrategy.key(for: art)] = art
+        }
+
+        var insertCount = 0
+        var updateCount = 0
 
         for case let managedArtwork as NSManagedObject in artworkSet {
             let title = managedArtwork.value(forKey: "title") as? String ?? ""
             let createdAt = managedArtwork.value(forKey: "createdAt") as? Date ?? .now
-            let key = "\(title)|\(Int(createdAt.timeIntervalSince1970))"
+            let key = ArtworkMatchStrategy.key(title: title, createdAt: createdAt)
 
-            // Skip if already mirrored (by title + rounded date)
-            if existingKeys.contains(key) { continue }
+            let caption = managedArtwork.value(forKey: "caption") as? String ?? ""
+            let isFavorited = managedArtwork.value(forKey: "isFavorited") as? Bool ?? false
 
-            let artwork = Artwork(
-                title: title,
-                caption: managedArtwork.value(forKey: "caption") as? String ?? "",
-                imageData: managedArtwork.value(forKey: "imageData") as? Data,
-                voiceNoteData: managedArtwork.value(forKey: "voiceNoteData") as? Data,
-                isFavorited: managedArtwork.value(forKey: "isFavorited") as? Bool ?? false,
-                createdAt: createdAt,
-                child: swiftDataChild
-            )
-            modelContext.insert(artwork)
+            if let existing = existingByKey[key] {
+                // Update existing artwork — the shared (owner's) version is canonical
+                var changed = false
+                if existing.title != title {
+                    existing.title = title
+                    changed = true
+                }
+                if existing.caption != caption {
+                    existing.caption = caption
+                    changed = true
+                }
+                if existing.isFavorited != isFavorited {
+                    existing.isFavorited = isFavorited
+                    changed = true
+                }
+                // Only fill in binary data if the local copy is missing it.
+                // Avoids expensive byte-by-byte comparisons on large blobs.
+                if existing.imageData == nil,
+                   let remoteImage = managedArtwork.value(forKey: "imageData") as? Data {
+                    existing.imageData = remoteImage
+                    changed = true
+                }
+                if existing.voiceNoteData == nil,
+                   let remoteVoice = managedArtwork.value(forKey: "voiceNoteData") as? Data {
+                    existing.voiceNoteData = remoteVoice
+                    changed = true
+                }
+                if changed { updateCount += 1 }
+            } else {
+                // Create new artwork
+                let artwork = Artwork(
+                    title: title,
+                    caption: caption,
+                    imageData: managedArtwork.value(forKey: "imageData") as? Data,
+                    voiceNoteData: managedArtwork.value(forKey: "voiceNoteData") as? Data,
+                    isFavorited: isFavorited,
+                    createdAt: createdAt,
+                    child: swiftDataChild
+                )
+                modelContext.insert(artwork)
+                insertCount += 1
+            }
+        }
+
+        if insertCount > 0 || updateCount > 0 {
+            diag("syncArtworks: \(insertCount) inserted, \(updateCount) updated for '\(swiftDataChild.name)'")
         }
     }
 
@@ -780,6 +965,7 @@ final class CloudKitSharingService {
     enum SharingError: LocalizedError {
         case notInitialised
         case objectIDNotFound
+        case syncFailed(underlying: Error)
 
         var errorDescription: String? {
             switch self {
@@ -787,6 +973,8 @@ final class CloudKitSharingService {
                 return "CloudKit sharing service is not initialised."
             case .objectIDNotFound:
                 return "Could not find the managed object for this child."
+            case .syncFailed(let underlying):
+                return "Sync failed: \(underlying.localizedDescription)"
             }
         }
     }
