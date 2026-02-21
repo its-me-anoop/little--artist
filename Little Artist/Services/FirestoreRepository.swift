@@ -10,6 +10,7 @@
 //
 
 import FirebaseFirestore
+import FirebaseStorage
 import Foundation
 import os
 import SwiftData
@@ -132,19 +133,27 @@ final class FirestoreRepository {
         }
     }
 
-    /// Deletes a child and all its artworks locally and from Firestore.
+    /// Deletes a child and all its artworks locally and from Firestore + Storage.
     func deleteChild(_ child: Child, in modelContext: ModelContext) {
         let firestoreId = child.firestoreId
         let userId = auth.userId
 
+        // Track the deletion so the sync listener doesn't re-create this child
+        if let firestoreId {
+            let childDocId = firestoreId.components(separatedBy: "/").last ?? firestoreId
+            localWriteIds.insert(childDocId)
+        }
+
         // Local delete (cascades to artworks via SwiftData relationship)
         modelContext.delete(child)
 
-        // Firestore delete
+        // Firestore + Storage delete
         if isSyncActive, let userId, let firestoreId {
             Task {
                 await deleteChildFromFirestore(firestoreId: firestoreId, userId: userId)
             }
+        } else if firestoreId == nil {
+            logger.warning("deleteChild: firestoreId is nil — skipping Firestore delete")
         }
     }
 
@@ -263,16 +272,38 @@ final class FirestoreRepository {
         }
     }
 
-    /// Deletes an artwork locally and from Firestore.
+    /// Deletes an artwork locally and from Firestore + Storage.
     func deleteArtwork(_ artwork: Artwork, in modelContext: ModelContext) {
         let firestoreId = artwork.firestoreId
+        let imageURL = artwork.imageURL
+        let voiceNoteURL = artwork.voiceNoteURL
         let userId = auth.userId
+
+        // Track the deletion so the sync listener doesn't re-create this artwork
+        if let firestoreId {
+            let parts = firestoreId.components(separatedBy: "/")
+            if parts.count >= 6 {
+                localWriteIds.insert(parts[5])
+            }
+        }
 
         modelContext.delete(artwork)
 
-        if isSyncActive, let userId, let firestoreId {
-            Task {
-                await deleteArtworkFromFirestore(firestoreId: firestoreId, userId: userId)
+        if isSyncActive, let userId {
+            if let firestoreId {
+                Task {
+                    await deleteArtworkFromFirestore(firestoreId: firestoreId, userId: userId)
+                }
+            } else {
+                // Artwork was never assigned a firestoreId but may have storage URLs
+                // (e.g. synced via uploadAllLocalData but firestoreId wasn't persisted).
+                // Clean up any Firebase Storage files we know about.
+                logger.warning("deleteArtwork: firestoreId is nil — skipping Firestore doc delete")
+                if imageURL != nil || voiceNoteURL != nil {
+                    Task {
+                        await deleteOrphanedStorage(imageURL: imageURL, voiceNoteURL: voiceNoteURL)
+                    }
+                }
             }
         }
     }
@@ -515,13 +546,23 @@ final class FirestoreRepository {
         let childRef = db.collection("users").document(userId).collection("children").document(childDocId)
 
         do {
-            // Delete all artworks in subcollection first
+            // Delete all artworks in subcollection + their Storage files
             let artworks = try await childRef.collection("artworks").getDocuments()
             for doc in artworks.documents {
+                let artworkDocId = doc.documentID
                 try await doc.reference.delete()
+                localWriteIds.insert(artworkDocId)
+                // Clean up Storage files for this artwork
+                await storage.delete(path: StorageService.artworkImagePath(userId: userId, childId: childDocId, artworkId: artworkDocId))
+                await storage.delete(path: StorageService.voiceNotePath(userId: userId, childId: childDocId, artworkId: artworkDocId))
             }
+
+            // Delete child's avatar from Storage
+            await storage.delete(path: StorageService.avatarPath(userId: userId, childId: childDocId))
+
             try await childRef.delete()
-            logger.info("Child deleted from Firestore: \(childDocId, privacy: .public)")
+            localWriteIds.insert(childDocId)
+            logger.info("Child + \(artworks.documents.count) artworks deleted from Firestore + Storage: \(childDocId, privacy: .public)")
         } catch {
             logger.error("Child delete failed: \(error.localizedDescription, privacy: .public)")
         }
@@ -646,7 +687,10 @@ final class FirestoreRepository {
 
     private func deleteArtworkFromFirestore(firestoreId: String, userId: String) async {
         let parts = firestoreId.components(separatedBy: "/")
-        guard parts.count >= 6 else { return }
+        guard parts.count >= 6 else {
+            logger.error("deleteArtworkFromFirestore: bad firestoreId format: \(firestoreId, privacy: .public)")
+            return
+        }
         let childDocId = parts[3]
         let artworkDocId = parts[5]
 
@@ -656,12 +700,26 @@ final class FirestoreRepository {
 
         do {
             try await artworkRef.delete()
+            localWriteIds.insert(artworkDocId)
             // Also delete storage files
             await storage.delete(path: StorageService.artworkImagePath(userId: userId, childId: childDocId, artworkId: artworkDocId))
             await storage.delete(path: StorageService.voiceNotePath(userId: userId, childId: childDocId, artworkId: artworkDocId))
-            logger.info("Artwork deleted: \(artworkDocId, privacy: .public)")
+            logger.info("Artwork deleted from Firestore + Storage: \(artworkDocId, privacy: .public)")
         } catch {
             logger.error("Artwork delete failed: \(error.localizedDescription, privacy: .public)")
+        }
+    }
+
+    /// Deletes Firebase Storage files using their download URLs directly.
+    /// Fallback for artworks missing a `firestoreId` but that have storage URLs.
+    private func deleteOrphanedStorage(imageURL: String?, voiceNoteURL: String?) async {
+        if let url = imageURL, let ref = try? Storage.storage().reference(forURL: url) {
+            try? await ref.delete()
+            logger.info("Deleted orphaned image from Storage")
+        }
+        if let url = voiceNoteURL, let ref = try? Storage.storage().reference(forURL: url) {
+            try? await ref.delete()
+            logger.info("Deleted orphaned voice note from Storage")
         }
     }
 
