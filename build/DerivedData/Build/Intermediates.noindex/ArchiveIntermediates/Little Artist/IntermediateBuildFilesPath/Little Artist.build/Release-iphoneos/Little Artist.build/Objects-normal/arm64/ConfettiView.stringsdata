@@ -1,0 +1,24 @@
+{
+  "source": "/Users/anoopjose/Projects/Little Artist/Little Artist/Components/ConfettiView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Achievement Unlocked!",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 175
+        }
+      },
+      {
+        "comment": "",
+        "key": "Awesome!",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 192
+        }
+      }
+    ]
+  },
+  "version": 1
+}

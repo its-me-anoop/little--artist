@@ -2,37 +2,42 @@
 //  ShareManagementView.swift
 //  Little Artist
 //
-//  Custom sharing management view that replaces UICloudSharingController
-//  for the "Manage Sharing" screen — displays the owner's actual iCloud
-//  name instead of the generic "(Owner)" label.
+//  Sharing management view — displays participants fetched from Firestore,
+//  allows the owner to send invite links, stop sharing, and participants to leave.
 //
 
-import CloudKit
 import SwiftUI
+import SwiftData
 
-/// A custom sharing management view that shows the owner's iCloud identity.
+/// A sharing management view that shows participants from Firestore.
 ///
-/// `UICloudSharingController` always displays "(Owner)" for the share owner.
-/// This view fetches the actual iCloud user name and presents a branded
-/// sharing management experience.
+/// Replaces the old CloudKit-based `UICloudSharingController` wrapper with
+/// a branded experience powered by ``FirestoreRepository``.
 struct ShareManagementView: View {
     let child: Child
-    let share: CKShare
-    let ckContainer: CKContainer
+    let shareId: String
+    /// When true, the view was just created — show the share link immediately.
+    var isNewShare: Bool = false
 
     var onStoppedSharing: (() -> Void)? = nil
 
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
 
-    @State private var ownerName: String?
+    @State private var participants: [(userId: String, role: String, acceptedAt: Date?)] = []
+    @State private var isLoadingParticipants = true
     @State private var sharePayload: SharePayload?
     @State private var isStoppingShare = false
     @State private var isLeavingShare = false
     @State private var stopError: String?
 
     private var isCurrentUserOwner: Bool {
-        share.currentUserParticipant?.role == .owner
+        !child.isShared
+    }
+
+    private var shareURL: URL? {
+        // Generate the Universal Link for this share
+        URL(string: "https://littleartist.app/share/\(shareId)")
     }
 
     // MARK: - Body
@@ -70,7 +75,13 @@ struct ShareManagementView: View {
                         .fontWeight(.semibold)
                 }
             }
-            .task { await fetchOwnerName() }
+            .task {
+                await loadParticipants()
+                // If this is a brand-new share, show the share sheet immediately
+                if isNewShare {
+                    presentShareLink()
+                }
+            }
             .sheet(item: $sharePayload) { payload in
                 ActivityView(activityItems: payload.items)
             }
@@ -134,8 +145,20 @@ struct ShareManagementView: View {
                     .padding(.horizontal, 16)
                     .padding(.vertical, 14)
 
+                if isLoadingParticipants {
+                    Divider().padding(.leading, 56)
+                    HStack(spacing: 12) {
+                        ProgressView()
+                        Text("Loading participants...")
+                            .font(Brand.captionFont)
+                            .foregroundStyle(Brand.warmGray)
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 14)
+                }
+
                 // Other participants
-                ForEach(otherParticipants, id: \.self) { participant in
+                ForEach(participants, id: \.userId) { participant in
                     Divider().padding(.leading, 56)
                     participantRow(participant)
                         .padding(.horizontal, 16)
@@ -146,17 +169,8 @@ struct ShareManagementView: View {
                 if isCurrentUserOwner {
                     Divider().padding(.leading, 56)
 
-                    // Send invite link via standard share sheet with child avatar preview
                     Button {
-                        if let url = share.url {
-                            let itemSource = ShareInviteItemSource(
-                                url: url,
-                                childName: child.name,
-                                avatarImageData: child.avatarImageData,
-                                avatarColor: child.avatarColor
-                            )
-                            sharePayload = SharePayload(items: [itemSource])
-                        }
+                        presentShareLink()
                     } label: {
                         HStack(spacing: 12) {
                             Image(systemName: "plus.circle.fill")
@@ -184,7 +198,7 @@ struct ShareManagementView: View {
                 .foregroundStyle(Brand.primary)
 
             VStack(alignment: .leading, spacing: 2) {
-                Text(ownerName ?? "You")
+                Text(isCurrentUserOwner ? "You" : "Owner")
                     .font(Brand.bodyFont)
                     .foregroundStyle(Brand.charcoal)
                 Text("Owner")
@@ -196,24 +210,24 @@ struct ShareManagementView: View {
         }
     }
 
-    private func participantRow(_ participant: CKShare.Participant) -> some View {
+    private func participantRow(_ participant: (userId: String, role: String, acceptedAt: Date?)) -> some View {
         HStack(spacing: 12) {
             Image(systemName: "person.crop.circle")
                 .font(.system(size: 28))
                 .foregroundStyle(Brand.sky)
 
             VStack(alignment: .leading, spacing: 2) {
-                Text(participantName(participant))
+                Text(participant.userId.prefix(8) + "...")
                     .font(Brand.bodyFont)
                     .foregroundStyle(Brand.charcoal)
-                Text(participantStatus(participant))
+                Text(participantRoleLabel(participant.role))
                     .font(Brand.caption2Font)
                     .foregroundStyle(Brand.warmGray)
             }
 
             Spacer()
 
-            if participant.acceptanceStatus == .pending {
+            if participant.acceptedAt == nil {
                 Text("Pending")
                     .font(Brand.caption2Font)
                     .foregroundStyle(Brand.primary)
@@ -307,74 +321,36 @@ struct ShareManagementView: View {
 
     // MARK: - Helpers
 
-    private var otherParticipants: [CKShare.Participant] {
-        share.participants.filter { $0.role != .owner }
-    }
-
-    private func participantName(_ participant: CKShare.Participant) -> String {
-        if let components = participant.userIdentity.nameComponents {
-            return PersonNameComponentsFormatter.localizedString(from: components, style: .default)
-        }
-        if let email = participant.userIdentity.lookupInfo?.emailAddress {
-            return email
-        }
-        if let phone = participant.userIdentity.lookupInfo?.phoneNumber {
-            return phone
-        }
-        return "Unknown"
-    }
-
-    private func participantStatus(_ participant: CKShare.Participant) -> String {
-        switch participant.permission {
-        case .readWrite: return "Can make changes"
-        case .readOnly: return "View only"
-        default: return "No access"
+    private func participantRoleLabel(_ role: String) -> String {
+        switch role {
+        case "editor": return "Can make changes"
+        case "viewer": return "View only"
+        default: return "Participant"
         }
     }
 
     // MARK: - Actions
 
-    private func fetchOwnerName() async {
-        // 1. Try share participant identity
-        if let components = share.currentUserParticipant?.userIdentity.nameComponents
-            ?? share.owner.userIdentity.nameComponents {
-            let name = PersonNameComponentsFormatter.localizedString(from: components, style: .default)
-            if !name.isEmpty { ownerName = name; return }
-        }
-
-        // 2. Request discoverability and fetch identity from CloudKit
+    private func loadParticipants() async {
+        isLoadingParticipants = true
         do {
-            // Request permission so CloudKit can resolve our identity
-            let status = try await ckContainer.requestApplicationPermission(.userDiscoverability)
-            if status == .granted {
-                let recordID = try await ckContainer.userRecordID()
-                if let identity = try await ckContainer.userIdentity(forUserRecordID: recordID),
-                   let components = identity.nameComponents {
-                    let name = PersonNameComponentsFormatter.localizedString(from: components, style: .default)
-                    if !name.isEmpty { ownerName = name; return }
-                }
-            }
+            participants = try await FirestoreRepository.shared.fetchParticipants(shareId: shareId)
         } catch {
-            // Discoverability not available — continue to fallbacks
+            // Silently fail — empty participants list is fine
         }
+        isLoadingParticipants = false
+    }
 
-        // 3. Try owner's email or phone from lookup info
-        if let email = share.owner.userIdentity.lookupInfo?.emailAddress {
-            ownerName = email
-            return
-        }
-        if let phone = share.owner.userIdentity.lookupInfo?.phoneNumber {
-            ownerName = phone
-            return
-        }
-
-        // 4. Falls back to "You"
+    private func presentShareLink() {
+        guard let url = shareURL else { return }
+        let text = "Join me on Little Artist to see \(child.name)'s artwork! \(url.absoluteString)"
+        sharePayload = SharePayload(items: [text])
     }
 
     private func stopSharing() async {
         isStoppingShare = true
         do {
-            try await CloudKitSharingService.shared.stopSharing(child)
+            try await FirestoreRepository.shared.stopSharing(shareId: shareId)
             dismiss()
             onStoppedSharing?()
         } catch {
@@ -386,7 +362,9 @@ struct ShareManagementView: View {
     private func leaveProfile() async {
         isLeavingShare = true
         do {
-            try await CloudKitSharingService.shared.leaveShare(child, modelContext: modelContext)
+            try await FirestoreRepository.shared.leaveShare(shareId: shareId)
+            // Remove local mirror of shared child
+            modelContext.delete(child)
             dismiss()
             onStoppedSharing?()
         } catch {

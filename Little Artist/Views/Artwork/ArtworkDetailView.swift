@@ -332,10 +332,14 @@ struct ArtworkDetailView: View {
     }
 
     private func saveEdits() {
-        artwork.title = editTitle.trimmingCharacters(in: .whitespacesAndNewlines)
-        artwork.caption = editCaption.trimmingCharacters(in: .whitespacesAndNewlines)
-        artwork.voiceNoteData = editVoiceNoteData
-        artwork.tags = editTags
+        FirestoreRepository.shared.updateArtwork(
+            artwork,
+            title: editTitle.trimmingCharacters(in: .whitespacesAndNewlines),
+            caption: editCaption.trimmingCharacters(in: .whitespacesAndNewlines),
+            voiceNoteData: editVoiceNoteData,
+            tags: editTags,
+            in: modelContext
+        )
         artwork.createdAt = editDate
         HapticService.success()
         showEditSheet = false
@@ -359,7 +363,7 @@ struct ArtworkDetailView: View {
 
     private func deleteArtwork() {
         HapticService.warning()
-        modelContext.delete(artwork)
+        FirestoreRepository.shared.deleteArtwork(artwork, in: modelContext)
         if let onDelete {
             onDelete()
         } else {

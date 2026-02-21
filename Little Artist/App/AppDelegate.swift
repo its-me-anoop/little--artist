@@ -3,29 +3,26 @@
 //  Little Artist
 //
 //  UIApplicationDelegate + UIWindowSceneDelegate for handling
-//  CloudKit share acceptance callbacks and remote notification
-//  delivery in SwiftUI scene-based apps.
+//  Firebase share link acceptance and remote notification delivery.
 //
 
-import CloudKit
 import UIKit
 
 /// Handles app-level callbacks and provides scene configuration
-/// that routes CloudKit share acceptance to ``SceneDelegate``.
+/// for Universal Link-based share acceptance.
 class AppDelegate: NSObject, UIApplicationDelegate {
 
     func application(
         _ application: UIApplication,
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
     ) -> Bool {
-        // Register for remote notifications so CloudKit can deliver
-        // silent pushes when data changes on another device.
+        // Register for remote notifications (used by Firebase for real-time sync)
         application.registerForRemoteNotifications()
         return true
     }
 
-    /// Returns a scene configuration that uses ``SceneDelegate`` so that
-    /// `windowScene(_:userDidAcceptCloudKitShareWith:)` is delivered.
+    /// Returns a scene configuration that uses ``SceneDelegate`` for
+    /// Universal Link handling (share acceptance).
     func application(
         _ application: UIApplication,
         configurationForConnecting connectingSceneSession: UISceneSession,
@@ -38,57 +35,35 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         config.delegateClass = SceneDelegate.self
         return config
     }
-
-    /// Fallback for non-scene environments (unlikely in SwiftUI apps).
-    func application(
-        _ application: UIApplication,
-        userDidAcceptCloudKitShareWith cloudKitShareMetadata: CKShare.Metadata
-    ) {
-        CloudKitSharingService.shared.diag("AppDelegate: userDidAcceptCloudKitShareWith CALLED")
-        Task { @MainActor in
-            CloudKitSharingService.shared.acceptShare(metadata: cloudKitShareMetadata)
-        }
-    }
-
-    /// Handles background remote notifications from CloudKit.
-    ///
-    /// `NSPersistentCloudKitContainer` processes the CloudKit data automatically,
-    /// but SwiftData's `@Query` results won't refresh until its context processes
-    /// the new persistent history. This handler triggers that refresh.
-    func application(
-        _ application: UIApplication,
-        didReceiveRemoteNotification userInfo: [AnyHashable: Any],
-        fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void
-    ) {
-        Task { @MainActor in
-            let service = CloudKitSharingService.shared
-            guard service.isInitialised, service.isSyncEnabled else {
-                completionHandler(.noData)
-                return
-            }
-            service.diag("AppDelegate: didReceiveRemoteNotification — refreshing")
-            service.refreshSwiftDataContext()
-            service.syncSharedDataToSwiftData()
-            completionHandler(.newData)
-        }
-    }
 }
 
 // MARK: - Scene Delegate
 
-/// Handles per-scene callbacks. In SwiftUI scene-based apps, CloudKit share
-/// acceptance is routed here — NOT to the UIApplicationDelegate method.
+/// Handles per-scene callbacks for Universal Link-based share acceptance.
 class SceneDelegate: NSObject, UIWindowSceneDelegate {
 
-    /// Called when the user taps a CloudKit share link and the system
-    /// delivers the share metadata to this scene.
-    func windowScene(
-        _ windowScene: UIWindowScene,
-        userDidAcceptCloudKitShareWith cloudKitShareMetadata: CKShare.Metadata
-    ) {
-        CloudKitSharingService.shared.diag("SceneDelegate: userDidAcceptCloudKitShareWith CALLED — record=\(cloudKitShareMetadata.share.recordID.recordName)")
-        Task { @MainActor in
-            CloudKitSharingService.shared.acceptShare(metadata: cloudKitShareMetadata)
+    /// Called when the user opens a Universal Link (e.g. a share invite).
+    func scene(_ scene: UIScene, continue userActivity: NSUserActivity) {
+        guard userActivity.activityType == NSUserActivityTypeBrowsingWeb,
+              let url = userActivity.webpageURL else { return }
+
+        // Extract shareId from the URL
+        // Expected format: https://yourdomain.com/share/{shareId}
+        let pathComponents = url.pathComponents
+        if let shareIndex = pathComponents.firstIndex(of: "share"),
+           shareIndex + 1 < pathComponents.count {
+            let shareId = pathComponents[shareIndex + 1]
+            Task { @MainActor in
+                FirestoreSyncService.shared.diag("Share link opened: \(shareId)")
+                do {
+                    try await FirestoreRepository.shared.acceptShare(shareId: shareId)
+                    // Restart sync to pick up shared data
+                    FirestoreSyncService.shared.stop()
+                    FirestoreSyncService.shared.start()
+                } catch {
+                    FirestoreSyncService.shared.diag("Share acceptance failed: \(error.localizedDescription)")
+                }
+            }
         }
     }
 }

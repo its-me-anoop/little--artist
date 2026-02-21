@@ -1,0 +1,30 @@
+{
+  "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/DerivedSources/GeneratedAssetSymbols.swift" : {
+    "const-values" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/GeneratedAssetSymbols.swiftconstvalues",
+    "dependencies" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/GeneratedAssetSymbols.d",
+    "diagnostics" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/GeneratedAssetSymbols.dia",
+    "object" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/GeneratedAssetSymbols.o",
+    "swift-dependencies" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/GeneratedAssetSymbols.swiftdeps"
+  },
+  "/Users/anoopjose/Projects/Little Artist/Little Artist/Views/NoArtworkView.swift" : {
+    "const-values" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/NoArtworkView.swiftconstvalues",
+    "dependencies" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/NoArtworkView.d",
+    "diagnostics" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/NoArtworkView.dia",
+    "object" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/NoArtworkView.o",
+    "swift-dependencies" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/NoArtworkView.swiftdeps"
+  },
+  "/Users/anoopjose/Projects/Little Artist/Little Artist/Views/NoChildrenView.swift" : {
+    "const-values" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/NoChildrenView.swiftconstvalues",
+    "dependencies" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/NoChildrenView.d",
+    "diagnostics" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/NoChildrenView.dia",
+    "object" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/NoChildrenView.o",
+    "swift-dependencies" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/NoChildrenView.swiftdeps"
+  },
+  "/Users/anoopjose/Projects/Little Artist/Little Artist/Views/OnboardingView.swift" : {
+    "const-values" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/OnboardingView.swiftconstvalues",
+    "dependencies" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/OnboardingView.d",
+    "diagnostics" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/OnboardingView.dia",
+    "object" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/OnboardingView.o",
+    "swift-dependencies" : "/Users/anoopjose/Projects/Little Artist/.codex-derived/Build/Intermediates.noindex/Little Artist.build/Debug-iphonesimulator/Little Artist.build/Objects-normal/arm64/OnboardingView.swiftdeps"
+  }
+}

@@ -42,11 +42,22 @@ final class Artwork {
     /// Tags applied to this artwork for categorization.
     var tags: [Tag]?
 
-    /// Stable identifier for CloudKit sync matching. Set to the CloudKit
-    /// record name for shared artworks, or a UUID for locally created ones.
-    /// Used instead of title+date to match artworks across devices so that
-    /// editing title or date doesn't create duplicates.
+    /// Legacy sync identifier (deprecated — use `firestoreId` instead).
+    /// Was the CloudKit record name for shared artworks, or a UUID.
+    /// - Note: Deprecated in V7; replaced by ``firestoreId``. Kept for migration.
     var syncIdentifier: String?
+
+    /// Firestore document path (e.g. `"users/{uid}/children/{cid}/artworks/{id}"`).
+    /// `nil` for artworks that have not yet been synced to Firebase.
+    var firestoreId: String?
+
+    /// Firebase Storage download URL for the artwork image.
+    /// Used by shared-device recipients to download the image from Firebase.
+    var imageURL: String?
+
+    /// Firebase Storage download URL for the voice note.
+    /// Used by shared-device recipients to download the voice note from Firebase.
+    var voiceNoteURL: String?
 
     init(
         title: String,
@@ -57,7 +68,10 @@ final class Artwork {
         createdAt: Date = .now,
         child: Child? = nil,
         tags: [Tag]? = nil,
-        syncIdentifier: String? = nil
+        syncIdentifier: String? = nil,
+        firestoreId: String? = nil,
+        imageURL: String? = nil,
+        voiceNoteURL: String? = nil
     ) {
         self.title = title
         self.caption = caption
@@ -68,5 +82,8 @@ final class Artwork {
         self.child = child
         self.tags = tags
         self.syncIdentifier = syncIdentifier
+        self.firestoreId = firestoreId
+        self.imageURL = imageURL
+        self.voiceNoteURL = voiceNoteURL
     }
 }

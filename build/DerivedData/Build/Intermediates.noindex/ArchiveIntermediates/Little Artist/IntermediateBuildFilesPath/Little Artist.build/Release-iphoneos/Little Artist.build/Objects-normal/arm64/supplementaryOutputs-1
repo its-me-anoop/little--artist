@@ -1,0 +1,12 @@
+{
+  "/Users/anoopjose/Projects/Little Artist/Little Artist/App/AppDelegate.swift" : {
+    "abi-baseline-json" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/Little_Artist.abi.json",
+    "const-values" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/Little Artist-primary.swiftconstvalues",
+    "dependencies" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/Little Artist-primary.d",
+    "diagnostics" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/Little Artist-primary.dia",
+    "objc-header" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/Little_Artist-Swift.h",
+    "swiftdoc" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/Little_Artist.swiftdoc",
+    "swiftmodule" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/Little_Artist.swiftmodule",
+    "swiftsourceinfo" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/Little_Artist.swiftsourceinfo"
+  }
+}

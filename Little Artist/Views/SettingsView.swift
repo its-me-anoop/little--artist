@@ -15,12 +15,12 @@ struct SettingsView: View {
     @Query private var artworks: [Artwork]
 
     private var store: StoreKitManager { StoreKitManager.shared }
-    private let sharingService = CloudKitSharingService.shared
+    private let syncService = FirestoreSyncService.shared
 
     @AppStorage("aiCaptionsEnabled") private var aiCaptionsEnabled = true
     @AppStorage("defaultCameraBack") private var defaultCameraBack = true
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = true
-    @AppStorage("iCloudSyncEnabled") private var iCloudSyncEnabled = false
+    @AppStorage("firebaseSyncEnabled") private var firebaseSyncEnabled = false
     @AppStorage("notificationsEnabled") private var notificationsEnabled = false
 
     @State private var showAddChild = false
@@ -77,9 +77,8 @@ struct SettingsView: View {
                                 Text(child.name)
                                     .font(Brand.bodyFont)
 
-                                if sharingService.isInitialised,
-                                   sharingService.isShared(child) || child.sharedRecordName != nil {
-                                    Image(systemName: sharingService.isOwner(of: child) ? "person.2.fill" : "person.2.wave.2")
+                                if child.isShared || child.firestoreId != nil {
+                                    Image(systemName: child.isShared ? "person.2.wave.2" : "person.2.fill")
                                         .font(.system(size: 11, weight: .medium))
                                         .foregroundStyle(Brand.sky)
                                 }
@@ -95,8 +94,8 @@ struct SettingsView: View {
                     .onDelete { indexSet in
                         for index in indexSet {
                             let child = children[index]
-                            let isShared = sharingService.isShared(child) || child.sharedRecordName != nil
-                            let isOwner = sharingService.isOwner(of: child)
+                            let isShared = child.isShared
+                            let isOwner = !child.isShared
 
                             if isShared && !isOwner {
                                 // Participant: show leave confirmation instead of delete
@@ -204,23 +203,33 @@ struct SettingsView: View {
 
                 // DATA
                 Section {
-                    // iCloud Sync toggle (premium only)
+                    // Firebase Sync toggle (premium only)
                     if store.isPremium {
-                        Toggle(isOn: $iCloudSyncEnabled) {
-                            Label("iCloud Sync", systemImage: "icloud.fill")
+                        Toggle(isOn: $firebaseSyncEnabled) {
+                            Label("Cloud Sync", systemImage: "arrow.triangle.2.circlepath.icloud.fill")
                         }
                         .tint(Brand.primary)
-                        .onChange(of: iCloudSyncEnabled) { _, enabled in
+                        .onChange(of: firebaseSyncEnabled) { _, enabled in
                             if enabled {
-                                CloudKitSharingService.shared.setup()
-                                CloudKitSharingService.shared.isSyncEnabled = true
-                                showSyncEnabledConfirmation = true
+                                // Prompt Sign in with Apple if not yet linked
+                                if !FirebaseAuthService.shared.isLinkedWithApple {
+                                    Task {
+                                        do {
+                                            try await FirebaseAuthService.shared.signInWithApple()
+                                            FirestoreSyncService.shared.start()
+                                            // Upload existing local data
+                                            await FirestoreRepository.shared.uploadAllLocalData(from: modelContext)
+                                            showSyncEnabledConfirmation = true
+                                        } catch {
+                                            firebaseSyncEnabled = false
+                                        }
+                                    }
+                                } else {
+                                    FirestoreSyncService.shared.start()
+                                    showSyncEnabledConfirmation = true
+                                }
                             } else {
-                                // Pause sync operations without tearing down the
-                                // Core Data stack (which risks data loss). The stack
-                                // stays alive but won't process new remote changes
-                                // until re-enabled.
-                                CloudKitSharingService.shared.isSyncEnabled = false
+                                FirestoreSyncService.shared.stop()
                             }
                         }
                     } else {
@@ -228,7 +237,7 @@ struct SettingsView: View {
                             paywallReason = .artworks
                         } label: {
                             HStack {
-                                Label("iCloud Sync", systemImage: "icloud.fill")
+                                Label("Cloud Sync", systemImage: "arrow.triangle.2.circlepath.icloud.fill")
                                     .foregroundStyle(Brand.disabled)
                                 Spacer()
                                 Text("Premium")
@@ -269,10 +278,10 @@ struct SettingsView: View {
                     Text("Data")
                 }
 
-                // SHARING DIAGNOSTICS (visible when CloudKit is active)
-                if sharingService.isInitialised || !sharingService.diagnosticLog.isEmpty {
+                // SYNC DIAGNOSTICS (visible when Firebase sync is active)
+                if syncService.isListening || !syncService.diagnosticLog.isEmpty {
                     Section {
-                        let snapshot = sharingService.diagnosticSnapshot()
+                        let snapshot = syncService.diagnosticSnapshot()
                         ForEach(Array(snapshot.sorted(by: { $0.key < $1.key })), id: \.key) { key, value in
                             HStack {
                                 Text(key)
@@ -280,13 +289,13 @@ struct SettingsView: View {
                                 Spacer()
                                 Text(value)
                                     .font(Brand.captionFont)
-                                    .foregroundStyle(value.contains("Missing") || value.contains("N/A") ? Brand.dustyRose : Brand.sage)
+                                    .foregroundStyle(value.contains("None") || value.contains("No") ? Brand.dustyRose : Brand.sage)
                             }
                         }
 
-                        if !sharingService.diagnosticLog.isEmpty {
-                            DisclosureGroup("Event Log (\(sharingService.diagnosticLog.count))") {
-                                ForEach(sharingService.diagnosticLog.reversed(), id: \.self) { entry in
+                        if !syncService.diagnosticLog.isEmpty {
+                            DisclosureGroup("Event Log (\(syncService.diagnosticLog.count))") {
+                                ForEach(syncService.diagnosticLog.reversed(), id: \.self) { entry in
                                     Text(entry)
                                         .font(.system(size: 10, design: .monospaced))
                                         .foregroundStyle(Brand.warmGray)
@@ -295,13 +304,14 @@ struct SettingsView: View {
                         }
 
                         Button {
-                            sharingService.runManualSync()
+                            syncService.stop()
+                            syncService.start()
                         } label: {
                             Label("Force Sync Now", systemImage: "arrow.triangle.2.circlepath")
                                 .foregroundStyle(Brand.primary)
                         }
                     } header: {
-                        Text("Sharing Diagnostics")
+                        Text("Sync Diagnostics")
                     }
                 }
 
@@ -345,21 +355,13 @@ struct SettingsView: View {
                 }
                 Button("Delete", role: .destructive) {
                     if let child = childToDelete {
-                        let isShared = sharingService.isShared(child) || child.sharedRecordName != nil
-                        if isShared {
-                            Task {
-                                try? await sharingService.deleteSharedChild(child, modelContext: modelContext)
-                            }
-                        } else {
-                            modelContext.delete(child)
-                        }
+                        FirestoreRepository.shared.deleteChild(child, in: modelContext)
                         childToDelete = nil
                     }
                 }
             } message: {
                 if let child = childToDelete {
-                    let isShared = sharingService.isShared(child) || child.sharedRecordName != nil
-                    if isShared {
+                    if child.isShared {
                         Text("This will permanently delete \(child.name) and all their artworks for everyone this profile is shared with.")
                     } else {
                         Text("This will permanently delete \(child.name) and all their \(child.artworks?.count ?? 0) artworks.")
@@ -372,9 +374,8 @@ struct SettingsView: View {
                 }
                 Button("Leave", role: .destructive) {
                     if let child = childToLeave {
-                        Task {
-                            try? await sharingService.leaveShare(child, modelContext: modelContext)
-                        }
+                        // Remove local mirror of shared child
+                        modelContext.delete(child)
                         childToLeave = nil
                     }
                 }
@@ -383,7 +384,7 @@ struct SettingsView: View {
                     Text("\(child.name)'s profile will be removed from your device. The owner will keep their copy.")
                 }
             }
-            .alert("iCloud Sync Enabled", isPresented: $showSyncEnabledConfirmation) {
+            .alert("Sync Enabled", isPresented: $showSyncEnabledConfirmation) {
                 Button("OK") {}
             } message: {
                 Text("Your data will now sync across your devices. You can share child profiles from the Edit Profile screen.")

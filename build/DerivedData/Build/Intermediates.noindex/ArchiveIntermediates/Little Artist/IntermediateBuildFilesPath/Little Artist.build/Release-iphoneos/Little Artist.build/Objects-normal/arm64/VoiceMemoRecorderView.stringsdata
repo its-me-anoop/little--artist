@@ -1,0 +1,88 @@
+{
+  "source": "/Users/anoopjose/Projects/Little Artist/Little Artist/Components/VoiceMemo/VoiceMemoRecorderView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Microphone access denied. Enable in Settings.",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 35
+        }
+      },
+      {
+        "comment": "",
+        "key": "Add voice memo",
+        "location": {
+          "startingColumn": 29,
+          "startingLine": 90
+        }
+      },
+      {
+        "comment": "",
+        "key": "Double tap to start recording, up to 30 seconds",
+        "location": {
+          "startingColumn": 28,
+          "startingLine": 91
+        }
+      },
+      {
+        "comment": "",
+        "key": "Add Voice Memo",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 78
+        }
+      },
+      {
+        "comment": "",
+        "key": "Cancel recording",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 110
+        }
+      },
+      {
+        "comment": "",
+        "key": "Stop recording",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 137
+        }
+      },
+      {
+        "comment": "",
+        "key": "Stop playback",
+        "location": {
+          "startingColumn": 58,
+          "startingLine": 178
+        }
+      },
+      {
+        "comment": "",
+        "key": "Play voice memo",
+        "location": {
+          "startingColumn": 76,
+          "startingLine": 178
+        }
+      },
+      {
+        "comment": "",
+        "key": "Delete voice memo",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 209
+        }
+      },
+      {
+        "comment": "",
+        "key": "Voice memo recorded",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 190
+        }
+      }
+    ]
+  },
+  "version": 1
+}

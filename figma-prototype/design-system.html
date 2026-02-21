@@ -1,0 +1,953 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1440, initial-scale=1">
+<title>Little Artist - Design System</title>
+<script src="https://mcp.figma.com/mcp/html-to-design/capture.js" async></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --primary: #F2784B;
+    --primary-tint: rgba(242, 120, 75, 0.12);
+    --cream: #FFF8F0;
+    --surface: #FFFBF7;
+    --charcoal: #3D3D3D;
+    --warm-gray: #8A8680;
+    --soft-tan: #E8E0D8;
+    --sage: #A8C5A0;
+    --sky: #7EB8DA;
+    --lavender: #B8A9D4;
+    --dusty-rose: #D4736C;
+    --disabled: #8A8680;
+    --gold: #E8C94A;
+    --blush: #D4928A;
+    --teal: #7BC8B5;
+  }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: #F5F5F5;
+    color: var(--charcoal);
+    padding: 60px;
+  }
+
+  h1 {
+    font-size: 48px;
+    font-weight: 800;
+    letter-spacing: -1px;
+    margin-bottom: 8px;
+  }
+
+  h1 span { color: var(--primary); }
+
+  .subtitle {
+    font-size: 18px;
+    color: var(--warm-gray);
+    margin-bottom: 60px;
+  }
+
+  h2 {
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 24px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid var(--soft-tan);
+  }
+
+  h3 {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--warm-gray);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 16px;
+  }
+
+  .section { margin-bottom: 60px; }
+
+  /* Colors */
+  .color-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 16px;
+  }
+
+  .color-card {
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  }
+
+  .color-swatch {
+    height: 80px;
+    width: 100%;
+  }
+
+  .color-info {
+    padding: 12px 14px;
+  }
+
+  .color-name {
+    font-weight: 600;
+    font-size: 14px;
+    margin-bottom: 4px;
+  }
+
+  .color-hex {
+    font-size: 12px;
+    color: var(--warm-gray);
+    font-family: 'SF Mono', monospace;
+  }
+
+  /* Typography */
+  .type-row {
+    display: flex;
+    align-items: baseline;
+    padding: 16px 0;
+    border-bottom: 1px solid #eee;
+  }
+
+  .type-label {
+    width: 180px;
+    font-size: 13px;
+    color: var(--warm-gray);
+    font-weight: 500;
+  }
+
+  .type-spec {
+    width: 220px;
+    font-size: 12px;
+    color: var(--warm-gray);
+    font-family: 'SF Mono', monospace;
+  }
+
+  .type-display { font-size: 34px; font-weight: 700; }
+  .type-title1 { font-size: 28px; font-weight: 700; }
+  .type-title2 { font-size: 22px; font-weight: 600; }
+  .type-title3 { font-size: 20px; font-weight: 500; }
+  .type-headline { font-size: 17px; font-weight: 600; }
+  .type-body { font-size: 17px; font-weight: 400; }
+  .type-subheadline { font-size: 15px; font-weight: 400; }
+  .type-caption { font-size: 12px; font-weight: 400; }
+  .type-caption2 { font-size: 11px; font-weight: 400; }
+
+  /* Spacing */
+  .spacing-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 16px;
+  }
+
+  .spacing-item {
+    background: white;
+    border-radius: 12px;
+    padding: 16px;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  }
+
+  .spacing-visual {
+    background: var(--primary-tint);
+    border: 2px dashed var(--primary);
+    border-radius: 4px;
+    margin: 8px auto;
+  }
+
+  .spacing-value {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--primary);
+  }
+
+  .spacing-label {
+    font-size: 12px;
+    color: var(--warm-gray);
+    margin-top: 4px;
+  }
+
+  /* Corner Radii */
+  .radii-grid {
+    display: flex;
+    gap: 20px;
+    align-items: flex-end;
+  }
+
+  .radius-item {
+    text-align: center;
+  }
+
+  .radius-box {
+    background: var(--primary-tint);
+    border: 2px solid var(--primary);
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 8px;
+  }
+
+  .radius-value {
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .radius-label {
+    font-size: 11px;
+    color: var(--warm-gray);
+  }
+
+  /* Components */
+  .component-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+  }
+
+  .component-card {
+    background: white;
+    border-radius: 20px;
+    padding: 32px 24px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .component-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--warm-gray);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  /* Buttons */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-family: inherit;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+  }
+
+  .btn-primary {
+    background: var(--primary);
+    color: white;
+    font-size: 17px;
+    padding: 16px 40px;
+    border-radius: 999px;
+    height: 54px;
+  }
+
+  .btn-secondary {
+    background: var(--primary-tint);
+    color: var(--primary);
+    font-size: 15px;
+    padding: 12px 24px;
+    border-radius: 12px;
+    height: 44px;
+  }
+
+  .btn-tertiary {
+    background: none;
+    color: var(--primary);
+    font-size: 15px;
+    padding: 8px 0;
+  }
+
+  .btn-destructive {
+    background: var(--dusty-rose);
+    color: white;
+    font-size: 17px;
+    padding: 16px 40px;
+    border-radius: 999px;
+    height: 54px;
+  }
+
+  .btn-ghost {
+    background: rgba(255,255,255,0.7);
+    backdrop-filter: blur(20px);
+    color: var(--charcoal);
+    font-size: 15px;
+    padding: 8px 16px;
+    border-radius: 8px;
+    height: 36px;
+  }
+
+  /* Cards */
+  .artwork-card {
+    background: white;
+    border-radius: 18px;
+    overflow: hidden;
+    box-shadow: 0 6px 12px rgba(61,61,61,0.08);
+    width: 180px;
+  }
+
+  .artwork-thumb {
+    width: 100%;
+    height: 180px;
+    background: linear-gradient(135deg, #FFD4C4 0%, #FFE8DC 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 48px;
+    border-radius: 12px;
+    margin: 8px;
+    width: calc(100% - 16px);
+  }
+
+  .artwork-info {
+    padding: 10px 16px 14px;
+  }
+
+  .artwork-title {
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+
+  .artwork-date {
+    font-size: 11px;
+    color: var(--warm-gray);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  /* Avatar */
+  .avatar {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 700;
+    font-size: 22px;
+  }
+
+  .avatar-ring {
+    width: 68px;
+    height: 68px;
+    border-radius: 50%;
+    border: 3px solid var(--primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Filter Chips */
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  .chip-active {
+    background: var(--primary);
+    color: white;
+  }
+
+  .chip-inactive {
+    background: rgba(0,0,0,0.05);
+    color: var(--charcoal);
+  }
+
+  .chip-avatar {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 11px;
+    font-weight: 700;
+  }
+
+  /* Year Chip */
+  .year-chip {
+    padding: 8px 20px;
+    border-radius: 999px;
+    font-size: 15px;
+    font-weight: 600;
+  }
+
+  .year-active {
+    background: var(--primary);
+    color: white;
+  }
+
+  .year-inactive {
+    background: rgba(232,224,216,0.5);
+    color: var(--charcoal);
+  }
+
+  /* Shadows */
+  .shadow-grid {
+    display: flex;
+    gap: 40px;
+  }
+
+  .shadow-item {
+    text-align: center;
+  }
+
+  .shadow-box {
+    width: 120px;
+    height: 120px;
+    background: white;
+    border-radius: 18px;
+    margin: 0 auto 12px;
+  }
+
+  .shadow-card { box-shadow: 0 6px 12px rgba(61,61,61,0.08); }
+  .shadow-avatar { box-shadow: 0 3px 6px rgba(61,61,61,0.06); }
+  .shadow-fab { box-shadow: 0 4px 10px rgba(242,120,75,0.4); }
+
+  .shadow-name {
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  .shadow-spec {
+    font-size: 11px;
+    color: var(--warm-gray);
+    margin-top: 2px;
+  }
+
+  /* FAB */
+  .fab {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: var(--primary);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    font-weight: 300;
+    box-shadow: 0 4px 10px rgba(242,120,75,0.4);
+    border: none;
+  }
+
+  /* Tab Bar */
+  .tab-bar {
+    display: flex;
+    background: white;
+    border-radius: 0;
+    padding: 8px 0;
+    border-top: 1px solid #eee;
+    width: 390px;
+  }
+
+  .tab-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--warm-gray);
+  }
+
+  .tab-item.active { color: var(--primary); }
+
+  .tab-icon { font-size: 20px; }
+
+  /* Avatar colors */
+  .avatar-palette {
+    display: flex;
+    gap: 12px;
+  }
+
+  .avatar-color {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+  }
+
+  /* Stat Card */
+  .stat-card {
+    background: white;
+    border-radius: 18px;
+    padding: 20px;
+    text-align: center;
+    box-shadow: 0 6px 12px rgba(61,61,61,0.08);
+    width: 160px;
+  }
+
+  .stat-value {
+    font-size: 28px;
+    font-weight: 700;
+  }
+
+  .stat-label {
+    font-size: 11px;
+    color: var(--warm-gray);
+    margin-top: 4px;
+  }
+
+  .stat-icon {
+    font-size: 20px;
+    color: var(--primary);
+    margin-bottom: 8px;
+  }
+
+  /* Achievement Badge */
+  .achievement {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 72px;
+    gap: 6px;
+  }
+
+  .achievement-ring {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    border: 3px solid var(--soft-tan);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+
+  .achievement-ring.unlocked {
+    border-color: var(--primary);
+  }
+
+  .achievement-name {
+    font-size: 11px;
+    font-weight: 500;
+    text-align: center;
+  }
+
+  .achievement-progress {
+    font-size: 10px;
+    color: var(--warm-gray);
+  }
+
+  /* Two column layout */
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+  }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<h1>Little <span>Artist</span></h1>
+<p class="subtitle">Design System &amp; Brand Tokens  |  iOS App  |  February 2026</p>
+
+<!-- Colors -->
+<div class="section">
+  <h2>Color Palette</h2>
+
+  <h3>Primary &amp; Neutrals</h3>
+  <div class="color-grid" style="margin-bottom: 24px;">
+    <div class="color-card">
+      <div class="color-swatch" style="background: var(--primary)"></div>
+      <div class="color-info">
+        <div class="color-name">Primary</div>
+        <div class="color-hex">#F2784B</div>
+      </div>
+    </div>
+    <div class="color-card">
+      <div class="color-swatch" style="background: var(--primary-tint)"></div>
+      <div class="color-info">
+        <div class="color-name">Primary Tint</div>
+        <div class="color-hex">12% opacity</div>
+      </div>
+    </div>
+    <div class="color-card">
+      <div class="color-swatch" style="background: var(--cream)"></div>
+      <div class="color-info">
+        <div class="color-name">Cream</div>
+        <div class="color-hex">#FFF8F0</div>
+      </div>
+    </div>
+    <div class="color-card">
+      <div class="color-swatch" style="background: var(--surface)"></div>
+      <div class="color-info">
+        <div class="color-name">Surface</div>
+        <div class="color-hex">#FFFBF7</div>
+      </div>
+    </div>
+    <div class="color-card">
+      <div class="color-swatch" style="background: var(--charcoal)"></div>
+      <div class="color-info">
+        <div class="color-name">Charcoal</div>
+        <div class="color-hex">#3D3D3D</div>
+      </div>
+    </div>
+    <div class="color-card">
+      <div class="color-swatch" style="background: var(--warm-gray)"></div>
+      <div class="color-info">
+        <div class="color-name">Warm Gray</div>
+        <div class="color-hex">#8A8680</div>
+      </div>
+    </div>
+    <div class="color-card">
+      <div class="color-swatch" style="background: var(--soft-tan)"></div>
+      <div class="color-info">
+        <div class="color-name">Soft Tan</div>
+        <div class="color-hex">#E8E0D8</div>
+      </div>
+    </div>
+  </div>
+
+  <h3>Accents</h3>
+  <div class="color-grid">
+    <div class="color-card">
+      <div class="color-swatch" style="background: var(--sage)"></div>
+      <div class="color-info">
+        <div class="color-name">Sage</div>
+        <div class="color-hex">#A8C5A0</div>
+      </div>
+    </div>
+    <div class="color-card">
+      <div class="color-swatch" style="background: var(--sky)"></div>
+      <div class="color-info">
+        <div class="color-name">Sky</div>
+        <div class="color-hex">#7EB8DA</div>
+      </div>
+    </div>
+    <div class="color-card">
+      <div class="color-swatch" style="background: var(--lavender)"></div>
+      <div class="color-info">
+        <div class="color-name">Lavender</div>
+        <div class="color-hex">#B8A9D4</div>
+      </div>
+    </div>
+    <div class="color-card">
+      <div class="color-swatch" style="background: var(--dusty-rose)"></div>
+      <div class="color-info">
+        <div class="color-name">Dusty Rose</div>
+        <div class="color-hex">#D4736C</div>
+      </div>
+    </div>
+    <div class="color-card">
+      <div class="color-swatch" style="background: var(--gold)"></div>
+      <div class="color-info">
+        <div class="color-name">Gold</div>
+        <div class="color-hex">#E8C94A</div>
+      </div>
+    </div>
+    <div class="color-card">
+      <div class="color-swatch" style="background: var(--blush)"></div>
+      <div class="color-info">
+        <div class="color-name">Blush</div>
+        <div class="color-hex">#D4928A</div>
+      </div>
+    </div>
+    <div class="color-card">
+      <div class="color-swatch" style="background: var(--teal)"></div>
+      <div class="color-info">
+        <div class="color-name">Teal</div>
+        <div class="color-hex">#7BC8B5</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Avatar Palette -->
+<div class="section">
+  <h2>Avatar Palette</h2>
+  <div class="avatar-palette">
+    <div class="avatar-color" style="background: #F2784B"></div>
+    <div class="avatar-color" style="background: #A8C5A0"></div>
+    <div class="avatar-color" style="background: #7EB8DA"></div>
+    <div class="avatar-color" style="background: #B8A9D4"></div>
+    <div class="avatar-color" style="background: #E8C94A"></div>
+    <div class="avatar-color" style="background: #D4928A"></div>
+    <div class="avatar-color" style="background: #7BC8B5"></div>
+  </div>
+</div>
+
+<!-- Typography -->
+<div class="section">
+  <h2>Typography</h2>
+  <p style="font-size: 14px; color: var(--warm-gray); margin-bottom: 24px;">
+    Headings: SF Rounded  |  Body: SF Pro (system default)
+  </p>
+
+  <div class="type-row">
+    <span class="type-label">Display</span>
+    <span class="type-spec">SF Rounded Bold 34pt</span>
+    <span class="type-display">Preserve the Magic</span>
+  </div>
+  <div class="type-row">
+    <span class="type-label">Title 1</span>
+    <span class="type-spec">SF Rounded Bold 28pt</span>
+    <span class="type-title1">Gallery</span>
+  </div>
+  <div class="type-row">
+    <span class="type-label">Title 2</span>
+    <span class="type-spec">SF Rounded Semibold 22pt</span>
+    <span class="type-title2">February 2026</span>
+  </div>
+  <div class="type-row">
+    <span class="type-label">Title 3</span>
+    <span class="type-spec">SF Rounded Medium 20pt</span>
+    <span class="type-title3">Milestones</span>
+  </div>
+  <div class="type-row">
+    <span class="type-label">Headline</span>
+    <span class="type-spec">SF Rounded Semibold 17pt</span>
+    <span class="type-headline">Get Started</span>
+  </div>
+  <div class="type-row">
+    <span class="type-label">Body</span>
+    <span class="type-spec">SF Pro Regular 17pt</span>
+    <span class="type-body">Archive your child's masterpieces</span>
+  </div>
+  <div class="type-row">
+    <span class="type-label">Subheadline</span>
+    <span class="type-spec">SF Pro Regular 15pt</span>
+    <span class="type-subheadline">Tap to view artwork details</span>
+  </div>
+  <div class="type-row">
+    <span class="type-label">Caption</span>
+    <span class="type-spec">SF Pro Regular 12pt</span>
+    <span class="type-caption">by Emma &middot; Feb 14, 2026</span>
+  </div>
+  <div class="type-row">
+    <span class="type-label">Caption 2</span>
+    <span class="type-spec">SF Pro Regular 11pt</span>
+    <span class="type-caption2">CHILDREN</span>
+  </div>
+</div>
+
+<!-- Spacing & Radii -->
+<div class="section">
+  <h2>Spacing Scale</h2>
+  <div class="spacing-grid">
+    <div class="spacing-item">
+      <div class="spacing-value">8</div>
+      <div class="spacing-visual" style="width: 8px; height: 8px;"></div>
+      <div class="spacing-label">Base</div>
+    </div>
+    <div class="spacing-item">
+      <div class="spacing-value">14</div>
+      <div class="spacing-visual" style="width: 14px; height: 14px;"></div>
+      <div class="spacing-label">Field</div>
+    </div>
+    <div class="spacing-item">
+      <div class="spacing-value">18</div>
+      <div class="spacing-visual" style="width: 18px; height: 18px;"></div>
+      <div class="spacing-label">Button</div>
+    </div>
+    <div class="spacing-item">
+      <div class="spacing-value">20</div>
+      <div class="spacing-visual" style="width: 20px; height: 20px;"></div>
+      <div class="spacing-label">Screen</div>
+    </div>
+    <div class="spacing-item">
+      <div class="spacing-value">24</div>
+      <div class="spacing-visual" style="width: 24px; height: 24px;"></div>
+      <div class="spacing-label">Gallery</div>
+    </div>
+    <div class="spacing-item">
+      <div class="spacing-value">28</div>
+      <div class="spacing-visual" style="width: 28px; height: 28px;"></div>
+      <div class="spacing-label">Section</div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h2>Corner Radii</h2>
+  <div class="radii-grid">
+    <div class="radius-item">
+      <div class="radius-box" style="border-radius: 40px;"></div>
+      <div class="radius-value">40pt</div>
+      <div class="radius-label">Onboarding</div>
+    </div>
+    <div class="radius-item">
+      <div class="radius-box" style="border-radius: 20px;"></div>
+      <div class="radius-value">20pt</div>
+      <div class="radius-label">Sheet</div>
+    </div>
+    <div class="radius-item">
+      <div class="radius-box" style="border-radius: 18px;"></div>
+      <div class="radius-value">18pt</div>
+      <div class="radius-label">Card</div>
+    </div>
+    <div class="radius-item">
+      <div class="radius-box" style="border-radius: 16px;"></div>
+      <div class="radius-value">16pt</div>
+      <div class="radius-label">Button</div>
+    </div>
+    <div class="radius-item">
+      <div class="radius-box" style="border-radius: 14px;"></div>
+      <div class="radius-value">14pt</div>
+      <div class="radius-label">Field</div>
+    </div>
+    <div class="radius-item">
+      <div class="radius-box" style="border-radius: 12px;"></div>
+      <div class="radius-value">12pt</div>
+      <div class="radius-label">Image</div>
+    </div>
+  </div>
+</div>
+
+<!-- Shadows -->
+<div class="section">
+  <h2>Shadows</h2>
+  <div class="shadow-grid">
+    <div class="shadow-item">
+      <div class="shadow-box shadow-card"></div>
+      <div class="shadow-name">Card Shadow</div>
+      <div class="shadow-spec">Charcoal 8%, 12pt blur, 6pt Y</div>
+    </div>
+    <div class="shadow-item">
+      <div class="shadow-box shadow-avatar"></div>
+      <div class="shadow-name">Avatar Shadow</div>
+      <div class="shadow-spec">Charcoal 6%, 6pt blur, 3pt Y</div>
+    </div>
+    <div class="shadow-item">
+      <div class="shadow-box shadow-fab" style="background: var(--primary);"></div>
+      <div class="shadow-name">FAB Shadow</div>
+      <div class="shadow-spec">Primary 40%, 10pt blur, 4pt Y</div>
+    </div>
+  </div>
+</div>
+
+<!-- Components -->
+<div class="section">
+  <h2>Components</h2>
+
+  <div class="component-grid">
+    <!-- Buttons -->
+    <div class="component-card">
+      <div class="component-label">Buttons</div>
+      <button class="btn btn-primary">Get Started</button>
+      <button class="btn btn-secondary">Edit Artwork</button>
+      <button class="btn btn-tertiary">Skip</button>
+      <button class="btn btn-destructive">Delete</button>
+      <button class="btn btn-ghost">Filter</button>
+    </div>
+
+    <!-- Avatars -->
+    <div class="component-card">
+      <div class="component-label">Avatars</div>
+      <div style="display: flex; gap: 16px; align-items: center;">
+        <div class="avatar-ring">
+          <div class="avatar" style="background: #F2784B;">E</div>
+        </div>
+        <div class="avatar" style="background: #7EB8DA;">N</div>
+        <div class="avatar" style="background: #B8A9D4;">L</div>
+      </div>
+      <div style="display: flex; gap: 8px; align-items: center; margin-top: 8px;">
+        <div style="width: 68px; height: 68px; border-radius: 50%; border: 2px dashed var(--soft-tan); display: flex; align-items: center; justify-content: center;">
+          <span style="font-size: 24px; color: var(--warm-gray);">+</span>
+        </div>
+        <span style="font-size: 12px; color: var(--warm-gray);">Add Child</span>
+      </div>
+    </div>
+
+    <!-- Filter Chips -->
+    <div class="component-card">
+      <div class="component-label">Filter Chips</div>
+      <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+        <span class="chip chip-active">All</span>
+        <span class="chip chip-inactive">
+          <span class="chip-avatar" style="background: #F2784B;">E</span>
+          Emma
+        </span>
+        <span class="chip chip-inactive">
+          <span class="chip-avatar" style="background: #7EB8DA;">N</span>
+          Noah
+        </span>
+      </div>
+      <div style="display: flex; gap: 8px; margin-top: 8px;">
+        <span class="year-chip year-active">2026</span>
+        <span class="year-chip year-inactive">2025</span>
+      </div>
+    </div>
+
+    <!-- Artwork Card -->
+    <div class="component-card">
+      <div class="component-label">Artwork Card</div>
+      <div class="artwork-card">
+        <div class="artwork-thumb">&#127912;</div>
+        <div class="artwork-info">
+          <div class="artwork-title">Rainbow House</div>
+          <div class="artwork-date">&#128197; Feb 14</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FAB -->
+    <div class="component-card">
+      <div class="component-label">Floating Action Button</div>
+      <button class="fab">+</button>
+    </div>
+
+    <!-- Stats & Badges -->
+    <div class="component-card">
+      <div class="component-label">Stats &amp; Badges</div>
+      <div class="stat-card">
+        <div class="stat-icon">&#127912;</div>
+        <div class="stat-value">47</div>
+        <div class="stat-label">Total Artworks</div>
+      </div>
+      <div style="display: flex; gap: 12px; margin-top: 12px;">
+        <div class="achievement">
+          <div class="achievement-ring unlocked">&#11088;</div>
+          <div class="achievement-name">First Steps</div>
+          <div class="achievement-progress">100%</div>
+        </div>
+        <div class="achievement">
+          <div class="achievement-ring">&#128274;</div>
+          <div class="achievement-name">Prolific</div>
+          <div class="achievement-progress">70%</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Tab Bar -->
+<div class="section">
+  <h2>Tab Bar</h2>
+  <div class="tab-bar">
+    <div class="tab-item active">
+      <span class="tab-icon">&#128444;</span>
+      Gallery
+    </div>
+    <div class="tab-item">
+      <span class="tab-icon">&#128336;</span>
+      Timeline
+    </div>
+    <div class="tab-item">
+      <span class="tab-icon">&#11088;</span>
+      Milestones
+    </div>
+    <div class="tab-item">
+      <span class="tab-icon">&#9881;</span>
+      Settings
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

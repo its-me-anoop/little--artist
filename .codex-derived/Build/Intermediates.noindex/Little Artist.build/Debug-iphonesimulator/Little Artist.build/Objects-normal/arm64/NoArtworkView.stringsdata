@@ -1,0 +1,24 @@
+{
+  "source": "/Users/anoopjose/Projects/Little Artist/Little Artist/Views/NoArtworkView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "No artwork yet",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 24
+        }
+      },
+      {
+        "comment": "",
+        "key": "Capture your first masterpiece\nby tapping the camera button.",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 27
+        }
+      }
+    ]
+  },
+  "version": 1
+}

@@ -7,7 +7,6 @@
 //  Created by Anoop Jose on 13/02/2026.
 //
 
-import CloudKit
 import SwiftUI
 import SwiftData
 
@@ -22,7 +21,7 @@ struct HomeView: View {
 
     @Environment(\.horizontalSizeClass) private var sizeClass
 
-    private let sharingService = CloudKitSharingService.shared
+    private let syncService = FirestoreSyncService.shared
 
     @AppStorage("hasSeenFirstArtworkUpsell") private var hasSeenUpsell = false
 
@@ -102,10 +101,10 @@ struct HomeView: View {
                                 }
                             }
                             .overlay(alignment: .topTrailing) {
-                                if sharingService.isInitialised {
+                                if child.isShared || child.firestoreId != nil {
                                     SharedBadgeView(
-                                        participantCount: sharingService.existingShare(for: child)?.participants.count ?? 0,
-                                        isShared: sharingService.isShared(child)
+                                        participantCount: 0,
+                                        isShared: child.isShared
                                     )
                                     .offset(x: 6, y: -6)
                                 }

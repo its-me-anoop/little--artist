@@ -1,0 +1,48 @@
+{
+  "source": "/Users/anoopjose/Projects/Little Artist/Little Artist/Views/Artwork/ArtworkComparisonView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Compare Artworks",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 71
+        }
+      },
+      {
+        "comment": "",
+        "key": "Tap each side to choose an artwork",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 36
+        }
+      },
+      {
+        "comment": "",
+        "key": "Add some artworks for %@ first.",
+        "location": {
+          "startingColumn": 43,
+          "startingLine": 188
+        }
+      },
+      {
+        "comment": "",
+        "key": "No Artworks Yet",
+        "location": {
+          "startingColumn": 25,
+          "startingLine": 186
+        }
+      },
+      {
+        "comment": "",
+        "key": "Cancel",
+        "location": {
+          "startingColumn": 28,
+          "startingLine": 219
+        }
+      }
+    ]
+  },
+  "version": 1
+}

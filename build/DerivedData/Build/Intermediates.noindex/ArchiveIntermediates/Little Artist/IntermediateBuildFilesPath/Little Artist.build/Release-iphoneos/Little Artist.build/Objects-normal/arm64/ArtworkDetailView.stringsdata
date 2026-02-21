@@ -1,0 +1,184 @@
+{
+  "source": "/Users/anoopjose/Projects/Little Artist/Little Artist/Views/Artwork/ArtworkDetailView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "·",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 135
+        }
+      },
+      {
+        "comment": "",
+        "key": "Voice Memo",
+        "location": {
+          "startingColumn": 27,
+          "startingLine": 174
+        }
+      },
+      {
+        "comment": "",
+        "key": "Share",
+        "location": {
+          "startingColumn": 27,
+          "startingLine": 186
+        }
+      },
+      {
+        "comment": "",
+        "key": "Edit",
+        "location": {
+          "startingColumn": 27,
+          "startingLine": 196
+        }
+      },
+      {
+        "comment": "",
+        "key": "Delete",
+        "location": {
+          "startingColumn": 27,
+          "startingLine": 206
+        }
+      },
+      {
+        "comment": "",
+        "key": "Artwork",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 227
+        }
+      },
+      {
+        "comment": "",
+        "key": "Delete this artwork?",
+        "location": {
+          "startingColumn": 16,
+          "startingLine": 313
+        }
+      },
+      {
+        "comment": "",
+        "key": "Edit Artwork",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 293
+        }
+      },
+      {
+        "comment": "",
+        "key": "Details",
+        "location": {
+          "startingColumn": 29,
+          "startingLine": 232
+        }
+      },
+      {
+        "comment": "",
+        "key": "Voice Memo",
+        "location": {
+          "startingColumn": 29,
+          "startingLine": 245
+        }
+      },
+      {
+        "comment": "",
+        "key": "Tags",
+        "location": {
+          "startingColumn": 29,
+          "startingLine": 250
+        }
+      },
+      {
+        "comment": "",
+        "key": "Artwork title (optional)",
+        "location": {
+          "startingColumn": 35,
+          "startingLine": 233
+        }
+      },
+      {
+        "comment": "",
+        "key": "Caption (optional)",
+        "location": {
+          "startingColumn": 35,
+          "startingLine": 234
+        }
+      },
+      {
+        "comment": "",
+        "key": "Date Created",
+        "location": {
+          "startingColumn": 29,
+          "startingLine": 237
+        }
+      },
+      {
+        "comment": "",
+        "key": "Creating magic...",
+        "location": {
+          "startingColumn": 68,
+          "startingLine": 267
+        }
+      },
+      {
+        "comment": "",
+        "key": "Improve with On-Device AI",
+        "location": {
+          "startingColumn": 90,
+          "startingLine": 267
+        }
+      },
+      {
+        "comment": "",
+        "key": "AI",
+        "location": {
+          "startingColumn": 31,
+          "startingLine": 290
+        }
+      },
+      {
+        "comment": "",
+        "key": "Cancel",
+        "location": {
+          "startingColumn": 32,
+          "startingLine": 297
+        }
+      },
+      {
+        "comment": "",
+        "key": "Save",
+        "location": {
+          "startingColumn": 32,
+          "startingLine": 302
+        }
+      },
+      {
+        "comment": "",
+        "key": "Cancel",
+        "location": {
+          "startingColumn": 20,
+          "startingLine": 314
+        }
+      },
+      {
+        "comment": "",
+        "key": "Delete",
+        "location": {
+          "startingColumn": 20,
+          "startingLine": 315
+        }
+      },
+      {
+        "comment": "",
+        "key": "This action cannot be undone.",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 319
+        }
+      }
+    ]
+  },
+  "version": 1
+}

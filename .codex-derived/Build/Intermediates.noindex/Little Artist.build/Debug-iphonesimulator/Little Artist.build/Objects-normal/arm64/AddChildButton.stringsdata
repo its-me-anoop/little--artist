@@ -1,0 +1,16 @@
+{
+  "source": "/Users/anoopjose/Projects/Little Artist/Little Artist/Components/AddChildButton.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Add",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 30
+        }
+      }
+    ]
+  },
+  "version": 1
+}

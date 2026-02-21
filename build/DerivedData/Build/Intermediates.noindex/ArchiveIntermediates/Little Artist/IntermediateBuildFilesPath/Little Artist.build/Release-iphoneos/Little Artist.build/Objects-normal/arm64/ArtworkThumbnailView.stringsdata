@@ -1,0 +1,24 @@
+{
+  "source": "/Users/anoopjose/Projects/Little Artist/Little Artist/Components/Cards/ArtworkThumbnailView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "%@ by %@, created %@",
+        "location": {
+          "startingColumn": 29,
+          "startingLine": 78
+        }
+      },
+      {
+        "comment": "",
+        "key": "Double tap to view details",
+        "location": {
+          "startingColumn": 28,
+          "startingLine": 79
+        }
+      }
+    ]
+  },
+  "version": 1
+}

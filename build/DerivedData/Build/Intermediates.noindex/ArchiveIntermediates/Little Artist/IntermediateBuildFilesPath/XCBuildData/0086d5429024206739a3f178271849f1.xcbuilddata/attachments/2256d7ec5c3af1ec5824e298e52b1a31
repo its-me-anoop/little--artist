@@ -1,0 +1,371 @@
+{
+  "" : {
+    "const-values" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/Little Artist-primary.swiftconstvalues",
+    "dependencies" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/Little Artist-primary.d",
+    "diagnostics" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/Little Artist-primary.dia",
+    "emit-module-dependencies" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/Little Artist-primary-emit-module.d",
+    "emit-module-diagnostics" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/Little Artist-primary-emit-module.dia",
+    "pch" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/Little Artist-primary-Bridging-header.pch",
+    "swift-dependencies" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/Little Artist-primary.swiftdeps"
+  },
+  "/Users/anoopjose/Projects/Little Artist/Little Artist/App/AppDelegate.swift" : {
+    "index-unit-output-path" : "/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/AppDelegate.o",
+    "llvm-bc" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/AppDelegate.bc",
+    "object" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/AppDelegate.o"
+  },
+  "/Users/anoopjose/Projects/Little Artist/Little Artist/App/ContentView.swift" : {
+    "index-unit-output-path" : "/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/ContentView.o",
+    "llvm-bc" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/ContentView.bc",
+    "object" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/ContentView.o"
+  },
+  "/Users/anoopjose/Projects/Little Artist/Little Artist/App/Little_ArtistApp.swift" : {
+    "index-unit-output-path" : "/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/Little_ArtistApp.o",
+    "llvm-bc" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/Little_ArtistApp.bc",
+    "object" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/Little_ArtistApp.o"
+  },
+  "/Users/anoopjose/Projects/Little Artist/Little Artist/Components/AIShimmerView.swift" : {
+    "index-unit-output-path" : "/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/AIShimmerView.o",
+    "llvm-bc" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/AIShimmerView.bc",
+    "object" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/AIShimmerView.o"
+  },
+  "/Users/anoopjose/Projects/Little Artist/Little Artist/Components/Avatars/ChildAvatarView.swift" : {
+    "index-unit-output-path" : "/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/ChildAvatarView.o",
+    "llvm-bc" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/ChildAvatarView.bc",
+    "object" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/ChildAvatarView.o"
+  },
+  "/Users/anoopjose/Projects/Little Artist/Little Artist/Components/Avatars/ChildSliderView.swift" : {
+    "index-unit-output-path" : "/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/ChildSliderView.o",
+    "llvm-bc" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/ChildSliderView.bc",
+    "object" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/ChildSliderView.o"
+  },
+  "/Users/anoopjose/Projects/Little Artist/Little Artist/Components/Badges/SharedBadgeView.swift" : {
+    "index-unit-output-path" : "/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/SharedBadgeView.o",
+    "llvm-bc" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/SharedBadgeView.bc",
+    "object" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/SharedBadgeView.o"
+  },
+  "/Users/anoopjose/Projects/Little Artist/Little Artist/Components/Buttons/AddArtworkButton.swift" : {
+    "index-unit-output-path" : "/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/AddArtworkButton.o",
+    "llvm-bc" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/AddArtworkButton.bc",
+    "object" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/AddArtworkButton.o"
+  },
+  "/Users/anoopjose/Projects/Little Artist/Little Artist/Components/Buttons/AddChildButton.swift" : {
+    "index-unit-output-path" : "/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/AddChildButton.o",
+    "llvm-bc" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/AddChildButton.bc",
+    "object" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/AddChildButton.o"
+  },
+  "/Users/anoopjose/Projects/Little Artist/Little Artist/Components/Cards/AchievementBadgeView.swift" : {
+    "index-unit-output-path" : "/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/AchievementBadgeView.o",
+    "llvm-bc" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/AchievementBadgeView.bc",
+    "object" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/AchievementBadgeView.o"
+  },
+  "/Users/anoopjose/Projects/Little Artist/Little Artist/Components/Cards/ArtworkThumbnailView.swift" : {
+    "index-unit-output-path" : "/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/ArtworkThumbnailView.o",
+    "llvm-bc" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/ArtworkThumbnailView.bc",
+    "object" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/ArtworkThumbnailView.o"
+  },
+  "/Users/anoopjose/Projects/Little Artist/Little Artist/Components/Cards/MemoryCardView.swift" : {
+    "index-unit-output-path" : "/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/MemoryCardView.o",
+    "llvm-bc" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/MemoryCardView.bc",
+    "object" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/MemoryCardView.o"
+  },
+  "/Users/anoopjose/Projects/Little Artist/Little Artist/Components/Cards/StatCardView.swift" : {
+    "index-unit-output-path" : "/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/StatCardView.o",
+    "llvm-bc" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/StatCardView.bc",
+    "object" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/StatCardView.o"
+  },
+  "/Users/anoopjose/Projects/Little Artist/Little Artist/Components/Cards/TimelineEntryCardView.swift" : {
+    "index-unit-output-path" : "/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/TimelineEntryCardView.o",
+    "llvm-bc" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/TimelineEntryCardView.bc",
+    "object" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/TimelineEntryCardView.o"
+  },
+  "/Users/anoopjose/Projects/Little Artist/Little Artist/Components/Chips/ChildFilterChipView.swift" : {
+    "index-unit-output-path" : "/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/ChildFilterChipView.o",
+    "llvm-bc" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/ChildFilterChipView.bc",
+    "object" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/ChildFilterChipView.o"
+  },
+  "/Users/anoopjose/Projects/Little Artist/Little Artist/Components/Chips/TagChipView.swift" : {
+    "index-unit-output-path" : "/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/TagChipView.o",
+    "llvm-bc" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/TagChipView.bc",
+    "object" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/TagChipView.o"
+  },
+  "/Users/anoopjose/Projects/Little Artist/Little Artist/Components/Chips/TagPickerView.swift" : {
+    "index-unit-output-path" : "/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/TagPickerView.o",
+    "llvm-bc" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/TagPickerView.bc",
+    "object" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/TagPickerView.o"
+  },
+  "/Users/anoopjose/Projects/Little Artist/Little Artist/Components/Chips/YearChipView.swift" : {
+    "index-unit-output-path" : "/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/YearChipView.o",
+    "llvm-bc" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/YearChipView.bc",
+    "object" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/YearChipView.o"
+  },
+  "/Users/anoopjose/Projects/Little Artist/Little Artist/Components/ConfettiView.swift" : {
+    "index-unit-output-path" : "/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/ConfettiView.o",
+    "llvm-bc" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/ConfettiView.bc",
+    "object" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/ConfettiView.o"
+  },
+  "/Users/anoopjose/Projects/Little Artist/Little Artist/Components/UIKitBridges/ActivityView.swift" : {
+    "index-unit-output-path" : "/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/ActivityView.o",
+    "llvm-bc" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/ActivityView.bc",
+    "object" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/ActivityView.o"
+  },
+  "/Users/anoopjose/Projects/Little Artist/Little Artist/Components/UIKitBridges/CameraPicker.swift" : {
+    "index-unit-output-path" : "/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/CameraPicker.o",
+    "llvm-bc" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/CameraPicker.bc",
+    "object" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/CameraPicker.o"
+  },
+  "/Users/anoopjose/Projects/Little Artist/Little Artist/Components/UIKitBridges/CloudSharingView.swift" : {
+    "index-unit-output-path" : "/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/CloudSharingView.o",
+    "llvm-bc" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/CloudSharingView.bc",
+    "object" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/CloudSharingView.o"
+  },
+  "/Users/anoopjose/Projects/Little Artist/Little Artist/Components/UIKitBridges/DocumentScannerPicker.swift" : {
+    "index-unit-output-path" : "/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/DocumentScannerPicker.o",
+    "llvm-bc" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/DocumentScannerPicker.bc",
+    "object" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/DocumentScannerPicker.o"
+  },
+  "/Users/anoopjose/Projects/Little Artist/Little Artist/Components/UIKitBridges/ShareInviteItemSource.swift" : {
+    "index-unit-output-path" : "/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/ShareInviteItemSource.o",
+    "llvm-bc" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/ShareInviteItemSource.bc",
+    "object" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/ShareInviteItemSource.o"
+  },
+  "/Users/anoopjose/Projects/Little Artist/Little Artist/Components/VoiceMemo/PlaybackWaveformView.swift" : {
+    "index-unit-output-path" : "/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/PlaybackWaveformView.o",
+    "llvm-bc" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/PlaybackWaveformView.bc",
+    "object" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/PlaybackWaveformView.o"
+  },
+  "/Users/anoopjose/Projects/Little Artist/Little Artist/Components/VoiceMemo/VoiceMemoPlayerView.swift" : {
+    "index-unit-output-path" : "/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/VoiceMemoPlayerView.o",
+    "llvm-bc" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/VoiceMemoPlayerView.bc",
+    "object" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/VoiceMemoPlayerView.o"
+  },
+  "/Users/anoopjose/Projects/Little Artist/Little Artist/Components/VoiceMemo/VoiceMemoRecorderView.swift" : {
+    "index-unit-output-path" : "/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/VoiceMemoRecorderView.o",
+    "llvm-bc" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/VoiceMemoRecorderView.bc",
+    "object" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/VoiceMemoRecorderView.o"
+  },
+  "/Users/anoopjose/Projects/Little Artist/Little Artist/Components/VoiceMemo/WaveformAnimationView.swift" : {
+    "index-unit-output-path" : "/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/WaveformAnimationView.o",
+    "llvm-bc" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/WaveformAnimationView.bc",
+    "object" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/WaveformAnimationView.o"
+  },
+  "/Users/anoopjose/Projects/Little Artist/Little Artist/Models/Artwork.swift" : {
+    "index-unit-output-path" : "/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/Artwork.o",
+    "llvm-bc" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/Artwork.bc",
+    "object" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/Artwork.o"
+  },
+  "/Users/anoopjose/Projects/Little Artist/Little Artist/Models/Child.swift" : {
+    "index-unit-output-path" : "/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/Child.o",
+    "llvm-bc" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/Child.bc",
+    "object" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/Child.o"
+  },
+  "/Users/anoopjose/Projects/Little Artist/Little Artist/Models/SchemaMigration.swift" : {
+    "index-unit-output-path" : "/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/SchemaMigration.o",
+    "llvm-bc" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/SchemaMigration.bc",
+    "object" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/SchemaMigration.o"
+  },
+  "/Users/anoopjose/Projects/Little Artist/Little Artist/Models/Tag.swift" : {
+    "index-unit-output-path" : "/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/Tag.o",
+    "llvm-bc" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/Tag.bc",
+    "object" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/Tag.o"
+  },
+  "/Users/anoopjose/Projects/Little Artist/Little Artist/Services/AISuggestionService.swift" : {
+    "index-unit-output-path" : "/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/AISuggestionService.o",
+    "llvm-bc" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/AISuggestionService.bc",
+    "object" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/AISuggestionService.o"
+  },
+  "/Users/anoopjose/Projects/Little Artist/Little Artist/Services/AudioRecordingService.swift" : {
+    "index-unit-output-path" : "/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/AudioRecordingService.o",
+    "llvm-bc" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/AudioRecordingService.bc",
+    "object" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/AudioRecordingService.o"
+  },
+  "/Users/anoopjose/Projects/Little Artist/Little Artist/Services/CloudKitSharingService.swift" : {
+    "index-unit-output-path" : "/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/CloudKitSharingService.o",
+    "llvm-bc" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/CloudKitSharingService.bc",
+    "object" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/CloudKitSharingService.o"
+  },
+  "/Users/anoopjose/Projects/Little Artist/Little Artist/Services/HapticService.swift" : {
+    "index-unit-output-path" : "/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/HapticService.o",
+    "llvm-bc" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/HapticService.bc",
+    "object" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/HapticService.o"
+  },
+  "/Users/anoopjose/Projects/Little Artist/Little Artist/Services/NotificationService.swift" : {
+    "index-unit-output-path" : "/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/NotificationService.o",
+    "llvm-bc" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/NotificationService.bc",
+    "object" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/NotificationService.o"
+  },
+  "/Users/anoopjose/Projects/Little Artist/Little Artist/Services/PDFExportService.swift" : {
+    "index-unit-output-path" : "/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/PDFExportService.o",
+    "llvm-bc" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/PDFExportService.bc",
+    "object" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/PDFExportService.o"
+  },
+  "/Users/anoopjose/Projects/Little Artist/Little Artist/Services/PremiumManager.swift" : {
+    "index-unit-output-path" : "/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/PremiumManager.o",
+    "llvm-bc" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/PremiumManager.bc",
+    "object" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/PremiumManager.o"
+  },
+  "/Users/anoopjose/Projects/Little Artist/Little Artist/Services/StoreKitManager.swift" : {
+    "index-unit-output-path" : "/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/StoreKitManager.o",
+    "llvm-bc" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/StoreKitManager.bc",
+    "object" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/StoreKitManager.o"
+  },
+  "/Users/anoopjose/Projects/Little Artist/Little Artist/Utilities/BrandTokens.swift" : {
+    "index-unit-output-path" : "/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/BrandTokens.o",
+    "llvm-bc" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/BrandTokens.bc",
+    "object" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/BrandTokens.o"
+  },
+  "/Users/anoopjose/Projects/Little Artist/Little Artist/Utilities/Color+Hex.swift" : {
+    "index-unit-output-path" : "/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/Color+Hex.o",
+    "llvm-bc" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/Color+Hex.bc",
+    "object" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/Color+Hex.o"
+  },
+  "/Users/anoopjose/Projects/Little Artist/Little Artist/Utilities/PreviewSampleData.swift" : {
+    "index-unit-output-path" : "/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/PreviewSampleData.o",
+    "llvm-bc" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/PreviewSampleData.bc",
+    "object" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/PreviewSampleData.o"
+  },
+  "/Users/anoopjose/Projects/Little Artist/Little Artist/Views/Artwork/AddArtworkView.swift" : {
+    "index-unit-output-path" : "/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/AddArtworkView.o",
+    "llvm-bc" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/AddArtworkView.bc",
+    "object" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/AddArtworkView.o"
+  },
+  "/Users/anoopjose/Projects/Little Artist/Little Artist/Views/Artwork/ArtworkComparisonView.swift" : {
+    "index-unit-output-path" : "/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/ArtworkComparisonView.o",
+    "llvm-bc" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/ArtworkComparisonView.bc",
+    "object" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/ArtworkComparisonView.o"
+  },
+  "/Users/anoopjose/Projects/Little Artist/Little Artist/Views/Artwork/ArtworkDetailView.swift" : {
+    "index-unit-output-path" : "/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/ArtworkDetailView.o",
+    "llvm-bc" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/ArtworkDetailView.bc",
+    "object" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/ArtworkDetailView.o"
+  },
+  "/Users/anoopjose/Projects/Little Artist/Little Artist/Views/Artwork/ArtworkGalleryView.swift" : {
+    "index-unit-output-path" : "/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/ArtworkGalleryView.o",
+    "llvm-bc" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/ArtworkGalleryView.bc",
+    "object" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/ArtworkGalleryView.o"
+  },
+  "/Users/anoopjose/Projects/Little Artist/Little Artist/Views/Artwork/NoArtworkView.swift" : {
+    "index-unit-output-path" : "/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/NoArtworkView.o",
+    "llvm-bc" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/NoArtworkView.bc",
+    "object" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/NoArtworkView.o"
+  },
+  "/Users/anoopjose/Projects/Little Artist/Little Artist/Views/Children/AddChildView.swift" : {
+    "index-unit-output-path" : "/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/AddChildView.o",
+    "llvm-bc" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/AddChildView.bc",
+    "object" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/AddChildView.o"
+  },
+  "/Users/anoopjose/Projects/Little Artist/Little Artist/Views/Children/EditChildView.swift" : {
+    "index-unit-output-path" : "/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/EditChildView.o",
+    "llvm-bc" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/EditChildView.bc",
+    "object" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/EditChildView.o"
+  },
+  "/Users/anoopjose/Projects/Little Artist/Little Artist/Views/Children/NoChildrenView.swift" : {
+    "index-unit-output-path" : "/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/NoChildrenView.o",
+    "llvm-bc" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/NoChildrenView.bc",
+    "object" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/NoChildrenView.o"
+  },
+  "/Users/anoopjose/Projects/Little Artist/Little Artist/Views/Children/ShareManagementView.swift" : {
+    "index-unit-output-path" : "/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/ShareManagementView.o",
+    "llvm-bc" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/ShareManagementView.bc",
+    "object" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/ShareManagementView.o"
+  },
+  "/Users/anoopjose/Projects/Little Artist/Little Artist/Views/HomeView.swift" : {
+    "index-unit-output-path" : "/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/HomeView.o",
+    "llvm-bc" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/HomeView.bc",
+    "object" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/HomeView.o"
+  },
+  "/Users/anoopjose/Projects/Little Artist/Little Artist/Views/MilestonesView.swift" : {
+    "index-unit-output-path" : "/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/MilestonesView.o",
+    "llvm-bc" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/MilestonesView.bc",
+    "object" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/MilestonesView.o"
+  },
+  "/Users/anoopjose/Projects/Little Artist/Little Artist/Views/Onboarding/AnimatedCardsView.swift" : {
+    "index-unit-output-path" : "/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/AnimatedCardsView.o",
+    "llvm-bc" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/AnimatedCardsView.bc",
+    "object" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/AnimatedCardsView.o"
+  },
+  "/Users/anoopjose/Projects/Little Artist/Little Artist/Views/Onboarding/AnimationTrigger.swift" : {
+    "index-unit-output-path" : "/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/AnimationTrigger.o",
+    "llvm-bc" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/AnimationTrigger.bc",
+    "object" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/AnimationTrigger.o"
+  },
+  "/Users/anoopjose/Projects/Little Artist/Little Artist/Views/Onboarding/CardAnimation.swift" : {
+    "index-unit-output-path" : "/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/CardAnimation.o",
+    "llvm-bc" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/CardAnimation.bc",
+    "object" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/CardAnimation.o"
+  },
+  "/Users/anoopjose/Projects/Little Artist/Little Artist/Views/Onboarding/DriftCardsView.swift" : {
+    "index-unit-output-path" : "/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/DriftCardsView.o",
+    "llvm-bc" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/DriftCardsView.bc",
+    "object" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/DriftCardsView.o"
+  },
+  "/Users/anoopjose/Projects/Little Artist/Little Artist/Views/Onboarding/DropCardsView.swift" : {
+    "index-unit-output-path" : "/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/DropCardsView.o",
+    "llvm-bc" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/DropCardsView.bc",
+    "object" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/DropCardsView.o"
+  },
+  "/Users/anoopjose/Projects/Little Artist/Little Artist/Views/Onboarding/FanCardsView.swift" : {
+    "index-unit-output-path" : "/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/FanCardsView.o",
+    "llvm-bc" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/FanCardsView.bc",
+    "object" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/FanCardsView.o"
+  },
+  "/Users/anoopjose/Projects/Little Artist/Little Artist/Views/Onboarding/IconCard.swift" : {
+    "index-unit-output-path" : "/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/IconCard.o",
+    "llvm-bc" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/IconCard.bc",
+    "object" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/IconCard.o"
+  },
+  "/Users/anoopjose/Projects/Little Artist/Little Artist/Views/Onboarding/OnboardingPage.swift" : {
+    "index-unit-output-path" : "/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/OnboardingPage.o",
+    "llvm-bc" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/OnboardingPage.bc",
+    "object" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/OnboardingPage.o"
+  },
+  "/Users/anoopjose/Projects/Little Artist/Little Artist/Views/Onboarding/OnboardingView.swift" : {
+    "index-unit-output-path" : "/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/OnboardingView.o",
+    "llvm-bc" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/OnboardingView.bc",
+    "object" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/OnboardingView.o"
+  },
+  "/Users/anoopjose/Projects/Little Artist/Little Artist/Views/Onboarding/PulseCardsView.swift" : {
+    "index-unit-output-path" : "/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/PulseCardsView.o",
+    "llvm-bc" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/PulseCardsView.bc",
+    "object" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/PulseCardsView.o"
+  },
+  "/Users/anoopjose/Projects/Little Artist/Little Artist/Views/Onboarding/ScatterCardsView.swift" : {
+    "index-unit-output-path" : "/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/ScatterCardsView.o",
+    "llvm-bc" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/ScatterCardsView.bc",
+    "object" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/ScatterCardsView.o"
+  },
+  "/Users/anoopjose/Projects/Little Artist/Little Artist/Views/PaywallView.swift" : {
+    "index-unit-output-path" : "/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/PaywallView.o",
+    "llvm-bc" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/PaywallView.bc",
+    "object" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/PaywallView.o"
+  },
+  "/Users/anoopjose/Projects/Little Artist/Little Artist/Views/PremiumUpsellView.swift" : {
+    "index-unit-output-path" : "/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/PremiumUpsellView.o",
+    "llvm-bc" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/PremiumUpsellView.bc",
+    "object" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/PremiumUpsellView.o"
+  },
+  "/Users/anoopjose/Projects/Little Artist/Little Artist/Views/PrivacyPolicyView.swift" : {
+    "index-unit-output-path" : "/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/PrivacyPolicyView.o",
+    "llvm-bc" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/PrivacyPolicyView.bc",
+    "object" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/PrivacyPolicyView.o"
+  },
+  "/Users/anoopjose/Projects/Little Artist/Little Artist/Views/SearchView.swift" : {
+    "index-unit-output-path" : "/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/SearchView.o",
+    "llvm-bc" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/SearchView.bc",
+    "object" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/SearchView.o"
+  },
+  "/Users/anoopjose/Projects/Little Artist/Little Artist/Views/SettingsView.swift" : {
+    "index-unit-output-path" : "/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/SettingsView.o",
+    "llvm-bc" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/SettingsView.bc",
+    "object" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/SettingsView.o"
+  },
+  "/Users/anoopjose/Projects/Little Artist/Little Artist/Views/TimelineView.swift" : {
+    "index-unit-output-path" : "/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/TimelineView.o",
+    "llvm-bc" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/TimelineView.bc",
+    "object" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/TimelineView.o"
+  },
+  "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/DerivedSources/GeneratedAssetSymbols.swift" : {
+    "index-unit-output-path" : "/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/GeneratedAssetSymbols.o",
+    "llvm-bc" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/GeneratedAssetSymbols.bc",
+    "object" : "/Users/anoopjose/Projects/Little Artist/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/Little Artist/IntermediateBuildFilesPath/Little Artist.build/Release-iphoneos/Little Artist.build/Objects-normal/arm64/GeneratedAssetSymbols.o"
+  }
+}

@@ -1,0 +1,136 @@
+{
+  "source": "/Users/anoopjose/Projects/Little Artist/Little Artist/Views/Children/EditChildView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Edit Profile",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 184
+        }
+      },
+      {
+        "comment": "",
+        "key": "Sharing Unavailable",
+        "location": {
+          "startingColumn": 20,
+          "startingLine": 232
+        }
+      },
+      {
+        "comment": "",
+        "key": "Delete this child profile?",
+        "location": {
+          "startingColumn": 20,
+          "startingLine": 240
+        }
+      },
+      {
+        "comment": "",
+        "key": "Child's name",
+        "location": {
+          "startingColumn": 31,
+          "startingLine": 72
+        }
+      },
+      {
+        "comment": "",
+        "key": "Pick a color",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 86
+        }
+      },
+      {
+        "comment": "",
+        "key": "Invite another parent to view and edit this profile",
+        "location": {
+          "startingColumn": 35,
+          "startingLine": 141
+        }
+      },
+      {
+        "comment": "",
+        "key": "Requires iCloud Sync (enable in Settings)",
+        "location": {
+          "startingColumn": 35,
+          "startingLine": 142
+        }
+      },
+      {
+        "comment": "",
+        "key": "Manage Sharing",
+        "location": {
+          "startingColumn": 75,
+          "startingLine": 127
+        }
+      },
+      {
+        "comment": "",
+        "key": "Share Profile",
+        "location": {
+          "startingColumn": 94,
+          "startingLine": 127
+        }
+      },
+      {
+        "comment": "",
+        "key": "Delete Profile",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 155
+        }
+      },
+      {
+        "comment": "",
+        "key": "Save Changes",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 171
+        }
+      },
+      {
+        "comment": "",
+        "key": "Cancel",
+        "location": {
+          "startingColumn": 28,
+          "startingLine": 188
+        }
+      },
+      {
+        "comment": "",
+        "key": "OK",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 236
+        }
+      },
+      {
+        "comment": "",
+        "key": "Cancel",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 241
+        }
+      },
+      {
+        "comment": "",
+        "key": "Delete",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 242
+        }
+      },
+      {
+        "comment": "",
+        "key": "All artworks for %@ will be permanently removed.",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 246
+        }
+      }
+    ]
+  },
+  "version": 1
+}
