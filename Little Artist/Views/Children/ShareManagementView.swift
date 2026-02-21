@@ -23,11 +23,17 @@ struct ShareManagementView: View {
     var onStoppedSharing: (() -> Void)? = nil
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.modelContext) private var modelContext
 
     @State private var ownerName: String?
     @State private var sharePayload: SharePayload?
     @State private var isStoppingShare = false
+    @State private var isLeavingShare = false
     @State private var stopError: String?
+
+    private var isCurrentUserOwner: Bool {
+        share.currentUserParticipant?.role == .owner
+    }
 
     // MARK: - Body
 
@@ -45,8 +51,12 @@ struct ShareManagementView: View {
                     // Share options
                     shareOptionsSection
 
-                    // Stop sharing
-                    stopSharingButton
+                    // Owner: stop sharing, Participant: leave
+                    if isCurrentUserOwner {
+                        stopSharingButton
+                    } else {
+                        leaveProfileButton
+                    }
                 }
                 .padding(.horizontal, Brand.screenPadding)
                 .padding(.bottom, 32)
@@ -132,30 +142,33 @@ struct ShareManagementView: View {
                         .padding(.vertical, 14)
                 }
 
-                Divider().padding(.leading, 56)
+                // Only owners can invite more people
+                if isCurrentUserOwner {
+                    Divider().padding(.leading, 56)
 
-                // Send invite link via standard share sheet with child avatar preview
-                Button {
-                    if let url = share.url {
-                        let itemSource = ShareInviteItemSource(
-                            url: url,
-                            childName: child.name,
-                            avatarImageData: child.avatarImageData,
-                            avatarColor: child.avatarColor
-                        )
-                        sharePayload = SharePayload(items: [itemSource])
+                    // Send invite link via standard share sheet with child avatar preview
+                    Button {
+                        if let url = share.url {
+                            let itemSource = ShareInviteItemSource(
+                                url: url,
+                                childName: child.name,
+                                avatarImageData: child.avatarImageData,
+                                avatarColor: child.avatarColor
+                            )
+                            sharePayload = SharePayload(items: [itemSource])
+                        }
+                    } label: {
+                        HStack(spacing: 12) {
+                            Image(systemName: "plus.circle.fill")
+                                .font(.system(size: 28))
+                                .foregroundStyle(Brand.primary)
+                            Text("Share With More People")
+                                .font(Brand.bodyFont)
+                                .foregroundStyle(Brand.primary)
+                        }
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 14)
                     }
-                } label: {
-                    HStack(spacing: 12) {
-                        Image(systemName: "plus.circle.fill")
-                            .font(.system(size: 28))
-                            .foregroundStyle(Brand.primary)
-                        Text("Share With More People")
-                            .font(Brand.bodyFont)
-                            .foregroundStyle(Brand.primary)
-                    }
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 14)
                 }
             }
             .background(Brand.surface)
@@ -265,6 +278,33 @@ struct ShareManagementView: View {
         .disabled(isStoppingShare)
     }
 
+    // MARK: - Leave Profile (Participant)
+
+    private var leaveProfileButton: some View {
+        Button(role: .destructive) {
+            Task { await leaveProfile() }
+        } label: {
+            HStack {
+                if isLeavingShare {
+                    ProgressView()
+                        .tint(Brand.dustyRose)
+                } else {
+                    Image(systemName: "person.badge.minus")
+                        .font(.system(size: 16, weight: .medium))
+                    Text("Leave Profile")
+                        .font(Brand.headlineFont)
+                }
+            }
+            .foregroundStyle(Brand.dustyRose)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 16)
+            .background(Brand.surface)
+            .clipShape(RoundedRectangle(cornerRadius: Brand.radiusCard))
+            .brandCardShadow()
+        }
+        .disabled(isLeavingShare)
+    }
+
     // MARK: - Helpers
 
     private var otherParticipants: [CKShare.Participant] {
@@ -340,6 +380,18 @@ struct ShareManagementView: View {
         } catch {
             stopError = error.localizedDescription
             isStoppingShare = false
+        }
+    }
+
+    private func leaveProfile() async {
+        isLeavingShare = true
+        do {
+            try await CloudKitSharingService.shared.leaveShare(child, modelContext: modelContext)
+            dismiss()
+            onStoppedSharing?()
+        } catch {
+            stopError = error.localizedDescription
+            isLeavingShare = false
         }
     }
 }

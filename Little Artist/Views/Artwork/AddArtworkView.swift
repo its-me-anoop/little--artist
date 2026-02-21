@@ -412,7 +412,8 @@ struct AddArtworkView: View {
                 title: "",
                 imageData: data,
                 createdAt: artworkDate.addingTimeInterval(Double(index)),
-                child: child
+                child: child,
+                syncIdentifier: UUID().uuidString
             )
             modelContext.insert(artwork)
         }
@@ -430,7 +431,8 @@ struct AddArtworkView: View {
             voiceNoteData: voiceNoteData,
             createdAt: artworkDate,
             child: child,
-            tags: selectedTags
+            tags: selectedTags,
+            syncIdentifier: UUID().uuidString
         )
         modelContext.insert(artwork)
         dismiss()

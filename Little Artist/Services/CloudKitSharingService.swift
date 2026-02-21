@@ -29,16 +29,22 @@ protocol CloudKitSyncEngine: Sendable {
 /// Encapsulates the logic for matching artworks across stacks (Single Responsibility).
 /// Used by both the shared-data mirror and the deduplication passes.
 enum ArtworkMatchStrategy {
-    /// Stable key for an artwork: title + creation date rounded to the
-    /// nearest second. Rounding avoids floating-point mismatches when
-    /// the same date is stored by Core Data and SwiftData independently.
-    static func key(for artwork: Artwork) -> String {
+    /// Legacy key for an artwork: title + creation date rounded to the
+    /// nearest second. Used as a fallback when `syncIdentifier` is not
+    /// available (pre-V6 artworks).
+    static func legacyKey(for artwork: Artwork) -> String {
         "\(artwork.title)|\(Int(artwork.createdAt.timeIntervalSince1970))"
     }
 
-    /// Builds a key from raw managed-object values (shared store mirroring).
-    static func key(title: String, createdAt: Date) -> String {
+    /// Builds a legacy key from raw managed-object values (shared store mirroring).
+    static func legacyKey(title: String, createdAt: Date) -> String {
         "\(title)|\(Int(createdAt.timeIntervalSince1970))"
+    }
+
+    /// Returns the stable sync key when a `syncIdentifier` is available.
+    static func stableKey(for artwork: Artwork) -> String? {
+        guard let id = artwork.syncIdentifier, !id.isEmpty else { return nil }
+        return "sync:\(id)"
     }
 
     /// Score indicating how much data an artwork carries — higher is better.
@@ -52,7 +58,7 @@ enum ArtworkMatchStrategy {
         return score
     }
 
-    /// Returns true when two artworks with the same key are genuinely
+    /// Returns true when two artworks with the same legacy key are genuinely
     /// duplicates rather than distinct artworks that happen to share a
     /// title and creation second (e.g. batch imports with different images).
     static func areLikelyDuplicates(_ a: Artwork, _ b: Artwork) -> Bool {
@@ -321,6 +327,7 @@ final class CloudKitSharingService: CloudKitSyncEngine {
 
         // Defer initial sync to next run loop to avoid issues during setup
         DispatchQueue.main.async { [weak self] in
+            self?.backfillSyncIdentifiers()
             self?.refreshSwiftDataContext()
             self?.syncSharedDataToSwiftData()
         }
@@ -741,6 +748,9 @@ final class CloudKitSharingService: CloudKitSyncEngine {
                 return
             }
 
+            // Track artwork changes per child for notifications
+            var artworkChanges: [(childName: String, inserted: Int, updated: Int)] = []
+
             for managedChild in sharedChildren {
                 let recordName = container.recordID(for: managedChild.objectID)?.recordName
                     ?? managedChild.objectID.uriRepresentation().absoluteString
@@ -757,7 +767,8 @@ final class CloudKitSharingService: CloudKitSyncEngine {
                     mirror.name = managedChild.value(forKey: "name") as? String ?? mirror.name
                     mirror.avatarColor = managedChild.value(forKey: "avatarColor") as? String ?? mirror.avatarColor
                     mirror.avatarImageData = managedChild.value(forKey: "avatarImageData") as? Data
-                    syncArtworks(for: managedChild, into: mirror, modelContext: modelContext)
+                    let counts = syncArtworks(for: managedChild, into: mirror, modelContext: modelContext)
+                    artworkChanges.append((mirror.name, counts.inserted, counts.updated))
                     diag("sync: updated existing mirror for '\(mirror.name)'")
                     continue
                 }
@@ -775,7 +786,8 @@ final class CloudKitSharingService: CloudKitSyncEngine {
                     match.sharedRecordName = recordName
                     match.avatarColor = managedChild.value(forKey: "avatarColor") as? String ?? match.avatarColor
                     match.avatarImageData = managedChild.value(forKey: "avatarImageData") as? Data
-                    syncArtworks(for: managedChild, into: match, modelContext: modelContext)
+                    let counts = syncArtworks(for: managedChild, into: match, modelContext: modelContext)
+                    artworkChanges.append((match.name, counts.inserted, counts.updated))
                     diag("sync: adopted local '\(match.name)' as mirror (same name)")
                     continue
                 }
@@ -790,7 +802,8 @@ final class CloudKitSharingService: CloudKitSyncEngine {
                 newChild.sharedRecordName = recordName
                 modelContext.insert(newChild)
 
-                syncArtworks(for: managedChild, into: newChild, modelContext: modelContext)
+                let counts = syncArtworks(for: managedChild, into: newChild, modelContext: modelContext)
+                artworkChanges.append((newChild.name, counts.inserted, counts.updated))
 
                 diag("sync: CREATED new mirror for '\(newChild.name)'")
             }
@@ -799,8 +812,24 @@ final class CloudKitSharingService: CloudKitSyncEngine {
             removeDuplicateMirrors(modelContext: modelContext)
             deduplicateArtworks(modelContext: modelContext)
 
+            // --- Orphan cleanup: remove mirrors whose shared records are gone ---
+            cleanupOrphanedMirrors(
+                sharedChildren: sharedChildren,
+                container: container,
+                modelContext: modelContext
+            )
+
             try modelContext.save()
             diag("sync: SAVED to SwiftData successfully")
+
+            // Send notifications for shared artwork changes
+            for change in artworkChanges where change.inserted > 0 || change.updated > 0 {
+                NotificationService.notifySharedArtworkChanges(
+                    childName: change.childName,
+                    insertedCount: change.inserted,
+                    updatedCount: change.updated
+                )
+            }
         } catch {
             diag("sync: FAILED — \(error.localizedDescription)")
         }
@@ -873,25 +902,40 @@ final class CloudKitSharingService: CloudKitSyncEngine {
     }
 
     /// Transfers artworks from `source` to `target` that don't already
-    /// exist on the target (matched by title + rounded creation date).
+    /// exist on the target (matched by syncIdentifier first, then legacy key).
     private func transferArtworks(from source: Child, to target: Child, modelContext: ModelContext) {
         guard let sourceArtworks = source.artworks, !sourceArtworks.isEmpty else { return }
-        let targetKeys = Set(
-            (target.artworks ?? []).map { ArtworkMatchStrategy.key(for: $0) }
-        )
-        for art in sourceArtworks {
-            if !targetKeys.contains(ArtworkMatchStrategy.key(for: art)) {
-                art.child = target
+        let targetArtworks = target.artworks ?? []
+
+        // Build lookup sets for target
+        var targetSyncIds = Set<String>()
+        var targetLegacyKeys = Set<String>()
+        for art in targetArtworks {
+            if let stableKey = ArtworkMatchStrategy.stableKey(for: art) {
+                targetSyncIds.insert(stableKey)
             }
+            targetLegacyKeys.insert(ArtworkMatchStrategy.legacyKey(for: art))
+        }
+
+        for art in sourceArtworks {
+            // Check stable key first
+            if let stableKey = ArtworkMatchStrategy.stableKey(for: art),
+               targetSyncIds.contains(stableKey) {
+                continue
+            }
+            // Fallback to legacy key
+            if targetLegacyKeys.contains(ArtworkMatchStrategy.legacyKey(for: art)) {
+                continue
+            }
+            art.child = target
         }
     }
 
     /// Removes duplicate artworks within each child profile.
     ///
-    /// Core Data's private CloudKit sync can copy artwork records between
-    /// same-account devices, creating duplicates in `default.store`.
-    /// This pass groups artworks by a stable key (title + rounded date)
-    /// and keeps only the one with the most data (image, caption, etc.).
+    /// Two-pass deduplication:
+    /// - Pass 1: Group by `syncIdentifier` (stable, authoritative)
+    /// - Pass 2: Group remaining (no syncId) by legacy key (title + date)
     ///
     /// To avoid false positives (e.g. batch imports with different images
     /// but the same title and timestamp), we additionally check that the
@@ -903,26 +947,49 @@ final class CloudKitSharingService: CloudKitSyncEngine {
         for child in allChildren {
             guard let artworks = child.artworks, artworks.count > 1 else { continue }
 
-            var seen: [String: Artwork] = [:]
+            // Pass 1: dedup by syncIdentifier (authoritative)
+            var seenBySyncId: [String: Artwork] = [:]
+            var remainingArtworks: [Artwork] = []
+
             for art in artworks {
-                let key = ArtworkMatchStrategy.key(for: art)
-                if let existing = seen[key] {
-                    // Guard against false positives: only dedup if images are similar
+                if let syncId = art.syncIdentifier, !syncId.isEmpty {
+                    if let existing = seenBySyncId[syncId] {
+                        let existingScore = ArtworkMatchStrategy.dataScore(for: existing)
+                        let thisScore = ArtworkMatchStrategy.dataScore(for: art)
+                        if thisScore > existingScore {
+                            modelContext.delete(existing)
+                            seenBySyncId[syncId] = art
+                        } else {
+                            modelContext.delete(art)
+                        }
+                        totalRemoved += 1
+                    } else {
+                        seenBySyncId[syncId] = art
+                    }
+                } else {
+                    remainingArtworks.append(art)
+                }
+            }
+
+            // Pass 2: dedup remaining (no syncId) by legacy key
+            var seenByLegacy: [String: Artwork] = [:]
+            for art in remainingArtworks {
+                let key = ArtworkMatchStrategy.legacyKey(for: art)
+                if let existing = seenByLegacy[key] {
                     guard ArtworkMatchStrategy.areLikelyDuplicates(existing, art) else {
                         continue
                     }
-                    // Keep the one with more data (image > no image, longer caption wins)
                     let existingScore = ArtworkMatchStrategy.dataScore(for: existing)
                     let thisScore = ArtworkMatchStrategy.dataScore(for: art)
                     if thisScore > existingScore {
                         modelContext.delete(existing)
-                        seen[key] = art
+                        seenByLegacy[key] = art
                     } else {
                         modelContext.delete(art)
                     }
                     totalRemoved += 1
                 } else {
-                    seen[key] = art
+                    seenByLegacy[key] = art
                 }
             }
         }
@@ -931,23 +998,75 @@ final class CloudKitSharingService: CloudKitSyncEngine {
         }
     }
 
+    // MARK: - Orphan Cleanup
+
+    /// Removes SwiftData mirror children whose shared-store records no longer exist.
+    ///
+    /// This handles two scenarios:
+    /// 1. Owner stopped sharing — participant's shared records disappear
+    /// 2. Owner deleted the child — shared records are removed from CloudKit
+    private func cleanupOrphanedMirrors(
+        sharedChildren: [NSManagedObject],
+        container: NSPersistentCloudKitContainer,
+        modelContext: ModelContext
+    ) {
+        // Build set of active shared record names
+        let activeRecordNames = Set(
+            sharedChildren.compactMap { container.recordID(for: $0.objectID)?.recordName }
+        )
+
+        // Fetch all SwiftData mirrors (have sharedRecordName)
+        let mirrorDescriptor = FetchDescriptor<Child>(
+            predicate: #Predicate<Child> { $0.sharedRecordName != nil }
+        )
+        guard let mirrors = try? modelContext.fetch(mirrorDescriptor) else { return }
+
+        var orphansRemoved = 0
+        for mirror in mirrors {
+            guard let recordName = mirror.sharedRecordName else { continue }
+
+            // Skip if this mirror is for a child in the private store (owner's child)
+            // — owners have children in both stores
+            if let _ = try? managedObjectID(for: mirror) {
+                continue
+            }
+
+            // If the record is no longer in the shared store, it's an orphan
+            if !activeRecordNames.contains(recordName) {
+                diag("orphan: removing mirror '\(mirror.name)' — shared record gone")
+                modelContext.delete(mirror)
+                orphansRemoved += 1
+            }
+        }
+
+        if orphansRemoved > 0 {
+            diag("orphan: removed \(orphansRemoved) orphaned mirror(s)")
+        }
+    }
+
     // MARK: - Artwork Sync (Shared Store → SwiftData)
 
     /// Mirrors artworks from a shared Core Data child into a SwiftData child.
     ///
-    /// For existing artworks (matched by key), updates text fields and fills in
-    /// missing binary data from the canonical shared version (owner's data).
-    /// For new artworks, creates a SwiftData copy.
+    /// Matching priority:
+    /// 1. `syncIdentifier` matches CloudKit record name (stable, survives edits)
+    /// 2. Legacy key (title + rounded date) as fallback for pre-V6 artworks
     ///
-    /// Uses a two-pass strategy:
+    /// On match: updates fields + backfills `syncIdentifier` if nil.
+    /// No match: inserts with `syncIdentifier = recordName ?? UUID()`.
+    ///
+    /// Uses a two-pass strategy for fetching:
     /// 1. Access artworks via the Core Data relationship (`child.artworks`)
     /// 2. Fallback: query all artworks in the shared store and match by child
     ///    object ID — catches cases where the relationship isn't populated yet
+    ///
+    /// - Returns: Tuple of `(inserted, updated)` counts for notification triggering.
+    @discardableResult
     private func syncArtworks(
         for managedChild: NSManagedObject,
         into swiftDataChild: Child,
         modelContext: ModelContext
-    ) {
+    ) -> (inserted: Int, updated: Int) {
         // --- Pass 1: try the Core Data relationship ---
         var artworkObjects: [NSManagedObject] = []
 
@@ -955,7 +1074,6 @@ final class CloudKitSharingService: CloudKitSyncEngine {
             artworkObjects = artworkSet.compactMap { $0 as? NSManagedObject }
             diag("syncArtworks: \(artworkObjects.count) artwork(s) via relationship for '\(swiftDataChild.name)'")
         } else {
-            // Log available relationship names so we can debug model mismatches
             let relNames = managedChild.entity.relationshipsByName.keys.sorted()
             diag("syncArtworks: 'artworks' relationship returned nil for '\(swiftDataChild.name)'. Available: \(relNames)")
         }
@@ -977,13 +1095,17 @@ final class CloudKitSharingService: CloudKitSyncEngine {
 
         guard !artworkObjects.isEmpty else {
             diag("syncArtworks: no artworks found for '\(swiftDataChild.name)'")
-            return
+            return (0, 0)
         }
 
-        // Build lookup of existing SwiftData artworks by key
-        var existingByKey: [String: Artwork] = [:]
+        // Build TWO lookup dictionaries from SwiftData artworks
+        var existingBySyncId: [String: Artwork] = [:]
+        var existingByLegacyKey: [String: Artwork] = [:]
         for art in (swiftDataChild.artworks ?? []) {
-            existingByKey[ArtworkMatchStrategy.key(for: art)] = art
+            if let syncId = art.syncIdentifier, !syncId.isEmpty {
+                existingBySyncId[syncId] = art
+            }
+            existingByLegacyKey[ArtworkMatchStrategy.legacyKey(for: art)] = art
         }
 
         var insertCount = 0
@@ -992,12 +1114,33 @@ final class CloudKitSharingService: CloudKitSyncEngine {
         for managedArtwork in artworkObjects {
             let title = managedArtwork.value(forKey: "title") as? String ?? ""
             let createdAt = managedArtwork.value(forKey: "createdAt") as? Date ?? .now
-            let key = ArtworkMatchStrategy.key(title: title, createdAt: createdAt)
-
             let caption = managedArtwork.value(forKey: "caption") as? String ?? ""
             let isFavorited = managedArtwork.value(forKey: "isFavorited") as? Bool ?? false
+            let remoteSyncId = managedArtwork.value(forKey: "syncIdentifier") as? String
 
-            if let existing = existingByKey[key] {
+            // Get CloudKit record name for this artwork
+            let recordName = persistentContainer?.recordID(for: managedArtwork.objectID)?.recordName
+
+            // --- Match by syncIdentifier first (stable, survives title/date edits) ---
+            var matched: Artwork?
+
+            // Try matching by remote syncIdentifier
+            if let remoteSyncId, !remoteSyncId.isEmpty,
+               let found = existingBySyncId[remoteSyncId] {
+                matched = found
+            }
+            // Try matching by CloudKit record name
+            if matched == nil, let recordName,
+               let found = existingBySyncId[recordName] {
+                matched = found
+            }
+            // Fallback: legacy key matching
+            if matched == nil {
+                let legacyKey = ArtworkMatchStrategy.legacyKey(title: title, createdAt: createdAt)
+                matched = existingByLegacyKey[legacyKey]
+            }
+
+            if let existing = matched {
                 // Update existing artwork — the shared (owner's) version is canonical
                 var changed = false
                 if existing.title != title {
@@ -1012,8 +1155,11 @@ final class CloudKitSharingService: CloudKitSyncEngine {
                     existing.isFavorited = isFavorited
                     changed = true
                 }
+                if existing.createdAt != createdAt {
+                    existing.createdAt = createdAt
+                    changed = true
+                }
                 // Only fill in binary data if the local copy is missing it.
-                // Avoids expensive byte-by-byte comparisons on large blobs.
                 if existing.imageData == nil,
                    let remoteImage = managedArtwork.value(forKey: "imageData") as? Data {
                     existing.imageData = remoteImage
@@ -1024,9 +1170,15 @@ final class CloudKitSharingService: CloudKitSyncEngine {
                     existing.voiceNoteData = remoteVoice
                     changed = true
                 }
+                // Backfill syncIdentifier if missing
+                if existing.syncIdentifier == nil || existing.syncIdentifier?.isEmpty == true {
+                    existing.syncIdentifier = remoteSyncId ?? recordName ?? UUID().uuidString
+                    changed = true
+                }
                 if changed { updateCount += 1 }
             } else {
-                // Create new artwork
+                // Create new artwork with stable syncIdentifier
+                let syncId = remoteSyncId ?? recordName ?? UUID().uuidString
                 let artwork = Artwork(
                     title: title,
                     caption: caption,
@@ -1034,7 +1186,8 @@ final class CloudKitSharingService: CloudKitSyncEngine {
                     voiceNoteData: managedArtwork.value(forKey: "voiceNoteData") as? Data,
                     isFavorited: isFavorited,
                     createdAt: createdAt,
-                    child: swiftDataChild
+                    child: swiftDataChild,
+                    syncIdentifier: syncId
                 )
                 modelContext.insert(artwork)
                 insertCount += 1
@@ -1043,6 +1196,168 @@ final class CloudKitSharingService: CloudKitSyncEngine {
 
         if insertCount > 0 || updateCount > 0 {
             diag("syncArtworks: \(insertCount) inserted, \(updateCount) updated for '\(swiftDataChild.name)'")
+        }
+        return (insertCount, updateCount)
+    }
+
+    // MARK: - Owner Detection & Access Control
+
+    /// Returns whether the current user is the owner of the given child.
+    ///
+    /// - Unshared child → always `true` (local data, user is the owner)
+    /// - Shared child → checks `CKShare.currentUserParticipant?.role == .owner`
+    /// - Fallback: if the child exists in the private store (no sharedRecordName),
+    ///   the current user is the owner
+    func isOwner(of child: Child) -> Bool {
+        // Unshared child — user is always the owner
+        guard isShared(child) || child.sharedRecordName != nil else {
+            return true
+        }
+
+        // Check CKShare participant role
+        if let share = existingShare(for: child),
+           let currentUser = share.currentUserParticipant {
+            return currentUser.role == .owner
+        }
+
+        // Fallback: children received via sharing have a sharedRecordName
+        // but no objectIDURL in the private store. Owners created the child
+        // locally, so they have a valid objectIDURL.
+        if child.sharedRecordName != nil {
+            // If we can resolve the child's objectID in Core Data, it's in
+            // the private store — the user is the owner.
+            if let _ = try? managedObjectID(for: child) {
+                return true
+            }
+            return false
+        }
+
+        return true
+    }
+
+    /// Leaves a shared child profile as a participant.
+    ///
+    /// Deletes the shared record zone from the participant's shared database
+    /// and removes the SwiftData mirror.
+    func leaveShare(_ child: Child, modelContext: ModelContext) async throws {
+        guard let container = persistentContainer, let sharedStore else {
+            throw SharingError.notInitialised
+        }
+
+        // Find the shared zone for this child
+        guard let recordName = child.sharedRecordName else {
+            throw SharingError.objectIDNotFound
+        }
+
+        // Find the child in the shared store by matching record name
+        let childReq = NSFetchRequest<NSManagedObject>(entityName: "Child")
+        childReq.affectedStores = [sharedStore]
+        let sharedChildren = (try? container.viewContext.fetch(childReq)) ?? []
+
+        for managedChild in sharedChildren {
+            let managedRecordName = container.recordID(for: managedChild.objectID)?.recordName
+            if managedRecordName == recordName {
+                // Get the share for this record
+                if let shares = try? container.fetchShares(matching: [managedChild.objectID]),
+                   let share = shares[managedChild.objectID] {
+                    // Delete the share zone from our shared database
+                    let ckContainer = CKContainer(identifier: ckContainerIdentifier)
+                    let sharedDB = ckContainer.sharedCloudDatabase
+                    try await sharedDB.deleteRecordZone(withID: share.recordID.zoneID)
+                    diag("leaveShare: deleted shared zone for '\(child.name)'")
+                }
+                break
+            }
+        }
+
+        // Clean up SwiftData mirror (cascade deletes artworks)
+        modelContext.delete(child)
+        try modelContext.save()
+        diag("leaveShare: removed SwiftData mirror for '\(child.name)'")
+    }
+
+    /// Deletes a shared child as the owner — revokes all participants' access
+    /// and removes the data from CloudKit and SwiftData.
+    func deleteSharedChild(_ child: Child, modelContext: ModelContext) async throws {
+        guard let container = persistentContainer else {
+            throw SharingError.notInitialised
+        }
+
+        // Stop sharing first (revokes access for all participants)
+        if isShared(child) {
+            try await stopSharing(child)
+        }
+
+        // Delete from Core Data (triggers CloudKit record deletion)
+        if let objectID = try? managedObjectID(for: child) {
+            let managedObject = container.viewContext.object(with: objectID)
+
+            // Delete related artworks from Core Data first
+            if let artworkSet = managedObject.value(forKey: "artworks") as? NSSet {
+                for case let artwork as NSManagedObject in artworkSet {
+                    container.viewContext.delete(artwork)
+                }
+            }
+
+            container.viewContext.delete(managedObject)
+            if container.viewContext.hasChanges {
+                try container.viewContext.save()
+            }
+            diag("deleteSharedChild: deleted from Core Data for '\(child.name)'")
+        }
+
+        // Delete from SwiftData (cascade deletes artworks)
+        modelContext.delete(child)
+        try modelContext.save()
+        diag("deleteSharedChild: deleted from SwiftData for '\(child.name)'")
+    }
+
+    // MARK: - Backfill
+
+    /// Populates `syncIdentifier` for existing artworks that were created
+    /// before V6. Tries to get the CloudKit record name from Core Data;
+    /// falls back to a UUID so future syncs have a stable key.
+    ///
+    /// Called once after `setup()` completes.
+    func backfillSyncIdentifiers() {
+        guard let modelContainer else {
+            diag("backfill: SKIP — no model container")
+            return
+        }
+
+        let context = modelContainer.mainContext
+        let descriptor = FetchDescriptor<Artwork>(
+            predicate: #Predicate<Artwork> { $0.syncIdentifier == nil }
+        )
+        guard let artworks = try? context.fetch(descriptor), !artworks.isEmpty else {
+            diag("backfill: no artworks need syncIdentifier")
+            return
+        }
+
+        var backfilled = 0
+        for artwork in artworks {
+            // Try to get the CloudKit record name via Core Data
+            if let container = persistentContainer,
+               let url = artwork.objectIDURL {
+                let coordinator = container.persistentStoreCoordinator
+                // Validate store UUID before calling managedObjectID
+                if let storeUUID = url.host, !storeUUID.isEmpty,
+                   coordinator.persistentStores.contains(where: { $0.identifier == storeUUID }),
+                   let objectID = coordinator.managedObjectID(forURIRepresentation: url),
+                   let recordID = container.recordID(for: objectID) {
+                    artwork.syncIdentifier = recordID.recordName
+                    backfilled += 1
+                    continue
+                }
+            }
+            // Fallback: assign a UUID
+            artwork.syncIdentifier = UUID().uuidString
+            backfilled += 1
+        }
+
+        if backfilled > 0 {
+            try? context.save()
+            diag("backfill: assigned syncIdentifier to \(backfilled) artwork(s)")
         }
     }
 

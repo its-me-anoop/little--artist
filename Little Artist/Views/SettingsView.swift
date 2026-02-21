@@ -25,7 +25,9 @@ struct SettingsView: View {
 
     @State private var showAddChild = false
     @State private var showDeleteChildConfirmation = false
+    @State private var showLeaveChildConfirmation = false
     @State private var childToDelete: Child?
+    @State private var childToLeave: Child?
     @State private var paywallReason: PaywallView.LimitReason?
     @State private var isRestoring = false
     @State private var exportPayload: SharePayload?
@@ -75,8 +77,9 @@ struct SettingsView: View {
                                 Text(child.name)
                                     .font(Brand.bodyFont)
 
-                                if sharingService.isInitialised, child.sharedRecordName == nil, sharingService.isShared(child) {
-                                    Image(systemName: "person.2.fill")
+                                if sharingService.isInitialised,
+                                   sharingService.isShared(child) || child.sharedRecordName != nil {
+                                    Image(systemName: sharingService.isOwner(of: child) ? "person.2.fill" : "person.2.wave.2")
                                         .font(.system(size: 11, weight: .medium))
                                         .foregroundStyle(Brand.sky)
                                 }
@@ -91,8 +94,18 @@ struct SettingsView: View {
                     }
                     .onDelete { indexSet in
                         for index in indexSet {
-                            childToDelete = children[index]
-                            showDeleteChildConfirmation = true
+                            let child = children[index]
+                            let isShared = sharingService.isShared(child) || child.sharedRecordName != nil
+                            let isOwner = sharingService.isOwner(of: child)
+
+                            if isShared && !isOwner {
+                                // Participant: show leave confirmation instead of delete
+                                childToLeave = child
+                                showLeaveChildConfirmation = true
+                            } else {
+                                childToDelete = child
+                                showDeleteChildConfirmation = true
+                            }
                         }
                     }
 
@@ -332,13 +345,42 @@ struct SettingsView: View {
                 }
                 Button("Delete", role: .destructive) {
                     if let child = childToDelete {
-                        modelContext.delete(child)
+                        let isShared = sharingService.isShared(child) || child.sharedRecordName != nil
+                        if isShared {
+                            Task {
+                                try? await sharingService.deleteSharedChild(child, modelContext: modelContext)
+                            }
+                        } else {
+                            modelContext.delete(child)
+                        }
                         childToDelete = nil
                     }
                 }
             } message: {
                 if let child = childToDelete {
-                    Text("This will permanently delete \(child.name) and all their \(child.artworks?.count ?? 0) artworks.")
+                    let isShared = sharingService.isShared(child) || child.sharedRecordName != nil
+                    if isShared {
+                        Text("This will permanently delete \(child.name) and all their artworks for everyone this profile is shared with.")
+                    } else {
+                        Text("This will permanently delete \(child.name) and all their \(child.artworks?.count ?? 0) artworks.")
+                    }
+                }
+            }
+            .alert("Leave Shared Profile?", isPresented: $showLeaveChildConfirmation) {
+                Button("Cancel", role: .cancel) {
+                    childToLeave = nil
+                }
+                Button("Leave", role: .destructive) {
+                    if let child = childToLeave {
+                        Task {
+                            try? await sharingService.leaveShare(child, modelContext: modelContext)
+                        }
+                        childToLeave = nil
+                    }
+                }
+            } message: {
+                if let child = childToLeave {
+                    Text("\(child.name)'s profile will be removed from your device. The owner will keep their copy.")
                 }
             }
             .alert("iCloud Sync Enabled", isPresented: $showSyncEnabledConfirmation) {

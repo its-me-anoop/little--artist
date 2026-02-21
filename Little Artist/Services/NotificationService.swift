@@ -21,6 +21,7 @@ enum NotificationService {
 
     private static let inactivityIdentifier = "com.littleartist.inactivityReminder"
     private static let onThisDayPrefix = "com.littleartist.onThisDay."
+    private static let sharedChangePrefix = "com.littleartist.sharedChange."
 
     /// Number of days of inactivity before sending a reminder.
     private static let inactivityDays: Int = 14
@@ -154,5 +155,51 @@ enum NotificationService {
 
             UNUserNotificationCenter.current().add(request)
         }
+    }
+
+    // MARK: - Shared Artwork Changes
+
+    /// Sends a local notification when shared artworks are added or updated
+    /// by another user.
+    ///
+    /// Uses a 3-second delay to batch rapid successive syncs. The identifier
+    /// is based on the child name hash so successive notifications for the
+    /// same child replace (not stack) each other.
+    ///
+    /// - Parameters:
+    ///   - childName: The name of the shared child profile.
+    ///   - insertedCount: Number of newly added artworks.
+    ///   - updatedCount: Number of updated artworks.
+    static func notifySharedArtworkChanges(childName: String, insertedCount: Int, updatedCount: Int) {
+        guard UserDefaults.standard.bool(forKey: "notificationsEnabled") else { return }
+        guard insertedCount > 0 || updatedCount > 0 else { return }
+
+        let content = UNMutableNotificationContent()
+        content.sound = .default
+
+        if insertedCount > 0 && updatedCount == 0 {
+            let artworkWord = insertedCount == 1 ? "artwork" : "artworks"
+            content.title = "New Artwork for \(childName)"
+            content.body = "\(insertedCount) new \(artworkWord) added to \(childName)'s gallery."
+        } else if updatedCount > 0 && insertedCount == 0 {
+            content.title = "\(childName)'s Gallery Updated"
+            content.body = "\(updatedCount) \(updatedCount == 1 ? "artwork" : "artworks") updated."
+        } else {
+            content.title = "\(childName)'s Gallery Updated"
+            content.body = "\(insertedCount) new, \(updatedCount) updated."
+        }
+
+        // 3-second delay batches rapid changes
+        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 3, repeats: false)
+
+        // Use child name hash so successive syncs replace, not stack
+        let identifier = "\(sharedChangePrefix)\(childName.hashValue)"
+        let request = UNNotificationRequest(
+            identifier: identifier,
+            content: content,
+            trigger: trigger
+        )
+
+        UNUserNotificationCenter.current().add(request)
     }
 }

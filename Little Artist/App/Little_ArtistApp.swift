@@ -41,7 +41,7 @@ struct Little_ArtistApp: App {
         }
         #endif
 
-        let schema = Schema(versionedSchema: SchemaV5.self)
+        let schema = Schema(versionedSchema: SchemaV6.self)
         let isPremium = UserDefaults.standard.bool(forKey: "isPremium")
         let iCloudEnabled = UserDefaults.standard.bool(forKey: "iCloudSyncEnabled")
 

@@ -33,11 +33,13 @@ struct EditChildView: View {
     @State private var showCamera = false
     @State private var showImagePlayground = false
     @State private var showDeleteConfirmation = false
+    @State private var showLeaveConfirmation = false
     @State private var showCloudSharing = false
     @State private var showShareManagement = false
     @State private var activeShare: CKShare?
     @State private var activeContainer: CKContainer?
     @State private var sharingError: String?
+    @State private var isLeavingShare = false
     @AppStorage("iCloudSyncEnabled") private var iCloudSyncEnabled = false
 
     private let presetColors = Brand.avatarColors
@@ -148,12 +150,23 @@ struct EditChildView: View {
 
                     Spacer().frame(height: 8)
 
-                    // Delete button
-                    Button(role: .destructive) {
-                        showDeleteConfirmation = true
-                    } label: {
-                        Text("Delete Profile")
-                            .font(Brand.headlineFont)
+                    // Delete or Leave button — owner can delete, participant can leave
+                    if isChildShared && !isCurrentUserOwner {
+                        // Participant: show Leave Profile
+                        Button(role: .destructive) {
+                            showLeaveConfirmation = true
+                        } label: {
+                            HStack(spacing: 8) {
+                                if isLeavingShare {
+                                    ProgressView()
+                                        .tint(Brand.dustyRose)
+                                } else {
+                                    Image(systemName: "person.badge.minus")
+                                        .font(.system(size: 16, weight: .medium))
+                                    Text("Leave Profile")
+                                        .font(Brand.headlineFont)
+                                }
+                            }
                             .foregroundStyle(Brand.dustyRose)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 16)
@@ -161,8 +174,26 @@ struct EditChildView: View {
                                 Capsule()
                                     .stroke(Brand.dustyRose, lineWidth: 1.5)
                             }
+                        }
+                        .disabled(isLeavingShare)
+                        .padding(.horizontal, 32)
+                    } else {
+                        // Owner or unshared: show Delete Profile
+                        Button(role: .destructive) {
+                            showDeleteConfirmation = true
+                        } label: {
+                            Text("Delete Profile")
+                                .font(Brand.headlineFont)
+                                .foregroundStyle(Brand.dustyRose)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 16)
+                                .overlay {
+                                    Capsule()
+                                        .stroke(Brand.dustyRose, lineWidth: 1.5)
+                                }
+                        }
+                        .padding(.horizontal, 32)
                     }
-                    .padding(.horizontal, 32)
 
                     // Save button
                     Button {
@@ -243,7 +274,19 @@ struct EditChildView: View {
                     deleteChild()
                 }
             } message: {
-                Text("All artworks for \(child.name) will be permanently removed.")
+                if isChildShared {
+                    Text("This will permanently delete \(child.name) and all their artworks for everyone this profile is shared with.")
+                } else {
+                    Text("All artworks for \(child.name) will be permanently removed.")
+                }
+            }
+            .alert("Leave this shared profile?", isPresented: $showLeaveConfirmation) {
+                Button("Cancel", role: .cancel) {}
+                Button("Leave", role: .destructive) {
+                    Task { await leaveSharedProfile() }
+                }
+            } message: {
+                Text("\(child.name)'s profile and all artworks will be removed from your device. The owner will keep their copy.")
             }
         }
     }
@@ -324,6 +367,16 @@ struct EditChildView: View {
         }
     }
 
+    // MARK: - Sharing State
+
+    private var isChildShared: Bool {
+        sharingService.isShared(child) || child.sharedRecordName != nil
+    }
+
+    private var isCurrentUserOwner: Bool {
+        sharingService.isOwner(of: child)
+    }
+
     // MARK: - Actions
 
     private func saveChanges() {
@@ -354,9 +407,34 @@ struct EditChildView: View {
     }
 
     private func deleteChild() {
-        modelContext.delete(child)
-        onDelete?()
-        dismiss()
+        if isChildShared && isCurrentUserOwner {
+            Task {
+                do {
+                    try await sharingService.deleteSharedChild(child, modelContext: modelContext)
+                } catch {
+                    // Fallback to local delete if CloudKit fails
+                    modelContext.delete(child)
+                }
+                onDelete?()
+                dismiss()
+            }
+        } else {
+            modelContext.delete(child)
+            onDelete?()
+            dismiss()
+        }
+    }
+
+    private func leaveSharedProfile() async {
+        isLeavingShare = true
+        do {
+            try await sharingService.leaveShare(child, modelContext: modelContext)
+            onDelete?()
+            dismiss()
+        } catch {
+            sharingError = "Failed to leave: \(error.localizedDescription)"
+            isLeavingShare = false
+        }
     }
 }
 

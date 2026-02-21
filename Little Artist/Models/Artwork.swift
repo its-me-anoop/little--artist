@@ -42,6 +42,12 @@ final class Artwork {
     /// Tags applied to this artwork for categorization.
     var tags: [Tag]?
 
+    /// Stable identifier for CloudKit sync matching. Set to the CloudKit
+    /// record name for shared artworks, or a UUID for locally created ones.
+    /// Used instead of title+date to match artworks across devices so that
+    /// editing title or date doesn't create duplicates.
+    var syncIdentifier: String?
+
     init(
         title: String,
         caption: String = "",
@@ -50,7 +56,8 @@ final class Artwork {
         isFavorited: Bool = false,
         createdAt: Date = .now,
         child: Child? = nil,
-        tags: [Tag]? = nil
+        tags: [Tag]? = nil,
+        syncIdentifier: String? = nil
     ) {
         self.title = title
         self.caption = caption
@@ -60,5 +67,6 @@ final class Artwork {
         self.createdAt = createdAt
         self.child = child
         self.tags = tags
+        self.syncIdentifier = syncIdentifier
     }
 }
