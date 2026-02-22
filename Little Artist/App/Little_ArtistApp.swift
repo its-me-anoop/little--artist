@@ -67,6 +67,7 @@ struct Little_ArtistApp: App {
 
             // Provide model container to sync services
             FirestoreSyncService.shared.modelContainer = container
+            FirestoreRepository.shared.modelContainer = container
 
             // Start Firebase sync when premium + sync enabled
             if isPremium && syncEnabled {

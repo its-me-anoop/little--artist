@@ -31,7 +31,19 @@ final class FirestoreSyncService {
 
     // MARK: - Dependencies
 
-    var modelContainer: ModelContainer?
+    var modelContainer: ModelContainer? {
+        didSet {
+            if let modelContainer {
+                _syncContext = ModelContext(modelContainer)
+            }
+        }
+    }
+
+    /// Single shared context for all sync operations to prevent concurrent
+    /// ModelContext instances from racing on fetch→insert.
+    private var _syncContext: ModelContext?
+
+    private var syncContext: ModelContext? { _syncContext }
 
     // MARK: - State
 
@@ -328,8 +340,7 @@ final class FirestoreSyncService {
         isShared: Bool,
         ownerUserId: String?
     ) async {
-        guard let container = modelContainer else { return }
-        let context = ModelContext(container)
+        guard let context = syncContext else { return }
 
         let data = document.data() ?? [:]
         let name = data["name"] as? String ?? ""
@@ -337,13 +348,43 @@ final class FirestoreSyncService {
         let avatarImageURL = data["avatarImageURL"] as? String
         let createdAt = (data["createdAt"] as? Timestamp)?.dateValue() ?? Date()
 
+        // Download avatar BEFORE the fetch+insert block so the critical
+        // section below runs synchronously with no suspension points.
+        var avatarData: Data?
+        if let avatarURL = avatarImageURL {
+            avatarData = await storage.download(url: avatarURL)
+        }
+
+        // --- Synchronous fetch → check → insert (no awaits) ---
+
         // Find existing child by firestoreId
         var descriptor = FetchDescriptor<Child>(
             predicate: #Predicate<Child> { $0.firestoreId == firestoreId }
         )
         descriptor.fetchLimit = 1
 
-        let existing = try? context.fetch(descriptor).first
+        var existing = try? context.fetch(descriptor).first
+
+        // Dedup safety net: if no match by firestoreId, also check by
+        // name + approximate createdAt (±2s) to catch orphaned records
+        if existing == nil {
+            let lowerBound = createdAt.addingTimeInterval(-2)
+            let upperBound = createdAt.addingTimeInterval(2)
+            var dedupDescriptor = FetchDescriptor<Child>(
+                predicate: #Predicate<Child> {
+                    $0.name == name
+                    && $0.createdAt >= lowerBound
+                    && $0.createdAt <= upperBound
+                }
+            )
+            dedupDescriptor.fetchLimit = 1
+            if let match = try? context.fetch(dedupDescriptor).first {
+                // Adopt this record — assign the firestoreId so future upserts match
+                match.firestoreId = firestoreId
+                existing = match
+                diag("Dedup: adopted orphaned child \(name) → \(firestoreId)")
+            }
+        }
 
         if let child = existing {
             // Update existing
@@ -351,6 +392,9 @@ final class FirestoreSyncService {
             child.avatarColor = avatarColor
             child.isShared = isShared
             child.ownerUserId = ownerUserId
+            if let avatarData, child.avatarImageData == nil {
+                child.avatarImageData = avatarData
+            }
         } else {
             // Insert new
             let child = Child(
@@ -361,17 +405,10 @@ final class FirestoreSyncService {
                 isShared: isShared,
                 ownerUserId: ownerUserId
             )
-            context.insert(child)
-        }
-
-        // Download avatar if URL is present and we don't have local data
-        if let avatarURL = avatarImageURL {
-            let targetChild = existing ?? (try? context.fetch(descriptor).first)
-            if targetChild?.avatarImageData == nil {
-                if let avatarData = await storage.download(url: avatarURL) {
-                    targetChild?.avatarImageData = avatarData
-                }
+            if let avatarData {
+                child.avatarImageData = avatarData
             }
+            context.insert(child)
         }
 
         try? context.save()
@@ -379,8 +416,7 @@ final class FirestoreSyncService {
     }
 
     private func removeChild(firestoreId: String) {
-        guard let container = modelContainer else { return }
-        let context = ModelContext(container)
+        guard let context = syncContext else { return }
 
         var descriptor = FetchDescriptor<Child>(
             predicate: #Predicate<Child> { $0.firestoreId == firestoreId }
@@ -399,8 +435,7 @@ final class FirestoreSyncService {
         firestoreId: String,
         childFirestoreId: String
     ) async {
-        guard let container = modelContainer else { return }
-        let context = ModelContext(container)
+        guard let context = syncContext else { return }
 
         let data = document.data()
         let title = data["title"] as? String ?? ""
@@ -410,6 +445,24 @@ final class FirestoreSyncService {
         let imageURL = data["imageURL"] as? String
         let voiceNoteURL = data["voiceNoteURL"] as? String
         let tagNames = data["tags"] as? [String] ?? []
+
+        // Download binary data BEFORE the fetch+insert block so the
+        // critical section below runs synchronously with no suspension points.
+        var imgData: Data?
+        var thumbnailData: Data?
+        var audioData: Data?
+
+        if let imgURL = imageURL {
+            imgData = await storage.download(url: imgURL)
+            if let imgData {
+                thumbnailData = ImageProcessingService.generateThumbnail(from: imgData)
+            }
+        }
+        if let audioURL = voiceNoteURL {
+            audioData = await storage.download(url: audioURL)
+        }
+
+        // --- Synchronous fetch → check → insert (no awaits) ---
 
         // Find the parent child
         var childDescriptor = FetchDescriptor<Child>(
@@ -451,6 +504,13 @@ final class FirestoreSyncService {
             artwork.imageURL = imageURL
             artwork.voiceNoteURL = voiceNoteURL
             artwork.tags = tags
+            if let imgData, artwork.imageData == nil {
+                artwork.imageData = imgData
+                if artwork.thumbnailData == nil { artwork.thumbnailData = thumbnailData }
+            }
+            if let audioData, artwork.voiceNoteData == nil {
+                artwork.voiceNoteData = audioData
+            }
         } else {
             // Insert new
             let artwork = Artwork(
@@ -464,32 +524,17 @@ final class FirestoreSyncService {
                 imageURL: imageURL,
                 voiceNoteURL: voiceNoteURL
             )
+            artwork.imageData = imgData
+            artwork.thumbnailData = thumbnailData
+            artwork.voiceNoteData = audioData
             context.insert(artwork)
-        }
-
-        // Download image/voice note if we don't have local data
-        let targetArtwork = existing ?? (try? context.fetch(artworkDescriptor).first)
-        if let imgURL = imageURL, targetArtwork?.imageData == nil {
-            if let imgData = await storage.download(url: imgURL) {
-                targetArtwork?.imageData = imgData
-                // Generate thumbnail from downloaded image
-                if targetArtwork?.thumbnailData == nil {
-                    targetArtwork?.thumbnailData = ImageProcessingService.generateThumbnail(from: imgData)
-                }
-            }
-        }
-        if let audioURL = voiceNoteURL, targetArtwork?.voiceNoteData == nil {
-            if let audioData = await storage.download(url: audioURL) {
-                targetArtwork?.voiceNoteData = audioData
-            }
         }
 
         try? context.save()
     }
 
     private func removeArtwork(firestoreId: String) {
-        guard let container = modelContainer else { return }
-        let context = ModelContext(container)
+        guard let context = syncContext else { return }
 
         var descriptor = FetchDescriptor<Artwork>(
             predicate: #Predicate<Artwork> { $0.firestoreId == firestoreId }

@@ -58,6 +58,9 @@ final class FirebaseAuthService: NSObject {
 
     private var authStateHandle: AuthStateDidChangeListenerHandle?
 
+    /// Task handle for the initial anonymous sign-in so callers can await it.
+    private var anonymousSignInTask: Task<Void, Never>?
+
     // MARK: - Init
 
     private override init() {
@@ -75,9 +78,9 @@ final class FirebaseAuthService: NSObject {
             }
         }
 
-        // If no user yet, sign in anonymously
+        // If no user yet, sign in anonymously (store task so others can await it)
         if Auth.auth().currentUser == nil {
-            Task { await signInAnonymously() }
+            anonymousSignInTask = Task { await signInAnonymously() }
         } else {
             currentUser = Auth.auth().currentUser
             logger.info("Existing user: \(self.currentUser?.uid ?? "nil", privacy: .public)")
@@ -102,6 +105,7 @@ final class FirebaseAuthService: NSObject {
         }
 
         isAuthenticating = false
+        anonymousSignInTask = nil
     }
 
     // MARK: - Sign in with Apple
@@ -110,6 +114,10 @@ final class FirebaseAuthService: NSObject {
     /// the current anonymous account. Returns `true` on success.
     @discardableResult
     func signInWithApple() async throws -> Bool {
+        // Wait for any in-flight anonymous sign-in to finish first,
+        // so we have a currentUser to link the Apple credential to.
+        await anonymousSignInTask?.value
+
         let nonce = randomNonceString()
         currentNonce = nonce
 
@@ -213,12 +221,22 @@ final class FirebaseAuthService: NSObject {
 extension FirebaseAuthService: ASAuthorizationControllerPresentationContextProviding {
 
     nonisolated func presentationAnchor(for controller: ASAuthorizationController) -> ASPresentationAnchor {
-        // Return the key window for the Sign in with Apple sheet to present in
-        guard let scene = UIApplication.shared.connectedScenes.first(where: { $0.activationState == .foregroundActive }) as? UIWindowScene,
-              let window = scene.windows.first(where: { $0.isKeyWindow }) else {
+        MainActor.assumeIsolated {
+            // Try the key window of the foreground-active scene first
+            if let scene = UIApplication.shared.connectedScenes
+                .first(where: { $0.activationState == .foregroundActive }) as? UIWindowScene,
+               let window = scene.windows.first(where: { $0.isKeyWindow }) {
+                return window
+            }
+            // Fallback: any visible window from any connected scene
+            for scene in UIApplication.shared.connectedScenes {
+                if let windowScene = scene as? UIWindowScene,
+                   let window = windowScene.windows.first(where: { $0.isKeyWindow }) ?? windowScene.windows.first {
+                    return window
+                }
+            }
             return UIWindow()
         }
-        return window
     }
 }
 

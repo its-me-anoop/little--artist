@@ -6,8 +6,10 @@
 //  data management, and about information.
 //
 
-import SwiftUI
+import AuthenticationServices
+import os
 import SwiftData
+import SwiftUI
 
 struct SettingsView: View {
     @Environment(\.modelContext) private var modelContext
@@ -226,9 +228,12 @@ struct SettingsView: View {
                                             // Upload existing local data
                                             await FirestoreRepository.shared.uploadAllLocalData(from: modelContext)
                                             showSyncEnabledConfirmation = true
+                                        } catch let error as ASAuthorizationError where error.code == .canceled {
+                                            // User tapped Cancel — silently revert toggle, no alert
+                                            firebaseSyncEnabled = false
                                         } catch {
                                             firebaseSyncEnabled = false
-                                            syncError = "Sign in with Apple failed. Please try again."
+                                            syncError = error.localizedDescription
                                         }
                                     }
                                 } else {

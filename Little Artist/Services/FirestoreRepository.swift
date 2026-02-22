@@ -44,6 +44,10 @@ final class FirestoreRepository {
     /// Used by `FirestoreSyncService` to skip echo writes from snapshot listeners.
     private(set) var localWriteIds: Set<String> = []
 
+    /// `true` while `uploadAllLocalData` is running. Used to prevent
+    /// `shareChild` from racing with the bulk upload.
+    private(set) var isUploadingAll = false
+
     /// Whether Firestore sync is active (premium + signed in + enabled).
     var isSyncActive: Bool {
         PremiumManager.isPremium
@@ -96,6 +100,7 @@ final class FirestoreRepository {
         }
 
         modelContext.insert(child)
+        try? modelContext.save()
 
         // Async Firestore sync using the pre-generated document reference
         if let childRef = preGeneratedRef, let userId = auth.userId {
@@ -313,10 +318,14 @@ final class FirestoreRepository {
     /// One-time upload of all local data to Firestore when user first enables sync.
     func uploadAllLocalData(from modelContext: ModelContext) async {
         guard let userId = auth.userId else { return }
+        isUploadingAll = true
         logger.info("Starting full local → Firestore upload for \(userId, privacy: .public)")
 
         let descriptor = FetchDescriptor<Child>(sortBy: [SortDescriptor(\.createdAt)])
-        guard let children = try? modelContext.fetch(descriptor) else { return }
+        guard let children = try? modelContext.fetch(descriptor) else {
+            isUploadingAll = false
+            return
+        }
 
         for child in children where child.firestoreId == nil {
             await syncChildToFirestore(child, userId: userId, avatarImageData: child.avatarImageData)
@@ -335,6 +344,7 @@ final class FirestoreRepository {
             }
         }
 
+        isUploadingAll = false
         logger.info("Full upload complete")
     }
 
@@ -344,6 +354,11 @@ final class FirestoreRepository {
     func shareChild(_ child: Child) async throws -> String {
         guard let userId = auth.userId else {
             throw FirestoreError.notAuthenticated
+        }
+
+        // Wait for any in-progress bulk upload to finish so firestoreId is populated
+        while isUploadingAll {
+            try await Task.sleep(for: .milliseconds(200))
         }
 
         // Ensure child is synced to Firestore first
@@ -503,6 +518,21 @@ final class FirestoreRepository {
                 child.firestoreId = firestoreId
             }
             localWriteIds.insert(childDocId)
+
+            // Explicitly save so firestoreId persists even if the app is killed
+            // before SwiftData auto-saves. Prevents nil firestoreId on cold restart.
+            if let container = modelContainer {
+                let saveContext = ModelContext(container)
+                let fid = child.firestoreId
+                var desc = FetchDescriptor<Child>(
+                    predicate: #Predicate<Child> { $0.firestoreId == fid }
+                )
+                desc.fetchLimit = 1
+                if let _ = try? saveContext.fetch(desc).first {
+                    try? saveContext.save()
+                }
+            }
+
             logger.info("Child synced: \(childRef.path, privacy: .public)")
         } catch {
             logger.error("Child sync failed: \(error.localizedDescription, privacy: .public)")
@@ -625,6 +655,21 @@ final class FirestoreRepository {
             artwork.imageURL = imageURL
             artwork.voiceNoteURL = voiceNoteURL
             localWriteIds.insert(artworkDocId)
+
+            // Explicitly save so firestoreId persists even if the app is killed
+            // before SwiftData auto-saves.
+            if let container = modelContainer {
+                let saveContext = ModelContext(container)
+                let fid = artwork.firestoreId
+                var desc = FetchDescriptor<Artwork>(
+                    predicate: #Predicate<Artwork> { $0.firestoreId == fid }
+                )
+                desc.fetchLimit = 1
+                if let _ = try? saveContext.fetch(desc).first {
+                    try? saveContext.save()
+                }
+            }
+
             logger.info("Artwork synced: \(artworkRef.path, privacy: .public)")
         } catch {
             logger.error("Artwork sync failed: \(error.localizedDescription, privacy: .public)")
