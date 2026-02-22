@@ -400,7 +400,7 @@ struct ArtworkDetailView: View {
         }
     }
 
-    /// Whether AI suggestions can be used (requires device support for FoundationModels).
+    /// Whether AI suggestions can be used (cloud or on-device).
     private var aiSuggestionsEnabled: Bool {
         AISuggestionService.isAvailable
     }
@@ -416,33 +416,24 @@ struct ArtworkDetailView: View {
         let childName = artwork.child?.name ?? "the child"
 
         Task {
-            if #available(iOS 26.0, *), AISuggestionService.isAvailable {
-                do {
-                    let suggestions = try await AISuggestionService.improveSuggestions(
-                        imageData: artwork.imageData,
-                        existingTitle: currentTitle,
-                        existingCaption: currentCaption,
-                        childName: childName
-                    )
+            do {
+                let suggestions = try await AISuggestionService.improveSuggestions(
+                    imageData: artwork.imageData,
+                    existingTitle: currentTitle,
+                    existingCaption: currentCaption,
+                    childName: childName
+                )
 
-                    await MainActor.run {
-                        editTitle = suggestions.title
-                        editCaption = suggestions.caption
-                        isGeneratingSuggestions = false
-                    }
-                    return
-                } catch {
-                    await MainActor.run {
-                        suggestionErrorMessage = "Suggestions unavailable right now."
-                        isGeneratingSuggestions = false
-                    }
-                    return
+                await MainActor.run {
+                    editTitle = suggestions.title
+                    editCaption = suggestions.caption
+                    isGeneratingSuggestions = false
                 }
-            }
-
-            await MainActor.run {
-                suggestionErrorMessage = "On-device AI is only available on supported devices."
-                isGeneratingSuggestions = false
+            } catch {
+                await MainActor.run {
+                    suggestionErrorMessage = "Suggestions unavailable right now."
+                    isGeneratingSuggestions = false
+                }
             }
         }
     }

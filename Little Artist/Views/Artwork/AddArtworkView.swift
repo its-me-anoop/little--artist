@@ -440,7 +440,7 @@ struct AddArtworkView: View {
         dismiss()
     }
 
-    /// Whether AI suggestions can be used (requires device support for FoundationModels).
+    /// Whether AI suggestions can be used (cloud or on-device).
     private var aiSuggestionsEnabled: Bool {
         AISuggestionService.isAvailable
     }
@@ -452,34 +452,25 @@ struct AddArtworkView: View {
         isGeneratingSuggestions = true
 
         Task {
-            if #available(iOS 26.0, *), AISuggestionService.isAvailable {
-                do {
-                    let suggestions = try await AISuggestionService.generateSuggestions(
-                        imageData: capturedImageData,
-                        childName: child.name
-                    )
-                    await MainActor.run {
-                        if title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                            title = suggestions.title
-                        }
-                        if caption.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                            caption = suggestions.caption
-                        }
-                        isGeneratingSuggestions = false
+            do {
+                let suggestions = try await AISuggestionService.generateSuggestions(
+                    imageData: capturedImageData,
+                    childName: child.name
+                )
+                await MainActor.run {
+                    if title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                        title = suggestions.title
                     }
-                    return
-                } catch {
-                    await MainActor.run {
-                        suggestionErrorMessage = "Suggestions unavailable right now."
-                        isGeneratingSuggestions = false
+                    if caption.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                        caption = suggestions.caption
                     }
-                    return
+                    isGeneratingSuggestions = false
                 }
-            }
-
-            await MainActor.run {
-                suggestionErrorMessage = "AI suggestions are only available on supported devices."
-                isGeneratingSuggestions = false
+            } catch {
+                await MainActor.run {
+                    suggestionErrorMessage = "Suggestions unavailable right now."
+                    isGeneratingSuggestions = false
+                }
             }
         }
     }
