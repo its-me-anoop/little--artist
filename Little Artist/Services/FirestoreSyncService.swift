@@ -3,7 +3,7 @@
 //  Little Artist
 //
 //  Manages Firestore snapshot listeners that pull remote changes
-//  into SwiftData. Replaces CloudKitSharingService's sync engine.
+//  into SwiftData.
 //
 //  Architecture:
 //  - Listens to users/{uid}/children collection for child changes
@@ -20,8 +20,7 @@ import SwiftData
 /// Listens to Firestore snapshot changes and reconciles them into SwiftData.
 ///
 /// This is the read path of the Firebase sync — the counterpart to
-/// ``FirestoreRepository`` which handles writes. Together they replace
-/// the old `CloudKitSharingService`.
+/// ``FirestoreRepository`` which handles writes.
 @MainActor
 @Observable
 final class FirestoreSyncService {

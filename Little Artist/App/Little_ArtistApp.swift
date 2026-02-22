@@ -47,7 +47,7 @@ struct Little_ArtistApp: App {
         let syncEnabled = UserDefaults.standard.bool(forKey: "firebaseSyncEnabled")
 
         // SwiftData uses local-only storage. Firebase handles cloud sync
-        // through FirestoreSyncService (replaces the old CloudKit dual-stack).
+        // through FirestoreSyncService.
         let storeURL = appSupport.appendingPathComponent("default.store")
         let modelConfiguration = ModelConfiguration(
             schema: schema,

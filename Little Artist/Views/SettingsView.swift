@@ -212,7 +212,7 @@ struct SettingsView: View {
                     // Firebase Sync toggle (premium only)
                     if store.isPremium {
                         Toggle(isOn: $firebaseSyncEnabled) {
-                            Label("Cloud Sync", systemImage: "arrow.triangle.2.circlepath.icloud.fill")
+                            Label("Cloud Sync", systemImage: "arrow.triangle.2.circlepath.cloud.fill")
                         }
                         .tint(Brand.primary)
                         .onChange(of: firebaseSyncEnabled) { _, enabled in
@@ -244,7 +244,7 @@ struct SettingsView: View {
                             paywallReason = .artworks
                         } label: {
                             HStack {
-                                Label("Cloud Sync", systemImage: "arrow.triangle.2.circlepath.icloud.fill")
+                                Label("Cloud Sync", systemImage: "arrow.triangle.2.circlepath.cloud.fill")
                                     .foregroundStyle(Brand.disabled)
                                 Spacer()
                                 Text("Premium")
