@@ -24,6 +24,21 @@ struct AISuggestion: Decodable {
     let caption: String
 }
 
+// MARK: - Artwork Validation Result
+
+/// Result of validating whether an image is children's artwork.
+struct ArtworkValidationResult {
+    /// Whether the image appears to be children's artwork or a creative piece.
+    let isArtwork: Bool
+    /// Whether the image content is appropriate for a children's app.
+    let isAppropriate: Bool
+    /// A user-facing message explaining why the image was flagged.
+    let message: String?
+
+    /// Image passed all checks.
+    static let valid = ArtworkValidationResult(isArtwork: true, isAppropriate: true, message: nil)
+}
+
 // MARK: - AI Suggestion Service
 
 /// Centralised service for generating AI-powered artwork suggestions.
@@ -79,6 +94,161 @@ enum AISuggestionService {
         - Caption: One warm sentence (max 15 words) celebrating what the child created.
         Return ONLY valid JSON: {"title":"...","caption":"..."}
         """
+
+    // MARK: - Image Validation
+
+    /// Validates whether an image is children's artwork.
+    ///
+    /// Tries Gemini (cloud) first for accurate multimodal classification,
+    /// then falls back to on-device Vision classification heuristics.
+    /// Returns a result indicating whether the image is artwork and appropriate.
+    static func validateArtwork(imageData: Data) async -> ArtworkValidationResult {
+        // Try cloud-based Gemini first
+        do {
+            return try await validateWithGemini(imageData: imageData)
+        } catch {
+            // Fall back to on-device Vision classification
+            return validateOnDevice(imageData: imageData)
+        }
+    }
+
+    /// Validates an image using Gemini multimodal analysis.
+    private static func validateWithGemini(imageData: Data) async throws -> ArtworkValidationResult {
+        guard let image = UIImage(data: imageData) else {
+            throw AISuggestionError.invalidImage
+        }
+
+        let prompt = """
+        You are a content classifier for a children's artwork archiving app.
+        Analyse this image and classify it. Return ONLY valid JSON with these fields:
+        - "is_artwork": true if this is children's artwork, a drawing, painting, craft, \
+        collage, sketch, colouring page, or any creative piece made by a child. \
+        Photos OF artwork (e.g. a painting hanging on a wall or lying on a table) also count as true. \
+        false if this is a regular photograph, screenshot, meme, or unrelated image.
+        - "is_appropriate": true if the content is appropriate for a family/children's app. \
+        false if it contains nudity, violence, gore, drugs, weapons, or other adult content.
+        - "reason": a short (max 12 words) description of what the image shows \
+        (e.g. "A photograph of a child", "A crayon drawing of a house", "An inappropriate image").
+
+        Return ONLY: {"is_artwork":bool,"is_appropriate":bool,"reason":"..."}
+        """
+
+        let response = try await geminiModel.generateContent(image, prompt)
+
+        guard let text = response.text else {
+            throw AISuggestionError.emptyResponse
+        }
+
+        return parseValidationResult(from: text)
+    }
+
+    /// Validates an image using on-device Vision classification heuristics.
+    private static func validateOnDevice(imageData: Data) -> ArtworkValidationResult {
+        guard let image = UIImage(data: imageData), let cgImage = image.cgImage else {
+            return .valid // Can't analyse — allow through
+        }
+
+        // Run Vision classification
+        let classifyRequest = VNClassifyImageRequest()
+        let handler = VNImageRequestHandler(cgImage: cgImage)
+        do {
+            try handler.perform([classifyRequest])
+        } catch {
+            return .valid // Classification failed — allow through
+        }
+
+        let results = classifyRequest.results ?? []
+        let labelMap = Dictionary(uniqueKeysWithValues: results.map { ($0.identifier, $0.confidence) })
+
+        // Check for photos of people (not artwork)
+        let personScore = labelMap["person"] ?? 0
+        let faceScore = labelMap["face"] ?? 0
+        let portraitScore = labelMap["portrait"] ?? 0
+        let selfieScore = labelMap["selfie"] ?? 0
+        let peopleTotalScore = max(personScore, faceScore, portraitScore, selfieScore)
+
+        // Check for artwork-like signals
+        let drawingScore = labelMap["drawing"] ?? 0
+        let paintingScore = labelMap["painting"] ?? 0
+        let artScore = labelMap["art"] ?? 0
+        let sketchScore = labelMap["sketch"] ?? 0
+        let crayonScore = labelMap["crayon"] ?? 0
+        let artworkTotalScore = max(drawingScore, paintingScore, artScore, sketchScore, crayonScore)
+
+        // If strong person signal and weak artwork signal, it's probably a photo of someone
+        if peopleTotalScore > 0.6 && artworkTotalScore < 0.3 {
+            return ArtworkValidationResult(
+                isArtwork: false,
+                isAppropriate: true,
+                message: "This looks like a photo of a person rather than artwork."
+            )
+        }
+
+        // Check for screenshots / UI
+        let screenshotScore = labelMap["screenshot"] ?? 0
+        let webScore = labelMap["web_page"] ?? 0
+        if max(screenshotScore, webScore) > 0.6 && artworkTotalScore < 0.2 {
+            return ArtworkValidationResult(
+                isArtwork: false,
+                isAppropriate: true,
+                message: "This looks like a screenshot rather than artwork."
+            )
+        }
+
+        // Check for nature/landscape photos (not artwork)
+        let landscapeScore = labelMap["landscape"] ?? 0
+        let outdoorScore = labelMap["outdoor"] ?? 0
+        let buildingScore = labelMap["building"] ?? 0
+        let photoScore = max(landscapeScore, outdoorScore, buildingScore)
+        if photoScore > 0.7 && artworkTotalScore < 0.2 {
+            return ArtworkValidationResult(
+                isArtwork: false,
+                isAppropriate: true,
+                message: "This looks like a photograph rather than artwork."
+            )
+        }
+
+        return .valid
+    }
+
+    /// Parses a validation result from Gemini's JSON response.
+    private static func parseValidationResult(from content: String) -> ArtworkValidationResult {
+        guard let jsonRange = content.range(of: #"\{[\s\S]*\}"#, options: .regularExpression) else {
+            return .valid // Can't parse — allow through
+        }
+
+        let jsonString = String(content[jsonRange])
+        guard let data = jsonString.data(using: .utf8) else {
+            return .valid
+        }
+
+        struct ValidationResponse: Decodable {
+            let is_artwork: Bool
+            let is_appropriate: Bool
+            let reason: String
+        }
+
+        guard let decoded = try? JSONDecoder().decode(ValidationResponse.self, from: data) else {
+            return .valid
+        }
+
+        if decoded.is_artwork && decoded.is_appropriate {
+            return .valid
+        }
+
+        var message: String
+        if !decoded.is_appropriate {
+            message = "This image doesn't appear appropriate for a children's app."
+        } else {
+            message = "This doesn't look like artwork. \(decoded.reason.prefix(60))"
+        }
+
+        return ArtworkValidationResult(
+            isArtwork: decoded.is_artwork,
+            isAppropriate: decoded.is_appropriate,
+            message: message
+        )
+    }
 
     // MARK: - Suggestion Generation
 

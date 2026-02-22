@@ -35,6 +35,9 @@ struct AddArtworkView: View {
     @State private var isGeneratingSuggestions = false
     @State private var suggestionErrorMessage: String?
     @State private var selectedTags: [Tag] = []
+    @State private var validationResult: ArtworkValidationResult?
+    @State private var isValidatingImage = false
+    @State private var validationDismissed = false
 
     // MARK: - Extracted Subviews
 
@@ -172,6 +175,13 @@ struct AddArtworkView: View {
         }
     }
 
+    /// Whether saving is blocked (no image or inappropriate content).
+    private var isSaveDisabled: Bool {
+        capturedImageData == nil
+        || isValidatingImage
+        || validationResult?.isAppropriate == false
+    }
+
     private var saveButton: some View {
         Button {
             saveArtwork()
@@ -181,10 +191,10 @@ struct AddArtworkView: View {
                 .foregroundStyle(.white)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 18)
-                .background(capturedImageData == nil ? Brand.disabled : Brand.primary)
+                .background(isSaveDisabled ? Brand.disabled : Brand.primary)
                 .clipShape(Capsule())
         }
-        .disabled(capturedImageData == nil)
+        .disabled(isSaveDisabled)
         .padding(.horizontal, 32)
         .padding(.top, 12)
         .padding(.bottom, 16)
@@ -206,6 +216,7 @@ struct AddArtworkView: View {
                             HStack(alignment: .top, spacing: 32) {
                                 VStack(spacing: 24) {
                                     imagePreview
+                                    validationWarningBanner
                                     captureSourceButtons
                                 }
                                 .frame(maxWidth: .infinity)
@@ -219,6 +230,8 @@ struct AddArtworkView: View {
                             imagePreview
                                 .frame(maxWidth: .infinity, alignment: .center)
                                 .padding(.top, 4)
+
+                            validationWarningBanner
 
                             captureSourceButtons
 
@@ -277,6 +290,13 @@ struct AddArtworkView: View {
                     batchPickerItems = []
                     isBatchImporting = false
                     dismiss()
+                }
+            }
+            .onChange(of: capturedImageData) { _, newData in
+                validationResult = nil
+                validationDismissed = false
+                if let newData {
+                    validateCapturedImage(newData)
                 }
             }
             .overlay {
@@ -438,6 +458,101 @@ struct AddArtworkView: View {
             in: modelContext
         )
         dismiss()
+    }
+
+    // MARK: - Validation Warning Banner
+
+    @ViewBuilder
+    private var validationWarningBanner: some View {
+        if isValidatingImage {
+            HStack(spacing: 10) {
+                ProgressView()
+                    .controlSize(.small)
+                Text("Checking image...")
+                    .font(Brand.captionFont)
+                    .foregroundStyle(Brand.warmGray)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 10)
+            .padding(.horizontal, 16)
+            .background(
+                RoundedRectangle(cornerRadius: Brand.radiusField)
+                    .fill(Brand.surface)
+            )
+            .padding(.horizontal, 32)
+        } else if let result = validationResult, result.message != nil, !validationDismissed {
+            let isBlocked = !result.isAppropriate
+
+            HStack(spacing: 10) {
+                Image(systemName: isBlocked ? "exclamationmark.octagon.fill" : "exclamationmark.triangle.fill")
+                    .font(.body)
+                    .foregroundStyle(isBlocked ? Brand.dustyRose : .orange)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(isBlocked ? "Image not allowed" : "Doesn't look like artwork")
+                        .font(Brand.captionFont.weight(.semibold))
+                        .foregroundStyle(Brand.charcoal)
+
+                    Text(result.message ?? "")
+                        .font(Brand.caption2Font)
+                        .foregroundStyle(Brand.warmGray)
+                        .lineLimit(2)
+                }
+
+                Spacer(minLength: 0)
+
+                if !isBlocked {
+                    Button {
+                        validationDismissed = true
+                    } label: {
+                        Image(systemName: "xmark")
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(Brand.warmGray)
+                            .padding(6)
+                    }
+                } else {
+                    Button {
+                        capturedImageData = nil
+                        capturedThumbnailData = nil
+                    } label: {
+                        Text("Remove")
+                            .font(Brand.caption2Font.weight(.semibold))
+                            .foregroundStyle(Brand.dustyRose)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 5)
+                            .background(
+                                Capsule()
+                                    .strokeBorder(Brand.dustyRose, lineWidth: 1)
+                            )
+                    }
+                }
+            }
+            .padding(.vertical, 10)
+            .padding(.horizontal, 14)
+            .background(
+                RoundedRectangle(cornerRadius: Brand.radiusField)
+                    .fill(isBlocked ? Brand.dustyRose.opacity(0.08) : Color.orange.opacity(0.08))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: Brand.radiusField)
+                            .strokeBorder(isBlocked ? Brand.dustyRose.opacity(0.3) : Color.orange.opacity(0.3), lineWidth: 1)
+                    )
+            )
+            .padding(.horizontal, 32)
+        }
+    }
+
+    // MARK: - Image Validation
+
+    /// Validates a captured image to check if it looks like children's artwork.
+    private func validateCapturedImage(_ imageData: Data) {
+        isValidatingImage = true
+        Task {
+            let result = await AISuggestionService.validateArtwork(imageData: imageData)
+            await MainActor.run {
+                validationResult = result
+                isValidatingImage = false
+            }
+        }
     }
 
     /// Whether AI suggestions can be used (cloud or on-device).
