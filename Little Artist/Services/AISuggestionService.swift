@@ -7,7 +7,7 @@
 //  with on-device Apple FoundationModels as a fallback.
 //
 
-import FirebaseVertexAI
+import FirebaseAI
 import Foundation
 import UIKit
 import Vision
@@ -71,7 +71,7 @@ enum AISuggestionService {
 
     /// Lazy-initialised Gemini model via Firebase Vertex AI.
     private static let geminiModel: GenerativeModel = {
-        VertexAI.vertexAI().generativeModel(modelName: "gemini-2.0-flash")
+        FirebaseAI.firebaseAI(backend: .googleAI()).generativeModel(modelName: "gemini-2.0-flash")
     }()
 
     // MARK: - System Prompts
