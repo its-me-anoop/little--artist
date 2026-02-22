@@ -54,8 +54,13 @@ final class FirestoreSyncService {
 
     /// Active snapshot listener registrations.
     private var childrenListener: ListenerRegistration?
+    private var sharesListener: ListenerRegistration?
     private var artworkListeners: [String: ListenerRegistration] = [:]
     private var sharedChildrenListeners: [String: ListenerRegistration] = [:]
+
+    /// Maps share document IDs to their associated childFirestoreId.
+    /// Used to clean up local data when a share is revoked.
+    private var activeShareChildMap: [String: String] = [:]
 
     private init() {}
 
@@ -81,6 +86,9 @@ final class FirestoreSyncService {
         childrenListener?.remove()
         childrenListener = nil
 
+        sharesListener?.remove()
+        sharesListener = nil
+
         for (_, listener) in artworkListeners {
             listener.remove()
         }
@@ -90,6 +98,8 @@ final class FirestoreSyncService {
             listener.remove()
         }
         sharedChildrenListeners.removeAll()
+
+        activeShareChildMap.removeAll()
 
         isListening = false
         diag("Sync stopped")
@@ -200,7 +210,7 @@ final class FirestoreSyncService {
         let sharesRef = db.collection("shares")
             .whereField("status", isEqualTo: "active")
 
-        sharesRef.addSnapshotListener { [weak self] snapshot, error in
+        sharesListener = sharesRef.addSnapshotListener { [weak self] snapshot, error in
             guard let self else { return }
             Task { @MainActor in
                 if let error {
@@ -210,22 +220,29 @@ final class FirestoreSyncService {
 
                 guard let snapshot else { return }
 
-                for doc in snapshot.documents {
-                    let shareId = doc.documentID
-                    let data = doc.data()
+                for change in snapshot.documentChanges {
+                    let shareId = change.document.documentID
+                    let data = change.document.data()
                     let ownerUserId = data["ownerUserId"] as? String ?? ""
                     let childId = data["childId"] as? String ?? ""
 
                     // Skip shares we own
                     if ownerUserId == userId { continue }
 
-                    // Check if we're a participant
-                    await self.checkAndListenToSharedChild(
-                        shareId: shareId,
-                        ownerUserId: ownerUserId,
-                        childId: childId,
-                        currentUserId: userId
-                    )
+                    switch change.type {
+                    case .added, .modified:
+                        // Check if we're a participant and start listening
+                        await self.checkAndListenToSharedChild(
+                            shareId: shareId,
+                            ownerUserId: ownerUserId,
+                            childId: childId,
+                            currentUserId: userId
+                        )
+                    case .removed:
+                        // Share was revoked or deleted — clean up local data
+                        let childFirestoreId = "users/\(ownerUserId)/children/\(childId)"
+                        self.removeSharedChild(childFirestoreId: childFirestoreId, shareId: shareId)
+                    }
                 }
             }
         }
@@ -268,6 +285,9 @@ final class FirestoreSyncService {
             }
             sharedChildrenListeners[childFirestoreId] = childListener
 
+            // Track which share maps to which child (for revocation cleanup)
+            activeShareChildMap[shareId] = childFirestoreId
+
             // Listen to shared child's artworks
             listenToArtworks(userId: ownerUserId, childDocId: childId, firestoreId: childFirestoreId)
 
@@ -275,6 +295,29 @@ final class FirestoreSyncService {
         } catch {
             diag("Failed to check share participation: \(error.localizedDescription)")
         }
+    }
+
+    // MARK: - Shared Child Cleanup
+
+    /// Removes a shared child from local SwiftData and detaches all associated listeners.
+    ///
+    /// Called when a share is revoked by the owner or the share document is deleted.
+    private func removeSharedChild(childFirestoreId: String, shareId: String) {
+        // 1. Detach the shared child document listener
+        sharedChildrenListeners[childFirestoreId]?.remove()
+        sharedChildrenListeners.removeValue(forKey: childFirestoreId)
+
+        // 2. Detach the shared child's artwork listener
+        artworkListeners[childFirestoreId]?.remove()
+        artworkListeners.removeValue(forKey: childFirestoreId)
+
+        // 3. Remove the share→child mapping
+        activeShareChildMap.removeValue(forKey: shareId)
+
+        // 4. Delete the shared child (and cascade-delete artworks) from SwiftData
+        removeChild(firestoreId: childFirestoreId)
+
+        diag("Revoked share cleaned up: \(childFirestoreId)")
     }
 
     // MARK: - SwiftData Reconciliation
