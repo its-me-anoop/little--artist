@@ -48,7 +48,6 @@ final class Artwork {
     var tags: [Tag]?
 
     /// Legacy sync identifier (deprecated — use `firestoreId` instead).
-    /// Was the CloudKit record name for shared artworks, or a UUID.
     /// - Note: Deprecated in V7; replaced by ``firestoreId``. Kept for migration.
     var syncIdentifier: String?
 

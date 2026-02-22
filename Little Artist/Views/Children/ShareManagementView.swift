@@ -11,8 +11,7 @@ import SwiftData
 
 /// A sharing management view that shows participants from Firestore.
 ///
-/// Replaces the old CloudKit-based `UICloudSharingController` wrapper with
-/// a branded experience powered by ``FirestoreRepository``.
+/// A branded sharing experience powered by ``FirestoreRepository``.
 struct ShareManagementView: View {
     let child: Child
     let shareId: String

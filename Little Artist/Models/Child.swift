@@ -31,7 +31,7 @@ final class Child {
     @Attribute(.externalStorage)
     var avatarImageData: Data?
 
-    /// Legacy CloudKit record name (deprecated — use `firestoreId` instead).
+    /// Legacy sync record name (deprecated — use `firestoreId` instead).
     /// `nil` for locally created children; set for mirrored shared children.
     /// - Note: Deprecated in V7; replaced by ``firestoreId``. Kept for migration.
     var sharedRecordName: String?
