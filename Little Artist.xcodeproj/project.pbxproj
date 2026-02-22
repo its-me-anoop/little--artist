@@ -10,6 +10,7 @@
 		6BBED5332F4A699700176D19 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 6BBED5322F4A699700176D19 /* FirebaseAuth */; };
 		6BBED5352F4A699700176D19 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 6BBED5342F4A699700176D19 /* FirebaseFirestore */; };
 		6BBED5372F4A699700176D19 /* FirebaseStorage in Frameworks */ = {isa = PBXBuildFile; productRef = 6BBED5362F4A699700176D19 /* FirebaseStorage */; };
+		6BBED5392F4A699700176D19 /* FirebaseVertexAI in Frameworks */ = {isa = PBXBuildFile; productRef = 6BBED5382F4A699700176D19 /* FirebaseVertexAI */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -74,6 +75,7 @@
 				6BBED5332F4A699700176D19 /* FirebaseAuth in Frameworks */,
 				6BBED5352F4A699700176D19 /* FirebaseFirestore in Frameworks */,
 				6BBED5372F4A699700176D19 /* FirebaseStorage in Frameworks */,
+				6BBED5392F4A699700176D19 /* FirebaseVertexAI in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -137,6 +139,7 @@
 				6BBED5322F4A699700176D19 /* FirebaseAuth */,
 				6BBED5342F4A699700176D19 /* FirebaseFirestore */,
 				6BBED5362F4A699700176D19 /* FirebaseStorage */,
+				6BBED5382F4A699700176D19 /* FirebaseVertexAI */,
 			);
 			productName = "Little Artist";
 			productReference = 6B5FAE012F3FD7E1006B1D0D /* Little Artist.app */;
@@ -647,6 +650,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 6BBED5312F4A699700176D19 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
 			productName = FirebaseStorage;
+		};
+		6BBED5382F4A699700176D19 /* FirebaseVertexAI */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 6BBED5312F4A699700176D19 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseVertexAI;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
