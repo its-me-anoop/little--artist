@@ -20,13 +20,10 @@ struct NoChildrenView: View {
         VStack(spacing: 16) {
             Spacer()
 
-            Image("crayon_child")
-                .renderingMode(.original)
+            Image("LaunchFox")
                 .resizable()
                 .scaledToFit()
-                .frame(width: 80, height: 80)
-                .crayonStyle()
-                .padding(.bottom, 8)
+                .frame(width: 120, height: 120)
 
             Text("Add your first little artist")
                 .font(Brand.title2Font.bold())
