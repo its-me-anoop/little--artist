@@ -75,6 +75,10 @@ final class FirestoreSyncService {
     /// Used to clean up local data when a share is revoked.
     private var activeShareChildMap: [String: String] = [:]
 
+    /// Tracks whether the initial children snapshot has been processed,
+    /// so we can run a one-time dedup pass afterwards.
+    private var hasProcessedInitialChildrenSnapshot = false
+
     private init() {}
 
     // MARK: - Lifecycle
@@ -117,6 +121,7 @@ final class FirestoreSyncService {
         sharedChildrenListeners.removeAll()
 
         activeShareChildMap.removeAll()
+        hasProcessedInitialChildrenSnapshot = false
 
         isListening = false
         diag("Sync stopped")
@@ -203,6 +208,12 @@ final class FirestoreSyncService {
                     if self.artworkListeners[firestoreId] == nil {
                         self.listenToArtworks(userId: userId, childDocId: childDocId, firestoreId: firestoreId)
                     }
+                }
+
+                // Run one-time dedup pass after initial snapshot
+                if !self.hasProcessedInitialChildrenSnapshot {
+                    self.hasProcessedInitialChildrenSnapshot = true
+                    self.deduplicateChildren()
                 }
 
                 self.lastSyncDate = Date()
@@ -407,21 +418,21 @@ final class FirestoreSyncService {
 
         var existing = try? context.fetch(descriptor).first
 
-        // Dedup safety net: if no match by firestoreId, also check by
-        // name + approximate createdAt (±2s) to catch orphaned records
+        // Dedup safety net: if no match by firestoreId, check for a truly
+        // orphaned local child (firestoreId == nil) with the same name.
+        // IMPORTANT: Only adopt children with NO firestoreId — otherwise
+        // when two Firestore docs share the same name, the second doc
+        // would steal the local child from the first doc.
         if existing == nil {
-            let lowerBound = createdAt.addingTimeInterval(-2)
-            let upperBound = createdAt.addingTimeInterval(2)
             var dedupDescriptor = FetchDescriptor<Child>(
                 predicate: #Predicate<Child> {
                     $0.name == name
-                    && $0.createdAt >= lowerBound
-                    && $0.createdAt <= upperBound
+                    && $0.firestoreId == nil
                 }
             )
             dedupDescriptor.fetchLimit = 1
             if let match = try? context.fetch(dedupDescriptor).first {
-                // Adopt this record — assign the firestoreId so future upserts match
+                // Adopt this truly orphaned record
                 match.firestoreId = firestoreId
                 existing = match
                 diag("Dedup: adopted orphaned child \(name) → \(firestoreId)")
@@ -587,6 +598,69 @@ final class FirestoreSyncService {
             context.delete(artwork)
             try? context.save()
             diag("Removed artwork: \(firestoreId)")
+        }
+    }
+
+    // MARK: - Deduplication
+
+    /// Scans local children for duplicates (same name) and merges them.
+    /// Keeps the child with the most artworks, reassigns orphaned artworks,
+    /// and deletes the redundant Firestore document.
+    private func deduplicateChildren() {
+        guard let context = syncContext else { return }
+        let allChildren = (try? context.fetch(FetchDescriptor<Child>())) ?? []
+
+        // Group by name (case-insensitive, trimmed)
+        var groups: [String: [Child]] = [:]
+        for child in allChildren {
+            let key = child.name.lowercased().trimmingCharacters(in: .whitespaces)
+            groups[key, default: []].append(child)
+        }
+
+        var didMerge = false
+
+        for (_, children) in groups where children.count > 1 {
+            // Keep the child with the most artworks; tie-break by earliest creation
+            let sorted = children.sorted { a, b in
+                let aCount = a.artworks?.count ?? 0
+                let bCount = b.artworks?.count ?? 0
+                if aCount != bCount { return aCount > bCount }
+                return a.createdAt < b.createdAt
+            }
+
+            let keeper = sorted[0]
+            let duplicates = sorted.dropFirst()
+
+            for dup in duplicates {
+                // Reassign any artworks from duplicate to keeper
+                for artwork in dup.artworks ?? [] {
+                    artwork.child = keeper
+                }
+
+                // Delete the duplicate Firestore document
+                if let firestoreId = dup.firestoreId, let userId = auth.userId {
+                    Task {
+                        await repository.deleteOrphanedFirestoreChild(
+                            firestoreId: firestoreId, userId: userId
+                        )
+                    }
+                }
+
+                // Remove artwork listener for this child
+                if let fid = dup.firestoreId {
+                    artworkListeners[fid]?.remove()
+                    artworkListeners.removeValue(forKey: fid)
+                }
+
+                // Delete local duplicate
+                context.delete(dup)
+                diag("Dedup: merged duplicate '\(dup.name)' into keeper")
+                didMerge = true
+            }
+        }
+
+        if didMerge {
+            try? context.save()
         }
     }
 

@@ -70,13 +70,15 @@ struct Little_ArtistApp: App {
             FirestoreRepository.shared.modelContainer = container
 
             // Always-on Firebase sync (starts once auth user is available).
+            // Upload first to assign firestoreIds + populate localWriteIds,
+            // THEN start the listener so echo writes are properly suppressed.
             Task { @MainActor in
                 while FirebaseAuthService.shared.userId == nil {
                     try? await Task.sleep(for: .milliseconds(200))
                 }
-                FirestoreSyncService.shared.start()
                 let uploadContext = ModelContext(container)
                 await FirestoreRepository.shared.uploadAllLocalData(from: uploadContext)
+                FirestoreSyncService.shared.start()
                 await FirestoreRepository.shared.syncUserPreferencesToFirestore()
             }
 

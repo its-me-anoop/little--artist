@@ -25,7 +25,7 @@ struct HomeView: View {
 
     @AppStorage("hasSeenFirstArtworkUpsell") private var hasSeenUpsell = false
 
-    @State private var selectedChild: Child?
+    @State private var selectedChildID: PersistentIdentifier?
     @State private var selectedArtwork: Artwork?
     @State private var showAddChild = false
     @State private var showAddArtwork = false
@@ -33,6 +33,11 @@ struct HomeView: View {
     @State private var paywallReason: PaywallView.LimitReason?
     @State private var artworkCountBeforeSheet = 0
     @State private var showPremiumUpsell = false
+
+    private var selectedChild: Child? {
+        guard let selectedChildID else { return nil }
+        return children.first { $0.persistentModelID == selectedChildID }
+    }
 
     /// Artworks created on this day in previous years.
     private var memoriesArtworks: [(artwork: Artwork, yearsAgo: Int)] {
@@ -73,7 +78,7 @@ struct HomeView: View {
                         Button {
                             HapticService.selection()
                             withAnimation(.snappy) {
-                                selectedChild = nil
+                                selectedChildID = nil
                             }
                         } label: {
                             Text("All")
@@ -95,24 +100,25 @@ struct HomeView: View {
                         ForEach(children) { child in
                             ChildFilterChipView(
                                 child: child,
-                                isSelected: selectedChild?.persistentModelID == child.persistentModelID
+                                isSelected: selectedChildID == child.persistentModelID
                             ) {
                                 HapticService.selection()
                                 withAnimation(.snappy) {
-                                    if selectedChild?.persistentModelID == child.persistentModelID {
-                                        selectedChild = nil
+                                    if selectedChildID == child.persistentModelID {
+                                        selectedChildID = nil
                                     } else {
-                                        selectedChild = child
+                                        selectedChildID = child.persistentModelID
                                     }
                                 }
                             }
                             .overlay(alignment: .topTrailing) {
-                                if child.isShared || child.firestoreId != nil {
+                                if child.isShared {
                                     SharedBadgeView(
                                         participantCount: 0,
                                         isShared: child.isShared
                                     )
                                     .offset(x: 6, y: -6)
+                                    .allowsHitTesting(false)
                                 }
                             }
                         }
@@ -223,6 +229,7 @@ struct HomeView: View {
                         // Master pane
                         VStack(spacing: 0) {
                             masterHeader
+                                .zIndex(1)
 
                             if children.isEmpty {
                                 NoChildrenView(onAddChild: { showAddChild = true })
@@ -238,6 +245,7 @@ struct HomeView: View {
                                     },
                                     selectedArtworkID: selectedArtwork?.persistentModelID
                                 )
+                                .clipped()
                             }
                         }
                         .frame(maxWidth: .infinity)
@@ -264,6 +272,7 @@ struct HomeView: View {
                     // iPhone: single-column
                     VStack(spacing: 0) {
                         masterHeader
+                            .zIndex(1)
 
                         if children.isEmpty {
                             NoChildrenView(onAddChild: { showAddChild = true })
@@ -271,6 +280,7 @@ struct HomeView: View {
                             NoArtworkView()
                         } else {
                             ArtworkGalleryView(artworks: filteredArtworks)
+                                .clipped()
                         }
                     }
                 }
@@ -323,15 +333,15 @@ struct HomeView: View {
             }
             .sheet(item: $editingChild) { child in
                 EditChildView(child: child) {
-                    if selectedChild?.persistentModelID == child.persistentModelID {
-                        selectedChild = nil
+                    if selectedChildID == child.persistentModelID {
+                        selectedChildID = nil
                     }
                 }
             }
             .sheet(item: $paywallReason) { reason in
                 PaywallView(reason: reason)
             }
-            .onChange(of: selectedChild) { _, _ in
+            .onChange(of: selectedChildID) { _, _ in
                 // Clear stale selection when child filter changes
                 if let selectedArtwork, !filteredArtworks.contains(where: { $0.persistentModelID == selectedArtwork.persistentModelID }) {
                     self.selectedArtwork = nil

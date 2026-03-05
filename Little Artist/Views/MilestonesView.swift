@@ -160,12 +160,10 @@ struct MilestonesView: View {
             VStack(spacing: Brand.Adaptive.gallerySpacing(for: sizeClass)) {
                 // Hero stat card
                 VStack(spacing: 12) {
-                    Image("crayon_palette")
-                        .renderingMode(.original)
+                    Image("LaunchFox")
                         .resizable()
                         .scaledToFit()
-                        .frame(width: 48, height: 48)
-                        .crayonStyle()
+                        .frame(width: 56, height: 56)
 
                     Text("\(totalArtworks)")
                         .font(Brand.title1Font)

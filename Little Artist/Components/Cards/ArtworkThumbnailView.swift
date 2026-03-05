@@ -34,13 +34,13 @@ struct ArtworkThumbnailView: View {
                     .resizable()
                     .scaledToFill()
                     .frame(maxWidth: .infinity)
-                    .aspectRatio(164.0 / 180.0, contentMode: .fill)
+                    .aspectRatio(164.0 / 180.0, contentMode: .fit)
                     .clipped()
                     .clipShape(RoundedRectangle(cornerRadius: 12))
             } else {
                 RoundedRectangle(cornerRadius: 12)
                     .fill(Color.white.opacity(0.5))
-                    .aspectRatio(164.0 / 180.0, contentMode: .fill)
+                    .aspectRatio(164.0 / 180.0, contentMode: .fit)
                     .overlay {
                         Image(systemName: "paintpalette")
                             .font(.system(size: 36))

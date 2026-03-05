@@ -365,6 +365,17 @@ final class FirestoreRepository {
         }
 
         for child in children where child.firestoreId == nil {
+            // Check if this child already exists in Firestore (by name)
+            // to avoid creating duplicate documents.
+            if let existingDocId = await findExistingFirestoreChild(name: child.name, userId: userId) {
+                let firestoreId = "users/\(userId)/children/\(existingDocId)"
+                child.firestoreId = firestoreId
+                localWriteIds.insert(existingDocId)
+                try? modelContext.save()
+                logger.info("Adopted existing Firestore child: \(firestoreId, privacy: .public)")
+                continue
+            }
+
             await syncChildToFirestore(child, userId: userId, avatarImageData: child.avatarImageData)
 
             // Upload each artwork for this child
@@ -635,6 +646,46 @@ final class FirestoreRepository {
             logger.info("Child synced: \(childRef.path, privacy: .public)")
         } catch {
             logger.error("Child sync failed: \(error.localizedDescription, privacy: .public)")
+        }
+    }
+
+    /// Checks if a child with the given name already exists in Firestore.
+    /// Returns the document ID if found, nil otherwise.
+    private func findExistingFirestoreChild(name: String, userId: String) async -> String? {
+        do {
+            let snapshot = try await db.collection("users").document(userId)
+                .collection("children")
+                .whereField("name", isEqualTo: name)
+                .limit(to: 1)
+                .getDocuments()
+            return snapshot.documents.first?.documentID
+        } catch {
+            logger.error("findExistingFirestoreChild query failed: \(error.localizedDescription, privacy: .public)")
+            return nil
+        }
+    }
+
+    /// Deletes an orphaned Firestore child document and its artworks subcollection.
+    /// Used during dedup to clean up redundant cloud data.
+    func deleteOrphanedFirestoreChild(firestoreId: String, userId: String) async {
+        let childDocId = firestoreId.components(separatedBy: "/").last ?? firestoreId
+        let childRef = db.collection("users").document(userId)
+            .collection("children").document(childDocId)
+
+        do {
+            // Delete any artworks in subcollection
+            let artworks = try await childRef.collection("artworks").getDocuments()
+            for doc in artworks.documents {
+                let artworkDocId = doc.documentID
+                try await doc.reference.delete()
+                localWriteIds.insert(artworkDocId)
+            }
+            // Delete the child document itself
+            try await childRef.delete()
+            localWriteIds.insert(childDocId)
+            logger.info("Deleted orphaned Firestore child: \(firestoreId, privacy: .public)")
+        } catch {
+            logger.error("Failed to delete orphaned child: \(error.localizedDescription, privacy: .public)")
         }
     }
 
