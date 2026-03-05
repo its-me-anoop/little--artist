@@ -31,7 +31,7 @@ struct NoArtworkView: View {
                         .foregroundStyle(Brand.charcoal)
                         .multilineTextAlignment(.center)
 
-                    Text("Capture your first masterpiece by tapping the camera button.")
+                    Text("Capture your first masterpiece by tapping the + button.")
                         .font(Brand.title3Font)
                         .foregroundStyle(Brand.warmGray)
                         .multilineTextAlignment(.center)
