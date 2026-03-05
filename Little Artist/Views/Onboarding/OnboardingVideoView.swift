@@ -37,7 +37,9 @@ struct OnboardingVideoView: View {
     }
 
     private func setupPlayer() {
-        guard let url = Bundle.main.url(forResource: videoName, withExtension: "mov") else {
+        guard let url = Bundle.main.url(forResource: videoName, withExtension: "mov")
+                ?? Bundle.main.url(forResource: videoName, withExtension: "MP4")
+                ?? Bundle.main.url(forResource: videoName, withExtension: "mp4") else {
             return
         }
 

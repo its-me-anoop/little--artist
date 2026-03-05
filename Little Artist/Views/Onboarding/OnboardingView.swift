@@ -55,7 +55,7 @@ struct OnboardingView: View {
             description: "Let AI generate fun titles and captions for each artwork, capturing the magic and story behind every creation.",
             animation: .drop,
             color: Brand.sky,
-            videoName: "thinking"
+            videoName: "magic"
         ),
         OnboardingPage(
             icons: ["crayon_mic", "crayon_waveform", "crayon_play"],
@@ -64,7 +64,7 @@ struct OnboardingView: View {
             description: "Let your child record a voice note describing their artwork. Preserve their words and imagination forever.",
             animation: .pulse,
             color: Brand.lavender,
-            videoName: "paint"
+            videoName: "voice"
         ),
         OnboardingPage(
             icons: ["crayon_share", "crayon_heart", "crayon_people"],
@@ -73,7 +73,7 @@ struct OnboardingView: View {
             description: "Share artwork with family and friends. Let everyone celebrate your little artist's wonderful creations.",
             animation: .scatter,
             color: Brand.dustyRose,
-            videoName: "capture"
+            videoName: "share"
         )
     ]
 
