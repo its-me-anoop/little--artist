@@ -758,11 +758,13 @@ final class FirestoreRepository {
     /// Deletes Firebase Storage files using their download URLs directly.
     /// Fallback for artworks missing a `firestoreId` but that have storage URLs.
     private func deleteOrphanedStorage(imageURL: String?, voiceNoteURL: String?) async {
-        if let url = imageURL, let ref = try? Storage.storage().reference(forURL: url) {
+        if let url = imageURL {
+            let ref = Storage.storage().reference(forURL: url)
             try? await ref.delete()
             logger.info("Deleted orphaned image from Storage")
         }
-        if let url = voiceNoteURL, let ref = try? Storage.storage().reference(forURL: url) {
+        if let url = voiceNoteURL {
+            let ref = Storage.storage().reference(forURL: url)
             try? await ref.delete()
             logger.info("Deleted orphaned voice note from Storage")
         }

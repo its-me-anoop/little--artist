@@ -31,90 +31,17 @@ struct AddChildView: View {
     @State private var showImagePlayground = false
 
     private let presetColors = Brand.avatarColors
+    private var isNameValid: Bool { !name.trimmingCharacters(in: .whitespaces).isEmpty }
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(spacing: 28) {
-                    Spacer().frame(height: 8)
-
-                    // Avatar preview
-                    avatarPreview
-                        .onTapGesture {
-                            if avatarImageData != nil {
-                                avatarImageData = nil
-                            }
-                        }
-
-                    // Photo source buttons
-                    photoSourceButtons
-
-                    // Name field
-                    TextField("Child's name", text: $name)
-                        .font(Brand.title3Font)
-                        .foregroundStyle(.primary)
-                        .multilineTextAlignment(.center)
-                        .padding(.vertical, 14)
-                        .padding(.horizontal, 24)
-                        .background(
-                            RoundedRectangle(cornerRadius: 14)
-                                .fill(Brand.surface)
-                        )
-                        .padding(.horizontal, 40)
-
-                    // Color picker
-                    VStack(spacing: 12) {
-                        Text("Pick a color")
-                            .font(Brand.subheadlineFont)
-                            .foregroundStyle(.secondary)
-
-                        HStack(spacing: 14) {
-                            ForEach(presetColors, id: \.self) { hex in
-                                Circle()
-                                    .fill(Color(hex: hex))
-                                    .frame(width: 40, height: 40)
-                                    .overlay {
-                                        if hex == selectedColor {
-                                            Circle()
-                                                .strokeBorder(.white, lineWidth: 3)
-                                            Image(systemName: "checkmark")
-                                                .font(Brand.captionFont.bold())
-                                                .foregroundStyle(.white)
-                                        }
-                                    }
-                                    .shadow(color: Color(hex: hex).opacity(0.4), radius: 4, x: 0, y: 2)
-                                    .onTapGesture {
-                                        withAnimation(.easeInOut(duration: 0.2)) {
-                                            selectedColor = hex
-                                        }
-                                    }
-                            }
-                        }
-                    }
-
-                    Spacer().frame(height: 16)
-
-                    // Save button
-                    Button {
-                        saveChild()
-                    } label: {
-                        Text("Add Child")
-                            .font(Brand.headlineFont)
-                            .foregroundStyle(.white)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 18)
-                            .background(name.trimmingCharacters(in: .whitespaces).isEmpty ? Brand.disabled : Brand.primary)
-                            .clipShape(Capsule())
-                    }
-                    .disabled(name.trimmingCharacters(in: .whitespaces).isEmpty)
-                    .padding(.horizontal, 32)
-                }
-                .padding(.bottom, 32)
-            }
-            .navigationTitle("New Little Artling")
-            .navigationBarTitleDisplayMode(.inline)
+            ScrollView { content }
+            .scrollIndicators(.hidden)
+            .background(onboardingBackground)
+            .navigationTitle("New Little Artist")
+            .navigationBarTitleDisplayMode(.large)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
+                ToolbarItem(placement: .topBarTrailing) {
                     Button("Cancel") { dismiss() }
                 }
             }
@@ -142,6 +69,103 @@ struct AddChildView: View {
                 }
             }
         }
+    }
+
+    private var content: some View {
+        VStack(spacing: 24) {
+            formCard
+            addButton
+        }
+        .padding(.top, 8)
+        .padding(.bottom, 24)
+    }
+
+    private var formCard: some View {
+        VStack(spacing: 20) {
+            avatarPreview
+                .onTapGesture {
+                    if avatarImageData != nil {
+                        avatarImageData = nil
+                    }
+                }
+
+            photoSourceButtons
+            nameField
+            colorPickerSection
+        }
+        .padding(.horizontal, 20)
+        .padding(.vertical, 22)
+        .background(
+            RoundedRectangle(cornerRadius: 26, style: .continuous)
+                .fill(Color.white.opacity(0.58))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 26, style: .continuous)
+                .stroke(Color.white.opacity(0.7), lineWidth: 2)
+        )
+        .padding(.horizontal, 20)
+    }
+
+    private var nameField: some View {
+        TextField("Child's name", text: $name)
+            .font(Brand.title3Font)
+            .foregroundStyle(Brand.charcoal)
+            .multilineTextAlignment(.center)
+            .textInputAutocapitalization(.words)
+            .padding(.vertical, 14)
+            .padding(.horizontal, 20)
+            .background(
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .fill(Color.white.opacity(0.82))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .stroke(Brand.softTan, lineWidth: 1.5)
+            )
+    }
+
+    private var colorPickerSection: some View {
+        VStack(spacing: 12) {
+            Text("Pick a color")
+                .font(Brand.subheadlineFont)
+                .foregroundStyle(Brand.warmGray)
+                .crayonStyle()
+
+            HStack(spacing: 14) {
+                ForEach(presetColors, id: \.self) { hex in
+                    ColorSwatchView(
+                        hex: hex,
+                        isSelected: selectedColor == hex
+                    ) {
+                        withAnimation(.easeInOut(duration: 0.2)) {
+                            selectedColor = hex
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private var addButton: some View {
+        Button {
+            saveChild()
+        } label: {
+            Text("Add Child")
+                .font(Brand.title2Font.bold())
+                .foregroundStyle(.white)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 20)
+                .background((isNameValid ? Brand.primary : Brand.disabled).gradient)
+                .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 24, style: .continuous)
+                        .stroke(Color.white.opacity(0.35), lineWidth: 3)
+                )
+                .shadow(color: (isNameValid ? Brand.primary : Brand.disabled).opacity(0.35), radius: 10, x: 0, y: 5)
+                .crayonStyle()
+        }
+        .disabled(!isNameValid)
+        .padding(.horizontal, 28)
     }
 
     // MARK: - Avatar Preview
@@ -174,6 +198,27 @@ struct AddChildView: View {
                     .offset(x: 4, y: 4)
             }
         }
+    }
+
+    private var onboardingBackground: some View {
+        GeometryReader { geo in
+            ZStack {
+                Brand.cream.ignoresSafeArea()
+
+                Circle()
+                    .fill(Brand.primary.opacity(0.15))
+                    .frame(width: geo.size.width * 1.3, height: geo.size.width * 1.3)
+                    .blur(radius: 60)
+                    .offset(x: -geo.size.width / 4, y: -geo.size.height / 4)
+
+                Circle()
+                    .fill(Brand.sky.opacity(0.12))
+                    .frame(width: geo.size.width * 1.1, height: geo.size.width * 1.1)
+                    .blur(radius: 70)
+                    .offset(x: geo.size.width / 3, y: geo.size.height / 4)
+            }
+        }
+        .ignoresSafeArea()
     }
 
     // MARK: - Photo Source Buttons
@@ -212,11 +257,16 @@ struct AddChildView: View {
                 .font(.system(size: 20, design: .rounded))
                 .foregroundStyle(Brand.primary)
                 .frame(width: 56, height: 56)
-                .background(Brand.primaryTint)
-                .clipShape(RoundedRectangle(cornerRadius: 16))
+                .background(Color.white.opacity(0.75))
+                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .stroke(Brand.primary.opacity(0.25), lineWidth: 1.5)
+                )
             Text(title)
                 .font(Brand.captionFont)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Brand.warmGray)
+                .crayonStyle()
         }
     }
 
@@ -232,6 +282,29 @@ struct AddChildView: View {
             in: modelContext
         )
         dismiss()
+    }
+}
+
+private struct ColorSwatchView: View {
+    let hex: String
+    let isSelected: Bool
+    let onTap: () -> Void
+
+    var body: some View {
+        Circle()
+            .fill(Color(hex: hex))
+            .frame(width: 40, height: 40)
+            .overlay {
+                if isSelected {
+                    Circle()
+                        .strokeBorder(.white, lineWidth: 3)
+                    Image(systemName: "checkmark")
+                        .font(Brand.captionFont.bold())
+                        .foregroundStyle(.white)
+                }
+            }
+            .shadow(color: Color(hex: hex).opacity(0.35), radius: 4, x: 0, y: 2)
+            .onTapGesture(perform: onTap)
     }
 }
 

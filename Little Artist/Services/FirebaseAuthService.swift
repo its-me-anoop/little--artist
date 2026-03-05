@@ -222,20 +222,18 @@ extension FirebaseAuthService: ASAuthorizationControllerPresentationContextProvi
 
     nonisolated func presentationAnchor(for controller: ASAuthorizationController) -> ASPresentationAnchor {
         MainActor.assumeIsolated {
-            // Try the key window of the foreground-active scene first
-            if let scene = UIApplication.shared.connectedScenes
-                .first(where: { $0.activationState == .foregroundActive }) as? UIWindowScene,
-               let window = scene.windows.first(where: { $0.isKeyWindow }) {
+            let windowScenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
+
+            // Try the key window of the foreground-active scene first.
+            if let activeScene = windowScenes.first(where: { $0.activationState == .foregroundActive }),
+               let window = activeScene.windows.first(where: { $0.isKeyWindow }) {
                 return window
             }
-            // Fallback: any visible window from any connected scene
-            for scene in UIApplication.shared.connectedScenes {
-                if let windowScene = scene as? UIWindowScene,
-                   let window = windowScene.windows.first(where: { $0.isKeyWindow }) ?? windowScene.windows.first {
-                    return window
-                }
-            }
-            return UIWindow()
+
+            // Fallback: any visible window from any connected scene.
+            return windowScenes.lazy.compactMap { scene in
+                scene.windows.first(where: { $0.isKeyWindow }) ?? scene.windows.first
+            }.first!
         }
     }
 }

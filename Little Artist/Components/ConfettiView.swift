@@ -42,7 +42,12 @@ struct ConfettiView: View {
         GeometryReader { geo in
             ZStack {
                 ForEach(particles) { particle in
-                    ParticleView(particle: particle, animate: animate, containerHeight: geo.size.height)
+                    ParticleView(
+                        particle: particle,
+                        animate: animate,
+                        containerWidth: geo.size.width,
+                        containerHeight: geo.size.height
+                    )
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -87,6 +92,7 @@ struct ConfettiView: View {
 private struct ParticleView: View {
     let particle: ConfettiParticle
     let animate: Bool
+    let containerWidth: CGFloat
     let containerHeight: CGFloat
 
     @State private var rotation: Double = 0
@@ -107,7 +113,7 @@ private struct ParticleView: View {
             }
         }
         .rotation3DEffect(.degrees(rotation), axis: (x: 1, y: 0.5, z: 0.3))
-        .offset(x: particle.startX + xOffset - UIScreen.main.bounds.width / 2, y: yOffset)
+        .offset(x: particle.startX + xOffset - containerWidth / 2, y: yOffset)
         .opacity(opacity)
         .onChange(of: animate) { _, active in
             if active {
