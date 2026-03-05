@@ -20,28 +20,41 @@ struct NoChildrenView: View {
         VStack(spacing: 16) {
             Spacer()
 
-            Image(systemName: "figure.child")
-                .font(.system(size: 60, design: .rounded))
-                .foregroundStyle(Brand.primary.opacity(0.6))
+            Image("crayon_child")
+                .renderingMode(.original)
+                .resizable()
+                .scaledToFit()
+                .frame(width: 80, height: 80)
+                .crayonStyle()
+                .padding(.bottom, 8)
 
             Text("Add your first little artist")
-                .font(.system(.title3, design: .rounded).weight(.semibold))
+                .font(Brand.title2Font.bold())
+                .foregroundStyle(Brand.charcoal)
 
             Text("Tap the + button to add a child\nand start capturing their artwork.")
-                .font(Brand.subheadlineFont)
-                .foregroundStyle(.secondary)
+                .font(Brand.title3Font)
+                .foregroundStyle(Brand.warmGray)
                 .multilineTextAlignment(.center)
+                .crayonStyle()
+                .padding(.bottom, 16)
 
             Button {
                 onAddChild()
             } label: {
                 Text("Add Child")
-                    .font(Brand.headlineFont)
+                    .font(Brand.title3Font.bold())
                     .foregroundStyle(.white)
                     .padding(.horizontal, 32)
-                    .padding(.vertical, 14)
-                    .background(Brand.primary)
-                    .clipShape(Capsule())
+                    .padding(.vertical, 16)
+                    .background(Brand.primary.gradient)
+                    .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 24, style: .continuous)
+                            .stroke(Color.white.opacity(0.4), lineWidth: 3)
+                    )
+                    .shadow(color: Brand.primary.opacity(0.4), radius: 8, x: 0, y: 4)
+                    .crayonStyle()
             }
             .padding(.top, 8)
 

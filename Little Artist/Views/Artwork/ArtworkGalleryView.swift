@@ -95,14 +95,14 @@ struct ArtworkGalleryView: View {
         ScrollView {
             // Toolbar — separated icon groups
             HStack(spacing: 12) {
-                // Count badge
                 Text("\(displayedArtworks.count)")
-                    .font(.system(size: 13, weight: .semibold, design: .rounded))
+                    .font(Brand.captionFont.bold())
                     .foregroundStyle(Brand.primary)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 6)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 8)
                     .background(.ultraThinMaterial)
-                    .clipShape(Capsule())
+                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    .crayonStyle()
 
                 Spacer()
 
@@ -196,14 +196,11 @@ struct ArtworkGalleryView: View {
                 // Sectioned grid grouped by year / month / date
                 LazyVStack(alignment: .leading, spacing: 24) {
                     ForEach(groupedSections) { yearGroup in
-                        // Year header with accent underline
                         VStack(alignment: .leading, spacing: 4) {
                             Text(String(yearGroup.year))
                                 .font(Brand.title1Font)
                                 .foregroundStyle(Brand.charcoal)
-                            RoundedRectangle(cornerRadius: 2)
-                                .fill(Brand.primary)
-                                .frame(width: 32, height: 3)
+                                .crayonStyle()
                         }
                         .padding(.horizontal, adaptivePadding)
                         .padding(.top, 8)
@@ -217,6 +214,7 @@ struct ArtworkGalleryView: View {
                                 Text(monthGroup.displayName)
                                     .font(Brand.headlineFont)
                                     .foregroundStyle(Brand.warmGray)
+                                    .crayonStyle()
                             }
                             .padding(.horizontal, adaptivePadding)
 
@@ -224,9 +222,10 @@ struct ArtworkGalleryView: View {
                                 VStack(alignment: .leading, spacing: spacing) {
                                     // Date header
                                     Text(dayGroup.displayName(month: monthGroup.month, year: monthGroup.year))
-                                        .font(Brand.captionFont)
+                                        .font(Brand.captionFont.bold())
                                         .foregroundStyle(Brand.warmGray.opacity(0.7))
                                         .padding(.horizontal, adaptivePadding)
+                                        .crayonStyle()
 
                                     LazyVGrid(columns: columns(for: availableWidth), spacing: spacing) {
                                         ForEach(dayGroup.artworks) { artwork in
@@ -367,9 +366,11 @@ private struct GalleryTile: View {
                     Rectangle()
                         .fill(Brand.surface)
                         .overlay {
-                            Image(systemName: "paintpalette")
-                                .font(.system(size: 24, design: .rounded))
-                                .foregroundStyle(Brand.primary.opacity(0.25))
+                            Image("crayon_palette")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 32, height: 32)
+                                .opacity(0.5)
                         }
                 }
 
@@ -393,7 +394,11 @@ private struct GalleryTile: View {
             }
         }
         .aspectRatio(1, contentMode: .fit)
-        .clipShape(RoundedRectangle(cornerRadius: 4))
+        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .stroke(Brand.warmGray.opacity(0.2), lineWidth: 2)
+        )
         .overlay(alignment: .bottomLeading) {
             if artwork.voiceNoteData != nil {
                 Image(systemName: "mic.fill")

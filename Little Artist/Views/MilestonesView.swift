@@ -72,7 +72,7 @@ struct MilestonesView: View {
                 }
             }
             .navigationTitle("Milestones")
-            .background(Color(.systemGroupedBackground))
+            .background(Brand.cream.ignoresSafeArea())
             .overlay {
                 if let achievement = celebratingAchievement {
                     AchievementCelebrationView(achievement: achievement) {
@@ -105,15 +105,21 @@ struct MilestonesView: View {
     private var emptyState: some View {
         VStack(spacing: 16) {
             Spacer()
-            Image(systemName: "star.fill")
-                .font(.system(size: 60, design: .rounded))
-                .foregroundStyle(Brand.primary.opacity(0.6))
+            Image("crayon_wand")
+                .renderingMode(.original)
+                .resizable()
+                .scaledToFit()
+                .frame(width: 80, height: 80)
+                .crayonStyle()
+                .padding(.bottom, 8)
             Text("No milestones yet")
-                .font(.system(.title3, design: .rounded).weight(.semibold))
+                .font(Brand.title2Font.bold())
+                .foregroundStyle(Brand.charcoal)
             Text("Capture your first artwork\nto start tracking milestones.")
-                .font(Brand.subheadlineFont)
-                .foregroundStyle(.secondary)
+                .font(Brand.title3Font)
+                .foregroundStyle(Brand.warmGray)
                 .multilineTextAlignment(.center)
+                .crayonStyle()
             Spacer()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -128,16 +134,22 @@ struct MilestonesView: View {
             VStack(spacing: Brand.Adaptive.gallerySpacing(for: sizeClass)) {
                 // Hero stat card
                 VStack(spacing: 12) {
-                    Image(systemName: "paintpalette.fill")
-                        .font(.title)
-                        .foregroundStyle(Brand.primary)
+                    Image("crayon_palette")
+                        .renderingMode(.original)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 48, height: 48)
+                        .crayonStyle()
 
                     Text("\(totalArtworks)")
-                        .font(.system(size: 48, weight: .bold, design: .rounded))
+                        .font(Brand.title1Font)
+                        .foregroundStyle(Brand.charcoal)
+                        .crayonStyle()
 
                     Text("Total Artworks")
-                        .font(Brand.subheadlineFont)
-                        .foregroundStyle(.secondary)
+                        .font(Brand.captionFont.bold())
+                        .foregroundStyle(Brand.warmGray)
+                        .crayonStyle()
 
                     // Progress bar to next milestone
                     VStack(spacing: 4) {
@@ -162,8 +174,13 @@ struct MilestonesView: View {
                 }
                 .padding(.vertical, 24)
                 .frame(maxWidth: sizeClass == .regular ? Brand.Adaptive.maxContentWidth : .infinity)
-                .background(Color(.secondarySystemGroupedBackground))
-                .clipShape(RoundedRectangle(cornerRadius: Brand.radiusCard))
+                .background(Brand.surface)
+                .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 24, style: .continuous)
+                        .stroke(Brand.warmGray.opacity(0.2), lineWidth: 2)
+                )
+                .crayonStyle()
                 .brandCardShadow()
                 .frame(maxWidth: .infinity)
                 .padding(.horizontal, adaptivePadding)
@@ -186,7 +203,9 @@ struct MilestonesView: View {
                 // Achievements
                 VStack(alignment: .leading, spacing: 12) {
                     Text("Achievements")
-                        .font(Brand.title3Font)
+                        .font(Brand.title2Font.bold())
+                        .foregroundStyle(Brand.charcoal)
+                        .crayonStyle()
                         .padding(.horizontal, adaptivePadding)
 
                     ScrollView(.horizontal, showsIndicators: false) {
@@ -204,7 +223,9 @@ struct MilestonesView: View {
                 if !children.isEmpty {
                     VStack(alignment: .leading, spacing: 12) {
                         Text("Per Child")
-                            .font(Brand.title3Font)
+                            .font(Brand.title2Font.bold())
+                            .foregroundStyle(Brand.charcoal)
+                            .crayonStyle()
                             .padding(.horizontal, adaptivePadding)
 
                         VStack(spacing: 0) {
@@ -220,13 +241,15 @@ struct MilestonesView: View {
                                         }
 
                                     Text(child.name)
-                                        .font(Brand.subheadlineFont.weight(.medium))
+                                        .font(Brand.captionFont.bold())
+                                        .foregroundStyle(Brand.charcoal)
+                                        .crayonStyle()
 
                                     Spacer()
 
                                     Text("\(artworkCount(for: child))")
-                                        .font(Brand.subheadlineFont)
-                                        .foregroundStyle(.secondary)
+                                        .font(Brand.captionFont)
+                                        .foregroundStyle(Brand.warmGray)
 
                                     Image(systemName: "photo.on.rectangle")
                                         .font(.caption)
@@ -241,8 +264,13 @@ struct MilestonesView: View {
                             }
                         }
                         .frame(maxWidth: sizeClass == .regular ? Brand.Adaptive.maxContentWidth : .infinity)
-                        .background(Color(.secondarySystemGroupedBackground))
-                        .clipShape(RoundedRectangle(cornerRadius: Brand.radiusCard))
+                        .background(Brand.surface)
+                        .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                                .stroke(Brand.warmGray.opacity(0.2), lineWidth: 2)
+                        )
+                        .crayonStyle()
                         .frame(maxWidth: .infinity)
                         .padding(.horizontal, adaptivePadding)
                     }

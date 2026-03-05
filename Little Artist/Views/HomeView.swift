@@ -77,12 +77,18 @@ struct HomeView: View {
                             }
                         } label: {
                             Text("All")
-                                .font(Brand.caption2Font.weight(.medium))
-                                .padding(.horizontal, 16)
-                                .padding(.vertical, 8)
-                                .background(selectedChild == nil ? Brand.primary : Color(.tertiarySystemFill))
-                                .foregroundStyle(selectedChild == nil ? .white : .primary)
-                                .clipShape(Capsule())
+                                .font(Brand.captionFont.bold())
+                                .crayonStyle()
+                                .padding(.horizontal, 18)
+                                .padding(.vertical, 10)
+                                .background(selectedChild == nil ? Brand.primary.gradient : Color(.tertiarySystemFill).gradient)
+                                .foregroundStyle(selectedChild == nil ? .white : Brand.charcoal)
+                                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                        .stroke(selectedChild == nil ? Color.white.opacity(0.4) : Color.clear, lineWidth: 2)
+                                )
+                                .shadow(color: selectedChild == nil ? Brand.primary.opacity(0.3) : .clear, radius: 4, x: 0, y: 2)
                         }
                         .buttonStyle(.plain)
 
@@ -123,13 +129,14 @@ struct HomeView: View {
                                 Image(systemName: "plus")
                                     .font(.system(size: 11, weight: .bold))
                                 Text("Add")
-                                    .font(Brand.caption2Font.weight(.medium))
+                                    .font(Brand.captionFont.bold())
+                                    .crayonStyle()
                             }
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 8)
-                            .background(Color(.tertiarySystemFill))
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 10)
+                            .background(Color(.tertiarySystemFill).gradient)
                             .foregroundStyle(Brand.primary)
-                            .clipShape(Capsule())
+                            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                         }
                         .buttonStyle(.plain)
                     }

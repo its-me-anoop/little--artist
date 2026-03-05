@@ -111,7 +111,7 @@ struct AddChildView: View {
                 }
                 .padding(.bottom, 32)
             }
-            .navigationTitle("New Little Artist")
+            .navigationTitle("New Little Artling")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {

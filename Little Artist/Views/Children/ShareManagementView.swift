@@ -339,7 +339,7 @@ struct ShareManagementView: View {
     }
 
     private func presentShareLink() {
-        let text = "Join me on Little Artist to see \(child.name)'s artwork! Open the app, go to Settings → Join Shared Profile, and enter this code:\n\n\(shareCode)"
+        let text = "Join me on Artling to see \(child.name)'s artwork! Open the app, go to Settings → Join Shared Profile, and enter this code:\n\n\(shareCode)"
         sharePayload = SharePayload(items: [text])
     }
 

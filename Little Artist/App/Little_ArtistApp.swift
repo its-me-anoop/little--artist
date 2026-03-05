@@ -12,7 +12,7 @@ import FirebaseCore
 import SwiftData
 import SwiftUI
 
-/// The main application entry point for Little Artist.
+/// The main application entry point for Artling.
 ///
 /// Sets up the shared `ModelContainer` for `Child` and `Artwork` persistence
 /// and conditionally presents either the ``OnboardingView`` or the
@@ -23,6 +23,7 @@ struct Little_ArtistApp: App {
 
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
     @AppStorage("firebaseSyncEnabled") private var firebaseSyncEnabled = false
+    @State private var splashFinished = false
 
     /// Reference to StoreKit manager so transaction listener starts early.
     private let storeKit = StoreKitManager.shared
@@ -94,7 +95,9 @@ struct Little_ArtistApp: App {
     var body: some Scene {
         WindowGroup {
             Group {
-                if hasCompletedOnboarding {
+                if !splashFinished {
+                    SplashVideoView(isFinished: $splashFinished)
+                } else if hasCompletedOnboarding {
                     ContentView()
                 } else {
                     OnboardingView(hasCompletedOnboarding: $hasCompletedOnboarding)

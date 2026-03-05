@@ -35,13 +35,19 @@ struct ChildFilterChipView: View {
                     }
 
                 Text(child.name)
-                    .font(Brand.caption2Font.weight(.medium))
+                    .font(Brand.captionFont.bold())
+                    .crayonStyle()
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
-            .background(isSelected ? Brand.primary : Color(.tertiarySystemFill))
-            .foregroundStyle(isSelected ? .white : .primary)
-            .clipShape(Capsule())
+            .padding(.horizontal, 14)
+            .padding(.vertical, 10)
+            .background(isSelected ? Brand.primary.gradient : Color(.tertiarySystemFill).gradient)
+            .foregroundStyle(isSelected ? .white : Brand.charcoal)
+            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .stroke(isSelected ? Color.white.opacity(0.4) : Color.clear, lineWidth: 2)
+            )
+            .shadow(color: isSelected ? Brand.primary.opacity(0.3) : .clear, radius: 4, x: 0, y: 2)
         }
         .buttonStyle(.plain)
         .accessibilityLabel("\(child.name), \(isSelected ? "selected" : "not selected")")

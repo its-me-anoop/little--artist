@@ -20,13 +20,22 @@ struct AddArtworkButton: View {
             HapticService.medium()
             action()
         } label: {
-            Image(systemName: "plus")
-                .font(.title2.weight(.semibold))
-                .foregroundStyle(.white)
-                .frame(width: 60, height: 60)
-                .background(Brand.primary)
-                .clipShape(Circle())
-                .brandFABShadow()
+            ZStack {
+                Circle()
+                    .fill(Brand.primary.gradient)
+                    .frame(width: 64, height: 64)
+                    .shadow(color: Brand.primary.opacity(0.4), radius: 8, x: 0, y: 4)
+
+                Circle()
+                    .stroke(Color.white.opacity(0.8), style: StrokeStyle(lineWidth: 4, lineCap: .round, lineJoin: .round))
+                    .frame(width: 64, height: 64)
+                    .padding(2)
+
+                Image(systemName: "plus")
+                    .font(.title.weight(.bold))
+                    .foregroundStyle(.white)
+            }
+            .crayonStyle()
         }
         .accessibilityLabel("Add new artwork")
         .accessibilityHint("Double tap to capture artwork")

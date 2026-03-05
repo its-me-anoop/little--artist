@@ -8,6 +8,7 @@
 //
 
 import Foundation
+import SwiftUI
 
 /// Data describing a single page of the onboarding carousel.
 struct OnboardingPage: Identifiable {
@@ -22,4 +23,8 @@ struct OnboardingPage: Identifiable {
     let description: String
     /// The card entrance animation style for this page.
     let animation: CardAnimation
+    /// The accent color associated with this page
+    let color: Color
+    /// The video file name (without extension) to play on this page.
+    let videoName: String
 }

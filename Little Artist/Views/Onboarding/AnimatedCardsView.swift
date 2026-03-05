@@ -39,7 +39,7 @@ struct AnimatedCardsView: View {
 
 #Preview("Drift") {
     AnimatedCardsView(
-        icons: ["paintpalette.fill", "photo.artframe", "paintbrush.pointed.fill"],
+        icons: ["crayon_palette", "crayon_child", "crayon_scribble"],
         accentColor: Brand.primary,
         style: .drift,
         isActive: true
@@ -50,7 +50,7 @@ struct AnimatedCardsView: View {
 
 #Preview("Fan") {
     AnimatedCardsView(
-        icons: ["camera.fill", "wand.and.stars", "sparkles"],
+        icons: ["crayon_camera", "crayon_photos", "crayon_frame"],
         accentColor: .purple,
         style: .fan,
         isActive: true

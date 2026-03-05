@@ -16,21 +16,25 @@ struct AddChildButton: View {
     var action: () -> Void
 
     var body: some View {
-        VStack(spacing: 6) {
+        VStack(spacing: 8) {
             ZStack {
                 Circle()
-                    .strokeBorder(Brand.primary.opacity(0.5), style: StrokeStyle(lineWidth: 2, dash: [6, 4]))
-                    .frame(width: 60, height: 60)
+                    .strokeBorder(Brand.primary.opacity(0.5), style: StrokeStyle(lineWidth: 3, lineCap: .round, dash: [8, 6]))
+                    .frame(width: 64, height: 64)
+                    .background(Circle().fill(Brand.surface))
+                    .crayonStyle()
 
                 Image(systemName: "plus")
-                    .font(.title2.weight(.semibold))
+                    .font(.title2.weight(.bold))
                     .foregroundStyle(Brand.primary)
+                    .crayonStyle()
             }
 
             Text("Add")
-                .font(Brand.captionFont)
-                .foregroundStyle(.secondary)
+                .font(Brand.captionFont.bold())
+                .foregroundStyle(Brand.warmGray)
                 .frame(width: 64)
+                .crayonStyle()
         }
         .onTapGesture {
             action()
