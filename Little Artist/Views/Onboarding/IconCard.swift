@@ -24,21 +24,36 @@ struct IconCard: View {
 
     var body: some View {
         ZStack {
-            RoundedRectangle(cornerRadius: 20)
+            RoundedRectangle(cornerRadius: 32, style: .continuous)
                 .fill(Brand.surface)
+                .overlay(
+                    Image("crayon_paper")
+                        .resizable()
+                        .opacity(0.3)
+                        .clipShape(RoundedRectangle(cornerRadius: 32, style: .continuous))
+                )
                 .brandCardShadow()
+            
+            // Hand-drawn thicker stroke
+            RoundedRectangle(cornerRadius: 32, style: .continuous)
+                .stroke(color.opacity(0.6), style: StrokeStyle(lineWidth: 6, lineCap: .round, lineJoin: .round))
+                .padding(2)
 
-            Image(systemName: icon)
-                .font(.system(size: size))
-                .foregroundStyle(color)
+            Image(icon)
+                .renderingMode(.original)
+                .resizable()
+                .scaledToFit()
+                .frame(width: size * 1.5, height: size * 1.5) // Scaling up the inner image
+                .shadow(color: color.opacity(0.3), radius: 8, x: 0, y: 4)
         }
-        .frame(width: cardSize, height: cardSize)
+        .frame(width: cardSize * 1.3, height: cardSize * 1.3) // Making the cards themselves larger
+        .crayonStyle() // Adding slight wobble to individual cards
     }
 }
 
 // MARK: - Preview
 
 #Preview {
-    IconCard(icon: "paintpalette.fill", size: 56, cardSize: 90, color: Brand.primary)
+    IconCard(icon: "crayon_palette", size: 56, cardSize: 90, color: Brand.primary)
         .padding()
 }

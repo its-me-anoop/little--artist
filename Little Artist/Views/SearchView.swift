@@ -92,12 +92,14 @@ struct SearchView: View {
                                     Button {
                                         searchText = term
                                     } label: {
-                                        Text(term)
-                                            .font(Brand.caption2Font)
-                                            .padding(.horizontal, 12)
-                                            .padding(.vertical, 6)
-                                            .background(Color(.tertiarySystemFill))
-                                            .clipShape(Capsule())
+                                            Text(term)
+                                                .font(Brand.captionFont.bold())
+                                                .padding(.horizontal, 14)
+                                                .padding(.vertical, 8)
+                                                .background(Color(.tertiarySystemFill).gradient)
+                                                .foregroundStyle(Brand.charcoal)
+                                                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                                                .crayonStyle()
                                     }
                                     .buttonStyle(.plain)
                                 }
@@ -139,14 +141,20 @@ struct SearchView: View {
                                 HStack(spacing: 4) {
                                     Image(systemName: showFavoritesOnly ? "heart.fill" : "heart")
                                         .font(.system(size: 11))
-                                    Text("Starred")
-                                        .font(Brand.caption2Font.weight(.medium))
-                                }
-                                .padding(.horizontal, 12)
-                                .padding(.vertical, 8)
-                                .background(showFavoritesOnly ? Brand.dustyRose : Color(.tertiarySystemFill))
-                                .foregroundStyle(showFavoritesOnly ? .white : .primary)
-                                .clipShape(Capsule())
+                                Text("Starred")
+                                    .font(Brand.captionFont.bold())
+                                    .crayonStyle()
+                            }
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 10)
+                            .background(showFavoritesOnly ? Brand.dustyRose.gradient : Color(.tertiarySystemFill).gradient)
+                            .foregroundStyle(showFavoritesOnly ? .white : Brand.charcoal)
+                            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                    .stroke(showFavoritesOnly ? Color.white.opacity(0.4) : Color.clear, lineWidth: 2)
+                            )
+                            .shadow(color: showFavoritesOnly ? Brand.dustyRose.opacity(0.3) : .clear, radius: 4, x: 0, y: 2)
                             }
                             .buttonStyle(.plain)
                         }
@@ -190,10 +198,11 @@ struct SearchView: View {
                                 .font(.system(size: 40, design: .rounded))
                                 .foregroundStyle(Brand.primary.opacity(0.4))
                             Text("No artwork found")
-                                .font(Brand.subheadlineFont.weight(.medium))
+                                .font(Brand.title3Font.bold())
+                                .foregroundStyle(Brand.charcoal)
                             Text("Try a different search or adjust filters")
-                                .font(Brand.caption2Font)
-                                .foregroundStyle(.secondary)
+                                .font(Brand.captionFont)
+                                .foregroundStyle(Brand.warmGray)
                         }
                         .frame(maxWidth: .infinity)
                         .padding(.top, 60)
@@ -230,7 +239,8 @@ struct SearchView: View {
         .scrollDismissesKeyboard(.interactively)
         .background(
             GeometryReader { geo in
-                Color(.systemGroupedBackground)
+                Brand.cream
+                    .ignoresSafeArea()
                     .onAppear { availableWidth = geo.size.width }
                     .onChange(of: geo.size.width) { _, newWidth in availableWidth = newWidth }
             }

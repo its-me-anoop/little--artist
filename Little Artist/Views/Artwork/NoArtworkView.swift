@@ -17,17 +17,23 @@ struct NoArtworkView: View {
         VStack(spacing: 16) {
             Spacer()
 
-            Image(systemName: "paintpalette")
-                .font(.system(size: 60, design: .rounded))
-                .foregroundStyle(Brand.primary.opacity(0.6))
+            Image("crayon_palette")
+                .renderingMode(.original)
+                .resizable()
+                .scaledToFit()
+                .frame(width: 80, height: 80)
+                .crayonStyle()
+                .padding(.bottom, 8)
 
             Text("No artwork yet")
-                .font(.system(.title3, design: .rounded).weight(.semibold))
+                .font(Brand.title2Font.bold())
+                .foregroundStyle(Brand.charcoal)
 
             Text("Capture your first masterpiece\nby tapping the camera button.")
-                .font(Brand.subheadlineFont)
-                .foregroundStyle(.secondary)
+                .font(Brand.title3Font)
+                .foregroundStyle(Brand.warmGray)
                 .multilineTextAlignment(.center)
+                .crayonStyle()
 
             Spacer()
         }

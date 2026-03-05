@@ -19,18 +19,25 @@ struct StatCardView: View {
                 .foregroundStyle(Brand.primary)
 
             Text(value)
-                .font(Brand.title2Font)
-                .foregroundStyle(.primary)
+                .font(Brand.title1Font)
+                .foregroundStyle(Brand.charcoal)
+                .crayonStyle()
 
             Text(label)
-                .font(Brand.caption2Font)
-                .foregroundStyle(.secondary)
+                .font(Brand.captionFont.bold())
+                .foregroundStyle(Brand.warmGray)
+                .crayonStyle()
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 16)
-        .background(Color(.secondarySystemGroupedBackground))
-        .clipShape(RoundedRectangle(cornerRadius: Brand.radiusCard))
+        .background(Brand.surface)
+        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .stroke(Brand.warmGray.opacity(0.2), lineWidth: 2)
+        )
         .brandCardShadow()
+        .crayonStyle()
     }
 }
 

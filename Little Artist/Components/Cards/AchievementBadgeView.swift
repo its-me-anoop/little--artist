@@ -84,39 +84,43 @@ struct AchievementBadgeView: View {
 
             // Name
             Text(achievement.name)
-                .font(.system(size: 12, weight: .semibold, design: .rounded))
+                .font(Brand.captionFont.bold())
                 .lineLimit(1)
-                .foregroundStyle(achievement.isUnlocked ? .primary : .secondary)
+                .foregroundStyle(achievement.isUnlocked ? Brand.charcoal : Brand.warmGray)
+                .crayonStyle()
 
             // Description or progress
             if achievement.isUnlocked {
                 Text(achievement.description)
-                    .font(.system(size: 10))
-                    .foregroundStyle(.secondary)
+                    .font(Brand.caption2Font)
+                    .foregroundStyle(Brand.warmGray)
                     .lineLimit(2)
                     .multilineTextAlignment(.center)
+                    .crayonStyle()
             } else {
                 Text("\(achievement.current)/\(achievement.target)")
-                    .font(.system(size: 11, weight: .medium, design: .rounded))
-                    .foregroundStyle(.tertiary)
+                    .font(Brand.captionFont)
+                    .foregroundStyle(Brand.warmGray.opacity(0.5))
+                    .crayonStyle()
             }
         }
         .frame(width: 100)
         .padding(.vertical, 14)
         .padding(.horizontal, 8)
         .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(Color(.secondarySystemGroupedBackground))
+            RoundedRectangle(cornerRadius: 20, style: .continuous)
+                .fill(Brand.surface)
         )
         .overlay(
-            RoundedRectangle(cornerRadius: 16)
+            RoundedRectangle(cornerRadius: 20, style: .continuous)
                 .strokeBorder(
                     achievement.isUnlocked
-                        ? achievement.accentColor.opacity(0.25)
-                        : Color.clear,
-                    lineWidth: 1
+                        ? achievement.accentColor.opacity(0.4)
+                        : Brand.warmGray.opacity(0.2),
+                    lineWidth: 2
                 )
         )
+        .crayonStyle()
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(achievement.name), \(achievement.isUnlocked ? "unlocked" : "\(achievement.current) of \(achievement.target)")")
     }

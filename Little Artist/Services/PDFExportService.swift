@@ -100,7 +100,7 @@ enum PDFExportService {
             .font: UIFont.systemFont(ofSize: 10, weight: .regular),
             .foregroundColor: warmGrayColor
         ]
-        let footer = "Created with Little Artist"
+        let footer = "Created with Artling"
         footer.draw(at: CGPoint(x: margin, y: pageHeight - margin - 12), withAttributes: footerAttrs)
     }
 
@@ -185,7 +185,7 @@ enum PDFExportService {
             .foregroundColor: warmGrayColor
         ]
         let childName = artwork.child?.name ?? ""
-        let footer = childName.isEmpty ? "Little Artist" : "by \(childName) · Little Artist"
+        let footer = childName.isEmpty ? "Artling" : "by \(childName) · Artling"
         footer.draw(at: CGPoint(x: margin, y: pageHeight - margin - 10), withAttributes: footerAttrs)
     }
 }

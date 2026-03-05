@@ -115,22 +115,29 @@ struct TimelineView: View {
                 }
             }
             .navigationTitle("Timeline")
-            .background(Color(.systemGroupedBackground))
+            .background(Brand.cream.ignoresSafeArea())
         }
     }
 
     private var emptyState: some View {
         VStack(spacing: 16) {
             Spacer()
-            Image(systemName: "clock.arrow.trianglehead.counterclockwise.rotate.90")
-                .font(.system(size: 60, design: .rounded))
-                .foregroundStyle(Brand.primary.opacity(0.6))
+            Image("crayon_photos")
+                .renderingMode(.original)
+                .resizable()
+                .scaledToFit()
+                .frame(width: 80, height: 80)
+                .crayonStyle()
+                .padding(.bottom, 8)
             Text("No artwork yet")
-                .font(.system(.title3, design: .rounded).weight(.semibold))
+                .font(Brand.title2Font.bold())
+                .foregroundStyle(Brand.charcoal)
+                .crayonStyle()
             Text("Capture your first artwork\nto start building your timeline.")
-                .font(Brand.subheadlineFont)
-                .foregroundStyle(.secondary)
+                .font(Brand.title3Font)
+                .foregroundStyle(Brand.warmGray)
                 .multilineTextAlignment(.center)
+                .crayonStyle()
             Spacer()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -249,7 +256,8 @@ struct TimelineView: View {
                                 } label: {
                                     HStack(spacing: 6) {
                                         Text(isExpanded ? "Show Less" : "Show All (\(group.artworks.count))")
-                                            .font(Brand.subheadlineFont.weight(.medium))
+                                            .font(Brand.captionFont.bold())
+                                            .crayonStyle()
                                         Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
                                             .font(.caption.weight(.semibold))
                                     }
@@ -262,9 +270,11 @@ struct TimelineView: View {
                         }
                     } header: {
                         Text(group.key)
-                            .font(Brand.title3Font)
+                            .font(Brand.title2Font.bold())
+                            .foregroundStyle(Brand.charcoal)
+                            .crayonStyle()
                             .padding(.horizontal, adaptivePadding)
-                            .padding(.vertical, 8)
+                            .padding(.vertical, 12)
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .background(.ultraThinMaterial)
                     }

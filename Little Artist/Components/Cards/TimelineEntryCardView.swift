@@ -31,28 +31,34 @@ struct TimelineEntryCardView: View {
                     .fill(Color(.tertiarySystemBackground))
                     .frame(width: thumbSize, height: thumbSize)
                     .overlay {
-                        Image(systemName: "paintpalette")
-                            .font(.system(size: sizeClass == .regular ? 28 : 20))
-                            .foregroundStyle(Brand.primary.opacity(0.3))
+                        Image("crayon_palette")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: sizeClass == .regular ? 32 : 24)
+                            .opacity(0.5)
+                            .crayonStyle()
                     }
             }
 
             // Text stack
             VStack(alignment: .leading, spacing: sizeClass == .regular ? 6 : 4) {
                 Text(artwork.title.isEmpty ? "Untitled" : artwork.title)
-                    .font(sizeClass == .regular ? Brand.headlineFont : Brand.subheadlineFont.weight(.semibold))
-                    .foregroundStyle(artwork.title.isEmpty ? .secondary : .primary)
+                    .font(Brand.headlineFont.bold())
+                    .foregroundStyle(artwork.title.isEmpty ? Brand.warmGray : Brand.charcoal)
                     .lineLimit(1)
+                    .crayonStyle()
 
                 if let child = artwork.child {
                     Text("by \(child.name)")
-                        .font(sizeClass == .regular ? Brand.captionFont : Brand.caption2Font)
-                        .foregroundStyle(.secondary)
+                        .font(Brand.captionFont)
+                        .foregroundStyle(Brand.warmGray)
+                        .crayonStyle()
                 }
 
                 Text(artwork.createdAt, format: .dateTime.month(.abbreviated).day())
-                    .font(sizeClass == .regular ? Brand.captionFont : Brand.caption2Font)
-                    .foregroundStyle(.tertiary)
+                    .font(Brand.caption2Font)
+                    .foregroundStyle(Brand.warmGray.opacity(0.8))
+                    .crayonStyle()
             }
 
             Spacer()
@@ -64,14 +70,13 @@ struct TimelineEntryCardView: View {
             }
         }
         .padding(sizeClass == .regular ? 16 : 12)
-        .background(Color(.secondarySystemGroupedBackground))
-        .clipShape(RoundedRectangle(cornerRadius: Brand.radiusImage))
+        .background(Brand.surface)
+        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
         .overlay {
-            if isSelected {
-                RoundedRectangle(cornerRadius: Brand.radiusImage)
-                    .strokeBorder(Brand.primary, lineWidth: 2.5)
-            }
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .stroke(isSelected ? Brand.primary : Brand.warmGray.opacity(0.2), lineWidth: 2)
         }
+        .crayonStyle()
         .brandCardShadow()
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(artwork.title.isEmpty ? "Untitled" : artwork.title) by \(artwork.child?.name ?? "unknown"), \(artwork.createdAt.formatted(.dateTime.month(.wide).day().year()))")

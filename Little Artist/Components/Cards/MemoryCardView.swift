@@ -21,14 +21,15 @@ struct MemoryCardView: View {
                     .resizable()
                     .scaledToFill()
                     .frame(width: cardWidth, height: cardWidth * 0.75)
-                    .clipShape(RoundedRectangle(cornerRadius: Brand.radiusImage))
+                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
             }
 
             // Title
             Text(artwork.title.isEmpty ? "Untitled" : artwork.title)
-                .font(Brand.captionFont.weight(.medium))
+                .font(Brand.captionFont.bold())
                 .foregroundStyle(Brand.charcoal)
                 .lineLimit(1)
+                .crayonStyle()
 
             // Years ago label
             HStack(spacing: 4) {
@@ -49,8 +50,13 @@ struct MemoryCardView: View {
         .frame(width: cardWidth)
         .padding(10)
         .background(
-            RoundedRectangle(cornerRadius: Brand.radiusCard)
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
                 .fill(Brand.surface)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .stroke(Brand.warmGray.opacity(0.2), lineWidth: 2)
+                )
+                .crayonStyle()
         )
         .brandCardShadow()
     }

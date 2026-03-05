@@ -23,12 +23,18 @@ struct YearChipView: View {
     var body: some View {
         Button(action: action) {
             Text(label)
-                .font(.subheadline.weight(isSelected ? .semibold : .regular))
-                .padding(.horizontal, 14)
-                .padding(.vertical, 7)
-                .foregroundStyle(isSelected ? .white : .primary)
-                .background(isSelected ? Brand.primary : Brand.softTan.opacity(0.5))
-                .clipShape(Capsule())
+                .font(Brand.captionFont.bold())
+                .padding(.horizontal, 16)
+                .padding(.vertical, 8)
+                .foregroundStyle(isSelected ? .white : Brand.charcoal)
+                .background(isSelected ? Brand.primary.gradient : Brand.softTan.opacity(0.5).gradient)
+                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .stroke(isSelected ? Color.white.opacity(0.4) : Color.clear, lineWidth: 2)
+                )
+                .shadow(color: isSelected ? Brand.primary.opacity(0.3) : .clear, radius: 4, x: 0, y: 2)
+                .crayonStyle()
         }
         .buttonStyle(.plain)
     }
