@@ -44,8 +44,7 @@ struct Little_ArtistApp: App {
         #endif
 
         let schema = Schema(versionedSchema: SchemaV7.self)
-        let isPremium = UserDefaults.standard.bool(forKey: "isPremium")
-        let syncEnabled = UserDefaults.standard.bool(forKey: "firebaseSyncEnabled")
+        UserDefaults.standard.set(true, forKey: "firebaseSyncEnabled")
 
         // SwiftData uses local-only storage. Firebase handles cloud sync
         // through FirestoreSyncService.
@@ -70,9 +69,15 @@ struct Little_ArtistApp: App {
             FirestoreSyncService.shared.modelContainer = container
             FirestoreRepository.shared.modelContainer = container
 
-            // Start Firebase sync when premium + sync enabled
-            if isPremium && syncEnabled {
+            // Always-on Firebase sync (starts once auth user is available).
+            Task { @MainActor in
+                while FirebaseAuthService.shared.userId == nil {
+                    try? await Task.sleep(for: .milliseconds(200))
+                }
                 FirestoreSyncService.shared.start()
+                let uploadContext = ModelContext(container)
+                await FirestoreRepository.shared.uploadAllLocalData(from: uploadContext)
+                await FirestoreRepository.shared.syncUserPreferencesToFirestore()
             }
 
             return container

@@ -30,11 +30,13 @@ struct StatCardView: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 16)
-        .background(Brand.surface)
-        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .background(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .fill(Color.white.opacity(0.58))
+        )
         .overlay(
             RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .stroke(Brand.warmGray.opacity(0.2), lineWidth: 2)
+                .stroke(Color.white.opacity(0.7), lineWidth: 2)
         )
         .brandCardShadow()
         .crayonStyle()
@@ -47,5 +49,5 @@ struct StatCardView: View {
         StatCardView(icon: "flame.fill", label: "Streak", value: "12 days")
     }
     .padding()
-    .background(Color(.systemGroupedBackground))
+    .background(Brand.cream)
 }

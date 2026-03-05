@@ -48,11 +48,14 @@ final class FirestoreRepository {
     /// `shareChild` from racing with the bulk upload.
     private(set) var isUploadingAll = false
 
-    /// Whether Firestore sync is active (premium + signed in + enabled).
+    /// Whether Firestore sync is active for the current authenticated user.
     var isSyncActive: Bool {
+        auth.userId != nil
+    }
+
+    /// Whether premium-only artwork authoring features are available.
+    private var canUsePremiumArtworkFeatures: Bool {
         PremiumManager.isPremium
-        && auth.isLinkedWithApple
-        && UserDefaults.standard.bool(forKey: "firebaseSyncEnabled")
     }
 
     private init() {}
@@ -62,6 +65,33 @@ final class FirestoreRepository {
     private var context: ModelContext? {
         guard let container = modelContainer else { return nil }
         return ModelContext(container)
+    }
+
+    // MARK: - Preferences
+
+    /// Pushes local app preferences to Firestore so they stay in sync across devices.
+    func syncUserPreferencesToFirestore() async {
+        guard let userId = auth.userId else { return }
+
+        let defaults = UserDefaults.standard
+        let data: [String: Any] = [
+            "aiCaptionsEnabled": defaults.bool(forKey: "aiCaptionsEnabled"),
+            "defaultCameraBack": defaults.bool(forKey: "defaultCameraBack"),
+            "notificationsEnabled": defaults.bool(forKey: "notificationsEnabled"),
+            "hasCompletedOnboarding": defaults.bool(forKey: "hasCompletedOnboarding"),
+            "updatedAt": FieldValue.serverTimestamp()
+        ]
+
+        do {
+            try await db.collection("users")
+                .document(userId)
+                .collection("meta")
+                .document("preferences")
+                .setData(data, merge: true)
+            logger.info("Preferences synced to Firestore")
+        } catch {
+            logger.error("Preferences sync failed: \(error.localizedDescription, privacy: .public)")
+        }
     }
 
     // MARK: - Children
@@ -178,12 +208,14 @@ final class FirestoreRepository {
         tags: [Tag]? = nil,
         in modelContext: ModelContext
     ) -> Artwork {
+        let sanitizedVoiceNoteData = canUsePremiumArtworkFeatures ? voiceNoteData : nil
+
         let artwork = Artwork(
             title: title,
             caption: caption,
             imageData: imageData,
             thumbnailData: thumbnailData,
-            voiceNoteData: voiceNoteData,
+            voiceNoteData: sanitizedVoiceNoteData,
             isFavorited: isFavorited,
             createdAt: createdAt,
             child: child,
@@ -194,7 +226,8 @@ final class FirestoreRepository {
         // Pre-generate Firestore ID and register in localWriteIds BEFORE insert
         // to prevent the snapshot listener from creating a duplicate.
         var preGeneratedRef: DocumentReference?
-        if isSyncActive, let userId = auth.userId, let childFirestoreId = child.firestoreId {
+        // New artworks only sync to cloud for active premium users.
+        if isSyncActive, canUsePremiumArtworkFeatures, let userId = auth.userId, let childFirestoreId = child.firestoreId {
             let childDocId = childFirestoreId.components(separatedBy: "/").last ?? childFirestoreId
             let artworkRef = db.collection("users").document(userId)
                 .collection("children").document(childDocId)
@@ -207,6 +240,7 @@ final class FirestoreRepository {
         }
 
         modelContext.insert(artwork)
+        try? modelContext.save()
 
         // Async Firestore sync using the pre-generated document reference
         if let artworkRef = preGeneratedRef, let userId = auth.userId, let childFirestoreId = child.firestoreId {
@@ -216,7 +250,7 @@ final class FirestoreRepository {
                     userId: userId,
                     childFirestoreId: childFirestoreId,
                     imageData: imageData,
-                    voiceNoteData: voiceNoteData,
+                    voiceNoteData: sanitizedVoiceNoteData,
                     docRef: artworkRef
                 )
             }
@@ -255,15 +289,18 @@ final class FirestoreRepository {
         tags: [Tag]? = nil,
         in modelContext: ModelContext
     ) {
+        let effectiveVoiceNoteData = canUsePremiumArtworkFeatures ? voiceNoteData : nil
+
         // Local update
         if let title { artwork.title = title }
         if let caption { artwork.caption = caption }
         if let imageData { artwork.imageData = imageData }
-        if let voiceNoteData { artwork.voiceNoteData = voiceNoteData }
+        if let effectiveVoiceNoteData { artwork.voiceNoteData = effectiveVoiceNoteData }
         if let isFavorited { artwork.isFavorited = isFavorited }
         if let tags { artwork.tags = tags }
+        try? modelContext.save()
 
-        // Firestore sync
+        // Cloud sync edits only for artworks that are already synced.
         if isSyncActive, let userId = auth.userId, let firestoreId = artwork.firestoreId {
             Task {
                 await updateArtworkInFirestore(
@@ -271,7 +308,7 @@ final class FirestoreRepository {
                     userId: userId,
                     artwork: artwork,
                     newImageData: imageData,
-                    newVoiceNoteData: voiceNoteData
+                    newVoiceNoteData: effectiveVoiceNoteData
                 )
             }
         }
@@ -331,7 +368,8 @@ final class FirestoreRepository {
             await syncChildToFirestore(child, userId: userId, avatarImageData: child.avatarImageData)
 
             // Upload each artwork for this child
-            for artwork in child.artworks ?? [] where artwork.firestoreId == nil {
+            // New artworks are premium-only for cloud upload.
+            for artwork in child.artworks ?? [] where artwork.firestoreId == nil && canUsePremiumArtworkFeatures {
                 if let childFirestoreId = child.firestoreId {
                     await syncArtworkToFirestore(
                         artwork,
@@ -346,6 +384,67 @@ final class FirestoreRepository {
 
         isUploadingAll = false
         logger.info("Full upload complete")
+    }
+
+    /// Deletes all Firebase data for a user account (children, artworks, storage, shares, preferences).
+    func deleteAllUserData(userId: String) async {
+        // Delete all children + nested artworks/storage.
+        do {
+            let childrenSnapshot = try await db.collection("users")
+                .document(userId)
+                .collection("children")
+                .getDocuments()
+
+            for doc in childrenSnapshot.documents {
+                let firestoreId = "users/\(userId)/children/\(doc.documentID)"
+                await deleteChildFromFirestore(firestoreId: firestoreId, userId: userId)
+            }
+        } catch {
+            logger.error("Failed to enumerate children for account deletion: \(error.localizedDescription, privacy: .public)")
+        }
+
+        // Delete user preferences metadata.
+        do {
+            try await db.collection("users")
+                .document(userId)
+                .collection("meta")
+                .document("preferences")
+                .delete()
+        } catch {
+            logger.error("Failed to delete preferences metadata: \(error.localizedDescription, privacy: .public)")
+        }
+
+        // Delete shares owned by this user.
+        do {
+            let sharesSnapshot = try await db.collection("shares")
+                .whereField("ownerUserId", isEqualTo: userId)
+                .getDocuments()
+            for shareDoc in sharesSnapshot.documents {
+                try? await shareDoc.reference.delete()
+            }
+        } catch {
+            logger.error("Failed to delete owned shares: \(error.localizedDescription, privacy: .public)")
+        }
+
+        // Remove this user from participant lists in shares they joined.
+        do {
+            let sharesSnapshot = try await db.collection("shares").getDocuments()
+            for shareDoc in sharesSnapshot.documents {
+                try? await shareDoc.reference
+                    .collection("participants")
+                    .document(userId)
+                    .delete()
+            }
+        } catch {
+            logger.error("Failed to remove participant memberships: \(error.localizedDescription, privacy: .public)")
+        }
+
+        // Finally remove root user document.
+        do {
+            try await db.collection("users").document(userId).delete()
+        } catch {
+            logger.error("Failed to delete root user document: \(error.localizedDescription, privacy: .public)")
+        }
     }
 
     // MARK: - Sharing
@@ -364,7 +463,7 @@ final class FirestoreRepository {
         // Ensure child is synced to Firestore first
         if child.firestoreId == nil {
             await syncChildToFirestore(child, userId: userId, avatarImageData: child.avatarImageData)
-            for artwork in child.artworks ?? [] where artwork.firestoreId == nil {
+            for artwork in child.artworks ?? [] where artwork.firestoreId == nil && canUsePremiumArtworkFeatures {
                 if let childFirestoreId = child.firestoreId {
                     await syncArtworkToFirestore(
                         artwork,
@@ -778,8 +877,8 @@ final class FirestoreRepository {
 
         var errorDescription: String? {
             switch self {
-            case .notAuthenticated: "Not signed in to Firebase."
-            case .syncFailed: "Failed to sync data to Firestore."
+            case .notAuthenticated: "Not signed in to cloud account."
+            case .syncFailed: "Failed to sync data to cloud storage."
             }
         }
     }

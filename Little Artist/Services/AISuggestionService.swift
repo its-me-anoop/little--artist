@@ -11,10 +11,6 @@ import FirebaseAI
 import Foundation
 import UIKit
 import Vision
-import CoreImage
-#if canImport(FoundationModels)
-import FoundationModels
-#endif
 
 // MARK: - AI Suggestion Result
 
@@ -43,36 +39,28 @@ struct ArtworkValidationResult {
 
 /// Centralised service for generating AI-powered artwork suggestions.
 ///
-/// Attempts cloud-based analysis via Firebase Vertex AI (Gemini) first,
+/// Uses cloud-based analysis via Firebase Vertex AI (Gemini),
 /// which can directly see the artwork image for higher quality results.
-/// Falls back to on-device Vision + FoundationModels when the cloud
-/// service is unavailable (offline, quota exceeded, etc.).
+/// If the cloud request fails, returns safe default text.
+/// All Gemini calls are gated by `GeminiUsageTracker` rate limits.
 enum AISuggestionService {
 
     // MARK: - Availability
 
-    /// Whether AI suggestions are available (cloud or on-device).
-    /// Cloud is always nominally available; on-device requires iOS 26+.
+    /// Whether AI suggestions are available.
+    /// Actual usage limits are enforced at the point of each Gemini API call.
     static var isAvailable: Bool {
         true
     }
 
-    /// Whether on-device AI is available as a fallback.
-    private static var isOnDeviceAvailable: Bool {
-        #if canImport(FoundationModels)
-        if #available(iOS 26.0, *) {
-            return SystemLanguageModel.default.isAvailable
-        }
-        #endif
-        return false
-    }
-
     // MARK: - Gemini (Cloud) Model
 
-    /// Lazy-initialised Gemini model via Firebase Vertex AI.
-    private static let geminiModel: GenerativeModel = {
-        FirebaseAI.firebaseAI(backend: .googleAI()).generativeModel(modelName: "gemini-2.0-flash")
-    }()
+    /// Preferred Gemini model names in order of priority.
+    private static let geminiModelNames = [
+        "gemini-2.5-flash",
+        "gemini-2.5-flash-lite",
+        "gemini-2.0-flash-001"
+    ]
 
     // MARK: - System Prompts
 
@@ -133,7 +121,7 @@ enum AISuggestionService {
         Return ONLY: {"is_artwork":bool,"is_appropriate":bool,"reason":"..."}
         """
 
-        let response = try await geminiModel.generateContent(image, prompt)
+        let response = try await generateGeminiContent(image: image, prompt: prompt)
 
         guard let text = response.text else {
             throw AISuggestionError.emptyResponse
@@ -254,28 +242,27 @@ enum AISuggestionService {
 
     /// Generates a new title and caption for a child's artwork.
     ///
-    /// Tries Gemini (cloud) first for multimodal image analysis,
-    /// then falls back to on-device Vision + FoundationModels.
+    /// Uses Gemini multimodal image analysis.
     static func generateSuggestions(imageData: Data, childName: String) async throws -> AISuggestion {
-        // Try cloud-based Gemini first
         do {
             return try await generateWithGemini(imageData: imageData, childName: childName)
         } catch {
-            // Fall back to on-device
-            return try await generateOnDevice(imageData: imageData, childName: childName)
+            return AISuggestion(
+                title: "My Artwork",
+                caption: "A colorful creation full of imagination."
+            )
         }
     }
 
     /// Improves an existing title and caption for a child's artwork.
     ///
-    /// Tries Gemini (cloud) first, then falls back to on-device.
+    /// Uses Gemini multimodal image analysis.
     static func improveSuggestions(
         imageData: Data?,
         existingTitle: String,
         existingCaption: String,
         childName: String
     ) async throws -> AISuggestion {
-        // Try cloud-based Gemini first
         do {
             return try await improveWithGemini(
                 imageData: imageData,
@@ -284,12 +271,9 @@ enum AISuggestionService {
                 childName: childName
             )
         } catch {
-            // Fall back to on-device
-            return try await improveOnDevice(
-                imageData: imageData,
-                existingTitle: existingTitle,
-                existingCaption: existingCaption,
-                childName: childName
+            return AISuggestion(
+                title: existingTitle.isEmpty ? "My Artwork" : existingTitle,
+                caption: existingCaption.isEmpty ? "A colorful creation full of imagination." : existingCaption
             )
         }
     }
@@ -309,7 +293,7 @@ enum AISuggestionService {
         Name this artwork with a fun, imaginative title and a warm caption about what \(childName) drew.
         """
 
-        let response = try await geminiModel.generateContent(image, prompt)
+        let response = try await generateGeminiContent(image: image, prompt: prompt)
 
         guard let text = response.text else {
             throw AISuggestionError.emptyResponse
@@ -336,9 +320,9 @@ enum AISuggestionService {
 
         let response: GenerateContentResponse
         if let imageData, let image = UIImage(data: imageData) {
-            response = try await geminiModel.generateContent(image, prompt)
+            response = try await generateGeminiContent(image: image, prompt: prompt)
         } else {
-            response = try await geminiModel.generateContent(prompt)
+            response = try await generateGeminiContent(prompt: prompt)
         }
 
         guard let text = response.text else {
@@ -348,237 +332,53 @@ enum AISuggestionService {
         return parseSuggestions(from: text)
     }
 
-    // MARK: - On-Device Fallback Implementation
+    /// Generates content using the first available Gemini model in priority order.
+    /// Checks usage limits before making the request and records usage on success.
+    private static func generateGeminiContent(prompt: String) async throws -> GenerateContentResponse {
+        try await MainActor.run { try checkUsageLimit() }
 
-    /// Generates suggestions using on-device Vision analysis + FoundationModels.
-    private static func generateOnDevice(imageData: Data, childName: String) async throws -> AISuggestion {
-        #if canImport(FoundationModels)
-        if #available(iOS 26.0, *), isOnDeviceAvailable {
-            let imageAnalysis = analyseImage(imageData)
-
-            let session = LanguageModelSession(
-                instructions: generateSystemInstruction
-            )
-
-            let prompt = """
-            Child: \(childName)
-            What the artwork shows: \(imageAnalysis)
-            Name this artwork with a fun, imaginative title and a warm caption about what \(childName) drew.
-            """
-
+        var lastError: Error?
+        for modelName in geminiModelNames {
             do {
-                let response = try await session.respond(to: prompt)
-                return parseSuggestions(from: response.content)
+                let model = FirebaseAI.firebaseAI(backend: .googleAI()).generativeModel(modelName: modelName)
+                let response = try await model.generateContent(prompt)
+                await MainActor.run { GeminiUsageTracker.shared.recordRequest() }
+                return response
             } catch {
-                try await Task.sleep(for: .milliseconds(350))
-                let retryResponse = try await session.respond(to: prompt)
-                return parseSuggestions(from: retryResponse.content)
+                lastError = error
             }
         }
-        #endif
-        return AISuggestion(title: "My Artwork", caption: "A colorful creation full of imagination.")
+        throw lastError ?? AISuggestionError.emptyResponse
     }
 
-    /// Improves suggestions using on-device Vision analysis + FoundationModels.
-    private static func improveOnDevice(
-        imageData: Data?,
-        existingTitle: String,
-        existingCaption: String,
-        childName: String
-    ) async throws -> AISuggestion {
-        #if canImport(FoundationModels)
-        if #available(iOS 26.0, *), isOnDeviceAvailable {
-            let imageAnalysis = imageData.map { analyseImage($0) } ?? "No image available"
+    /// Generates multimodal content using the first available Gemini model in priority order.
+    /// Checks usage limits before making the request and records usage on success.
+    private static func generateGeminiContent(image: UIImage, prompt: String) async throws -> GenerateContentResponse {
+        try await MainActor.run { try checkUsageLimit() }
 
-            let session = LanguageModelSession(
-                instructions: improveSystemInstruction
-            )
-
-            let prompt = """
-            Child: \(childName)
-            Current title: \(existingTitle.isEmpty ? "None" : existingTitle)
-            Current caption: \(existingCaption.isEmpty ? "None" : existingCaption)
-            What the artwork shows: \(imageAnalysis)
-            Improve the title and caption to be more creative and specific to the artwork.
-            """
-
+        var lastError: Error?
+        for modelName in geminiModelNames {
             do {
-                let response = try await session.respond(to: prompt)
-                return parseSuggestions(from: response.content)
+                let model = FirebaseAI.firebaseAI(backend: .googleAI()).generativeModel(modelName: modelName)
+                let response = try await model.generateContent(image, prompt)
+                await MainActor.run { GeminiUsageTracker.shared.recordRequest() }
+                return response
             } catch {
-                try await Task.sleep(for: .milliseconds(350))
-                let retryResponse = try await session.respond(to: prompt)
-                return parseSuggestions(from: retryResponse.content)
+                lastError = error
             }
         }
-        #endif
-        return AISuggestion(title: "My Artwork", caption: "A colorful creation full of imagination.")
+        throw lastError ?? AISuggestionError.emptyResponse
     }
 
-    // MARK: - Image Analysis (On-Device Fallback)
-
-    /// Analyses an artwork image using Vision classification and OCR.
-    ///
-    /// Used only for the on-device fallback path where the language model
-    /// cannot see the image directly.
-    static func analyseImage(_ imageData: Data) -> String {
-        guard let image = UIImage(data: imageData), let cgImage = image.cgImage else {
-            return "Unable to process image"
+    /// Checks the usage tracker and throws if the rate limit is exceeded.
+    @MainActor
+    private static func checkUsageLimit() throws {
+        let tracker = GeminiUsageTracker.shared
+        guard tracker.canMakeRequest else {
+            let message = tracker.exceededLimit?.message
+                ?? "AI usage limit reached. Please try again later."
+            throw AISuggestionError.rateLimitExceeded(message: message)
         }
-
-        var descriptions: [String] = []
-
-        // 1. Image classification — identifies objects, scenes, and themes
-        let classifyRequest = VNClassifyImageRequest()
-        let handler = VNImageRequestHandler(cgImage: cgImage)
-        do {
-            try handler.perform([classifyRequest])
-            let topLabels = (classifyRequest.results ?? [])
-                .filter { $0.confidence > 0.3 }
-                .sorted { $0.confidence > $1.confidence }
-                .prefix(10)
-                .map { "\($0.identifier) (\(Int($0.confidence * 100))%)" }
-            if !topLabels.isEmpty {
-                descriptions.append("Visual content: \(topLabels.joined(separator: ", "))")
-            }
-        } catch {
-            // Classification failed, continue with other analysis
-        }
-
-        // 2. OCR — extract any text written in the artwork
-        let textRequest = VNRecognizeTextRequest()
-        textRequest.recognitionLevel = .accurate
-        textRequest.usesLanguageCorrection = true
-        let textHandler = VNImageRequestHandler(cgImage: cgImage)
-        do {
-            try textHandler.perform([textRequest])
-            let lines = (textRequest.results ?? [])
-                .compactMap { $0.topCandidates(1).first?.string }
-                .prefix(6)
-            if !lines.isEmpty {
-                descriptions.append("Text in image: \(lines.joined(separator: ", "))")
-            }
-        } catch {
-            // OCR failed, continue
-        }
-
-        // 3. Dominant colours — describe the colour palette
-        let colours = extractDominantColours(from: cgImage)
-        if !colours.isEmpty {
-            descriptions.append("Dominant colours: \(colours.joined(separator: ", "))")
-        }
-
-        // 4. Basic image properties
-        let width = cgImage.width
-        let height = cgImage.height
-        let orientation = width > height ? "landscape" : (height > width ? "portrait" : "square")
-        descriptions.append("Format: \(orientation)")
-
-        return descriptions.isEmpty ? "No visual details detected" : descriptions.joined(separator: ". ")
-    }
-
-    /// Extracts dominant colour names from an image using CIAreaHistogram.
-    private static func extractDominantColours(from cgImage: CGImage) -> [String] {
-        let ciImage = CIImage(cgImage: cgImage)
-        let context = CIContext()
-
-        // Sample colours from a grid of points across the image
-        let width = CGFloat(cgImage.width)
-        let height = CGFloat(cgImage.height)
-        var colourCounts: [String: Int] = [:]
-
-        let samplePoints = 5
-        for row in 0..<samplePoints {
-            for col in 0..<samplePoints {
-                let x = width * CGFloat(col) / CGFloat(samplePoints) + width / CGFloat(samplePoints * 2)
-                let y = height * CGFloat(row) / CGFloat(samplePoints) + height / CGFloat(samplePoints * 2)
-                let rect = CGRect(x: x, y: y, width: 1, height: 1)
-
-                guard let filter = CIFilter(name: "CIAreaAverage", parameters: [
-                    kCIInputImageKey: ciImage,
-                    kCIInputExtentKey: CIVector(cgRect: rect)
-                ]),
-                let outputImage = filter.outputImage else { continue }
-
-                var pixel = [UInt8](repeating: 0, count: 4)
-                context.render(outputImage, toBitmap: &pixel, rowBytes: 4,
-                              bounds: CGRect(x: 0, y: 0, width: 1, height: 1),
-                              format: .RGBA8, colorSpace: CGColorSpaceCreateDeviceRGB())
-
-                let name = colourName(r: pixel[0], g: pixel[1], b: pixel[2])
-                colourCounts[name, default: 0] += 1
-            }
-        }
-
-        return colourCounts
-            .sorted { $0.value > $1.value }
-            .prefix(4)
-            .map { $0.key }
-    }
-
-    /// Maps RGB values to a human-readable colour name.
-    private static func colourName(r: UInt8, g: UInt8, b: UInt8) -> String {
-        let rf = Double(r) / 255.0
-        let gf = Double(g) / 255.0
-        let bf = Double(b) / 255.0
-
-        let maxC = max(rf, gf, bf)
-        let minC = min(rf, gf, bf)
-        let brightness = (maxC + minC) / 2.0
-        let saturation = maxC == minC ? 0 : (maxC - minC) / (1.0 - abs(2 * brightness - 1))
-
-        if brightness < 0.15 { return "black" }
-        if brightness > 0.9 && saturation < 0.1 { return "white" }
-        if saturation < 0.12 { return brightness > 0.5 ? "light gray" : "dark gray" }
-
-        // Calculate hue
-        var hue: Double = 0
-        if maxC == rf {
-            hue = 60.0 * (((gf - bf) / (maxC - minC)).truncatingRemainder(dividingBy: 6))
-        } else if maxC == gf {
-            hue = 60.0 * (((bf - rf) / (maxC - minC)) + 2)
-        } else {
-            hue = 60.0 * (((rf - gf) / (maxC - minC)) + 4)
-        }
-        if hue < 0 { hue += 360 }
-
-        switch hue {
-        case 0..<15: return "red"
-        case 15..<40: return "orange"
-        case 40..<70: return "yellow"
-        case 70..<160: return "green"
-        case 160..<200: return "teal"
-        case 200..<250: return "blue"
-        case 250..<290: return "purple"
-        case 290..<330: return "pink"
-        default: return "red"
-        }
-    }
-
-    // MARK: - OCR (legacy helper)
-
-    /// Extracts readable text from artwork image data using Vision OCR.
-    static func extractText(from imageData: Data) -> String {
-        guard let image = UIImage(data: imageData), let cgImage = image.cgImage else {
-            return ""
-        }
-
-        let request = VNRecognizeTextRequest()
-        request.recognitionLevel = .accurate
-        request.usesLanguageCorrection = true
-
-        let handler = VNImageRequestHandler(cgImage: cgImage)
-        do {
-            try handler.perform([request])
-        } catch {
-            return ""
-        }
-
-        let lines = (request.results ?? [])
-            .compactMap { $0.topCandidates(1).first?.string }
-            .prefix(6)
-
-        return lines.joined(separator: ", ")
     }
 
     // MARK: - Parsing
@@ -633,7 +433,19 @@ enum AISuggestionService {
 // MARK: - Errors
 
 /// Errors specific to AI suggestion generation.
-enum AISuggestionError: Error {
+enum AISuggestionError: LocalizedError {
     case invalidImage
     case emptyResponse
+    case rateLimitExceeded(message: String)
+
+    var errorDescription: String? {
+        switch self {
+        case .invalidImage:
+            return "The image could not be processed."
+        case .emptyResponse:
+            return "No response was received from the AI service."
+        case .rateLimitExceeded(let message):
+            return message
+        }
+    }
 }

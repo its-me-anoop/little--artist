@@ -96,9 +96,13 @@ struct SearchView: View {
                                                 .font(Brand.captionFont.bold())
                                                 .padding(.horizontal, 14)
                                                 .padding(.vertical, 8)
-                                                .background(Color(.tertiarySystemFill).gradient)
+                                                .background(Color.white.opacity(0.58).gradient)
                                                 .foregroundStyle(Brand.charcoal)
                                                 .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                                                .overlay(
+                                                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                                        .stroke(Color.white.opacity(0.7), lineWidth: 1.5)
+                                                )
                                                 .crayonStyle()
                                     }
                                     .buttonStyle(.plain)
@@ -147,12 +151,12 @@ struct SearchView: View {
                             }
                             .padding(.horizontal, 14)
                             .padding(.vertical, 10)
-                            .background(showFavoritesOnly ? Brand.dustyRose.gradient : Color(.tertiarySystemFill).gradient)
+                            .background(showFavoritesOnly ? Brand.dustyRose.gradient : Color.white.opacity(0.58).gradient)
                             .foregroundStyle(showFavoritesOnly ? .white : Brand.charcoal)
                             .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                             .overlay(
                                 RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                    .stroke(showFavoritesOnly ? Color.white.opacity(0.4) : Color.clear, lineWidth: 2)
+                                    .stroke(showFavoritesOnly ? Color.white.opacity(0.4) : Color.white.opacity(0.7), lineWidth: 2)
                             )
                             .shadow(color: showFavoritesOnly ? Brand.dustyRose.opacity(0.3) : .clear, radius: 4, x: 0, y: 2)
                             }
@@ -193,7 +197,7 @@ struct SearchView: View {
                         .padding(.horizontal, Brand.screenPadding)
 
                     if filteredArtworks.isEmpty {
-                        VStack(spacing: 12) {
+                        VStack(spacing: 14) {
                             Image(systemName: "magnifyingglass")
                                 .font(.system(size: 40, design: .rounded))
                                 .foregroundStyle(Brand.primary.opacity(0.4))
@@ -205,7 +209,19 @@ struct SearchView: View {
                                 .foregroundStyle(Brand.warmGray)
                         }
                         .frame(maxWidth: .infinity)
-                        .padding(.top, 60)
+                        .padding(.horizontal, 20)
+                        .padding(.vertical, 24)
+                        .background(
+                            RoundedRectangle(cornerRadius: 26, style: .continuous)
+                                .fill(Color.white.opacity(0.58))
+                        )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 26, style: .continuous)
+                                .stroke(Color.white.opacity(0.7), lineWidth: 2)
+                        )
+                        .brandCardShadow()
+                        .padding(.horizontal, Brand.screenPadding)
+                        .padding(.top, 40)
                     } else {
                         LazyVGrid(
                             columns: Array(

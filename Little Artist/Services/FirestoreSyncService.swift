@@ -67,6 +67,7 @@ final class FirestoreSyncService {
     /// Active snapshot listener registrations.
     private var childrenListener: ListenerRegistration?
     private var sharesListener: ListenerRegistration?
+    private var preferencesListener: ListenerRegistration?
     private var artworkListeners: [String: ListenerRegistration] = [:]
     private var sharedChildrenListeners: [String: ListenerRegistration] = [:]
 
@@ -91,6 +92,7 @@ final class FirestoreSyncService {
 
         listenToChildren(userId: userId)
         listenToShares(userId: userId)
+        listenToPreferences(userId: userId)
     }
 
     /// Stops all listeners. Call when user disables sync or signs out.
@@ -100,6 +102,9 @@ final class FirestoreSyncService {
 
         sharesListener?.remove()
         sharesListener = nil
+
+        preferencesListener?.remove()
+        preferencesListener = nil
 
         for (_, listener) in artworkListeners {
             listener.remove()
@@ -115,6 +120,43 @@ final class FirestoreSyncService {
 
         isListening = false
         diag("Sync stopped")
+    }
+
+    // MARK: - Preferences Listener
+
+    private func listenToPreferences(userId: String) {
+        let preferencesRef = db.collection("users")
+            .document(userId)
+            .collection("meta")
+            .document("preferences")
+
+        preferencesListener = preferencesRef.addSnapshotListener { [weak self] snapshot, error in
+            guard let self else { return }
+            Task { @MainActor in
+                if let error {
+                    self.diag("Preferences listener error: \(error.localizedDescription)")
+                    return
+                }
+
+                guard let data = snapshot?.data() else { return }
+                let defaults = UserDefaults.standard
+
+                if let aiCaptionsEnabled = data["aiCaptionsEnabled"] as? Bool {
+                    defaults.set(aiCaptionsEnabled, forKey: "aiCaptionsEnabled")
+                }
+                if let defaultCameraBack = data["defaultCameraBack"] as? Bool {
+                    defaults.set(defaultCameraBack, forKey: "defaultCameraBack")
+                }
+                if let notificationsEnabled = data["notificationsEnabled"] as? Bool {
+                    defaults.set(notificationsEnabled, forKey: "notificationsEnabled")
+                }
+                if let hasCompletedOnboarding = data["hasCompletedOnboarding"] as? Bool {
+                    defaults.set(hasCompletedOnboarding, forKey: "hasCompletedOnboarding")
+                }
+
+                self.diag("Applied remote preferences")
+            }
+        }
     }
 
     // MARK: - Children Listener

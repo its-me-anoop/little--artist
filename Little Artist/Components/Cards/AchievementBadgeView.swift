@@ -44,7 +44,7 @@ struct AchievementBadgeView: View {
                     .stroke(
                         achievement.isUnlocked
                             ? achievement.accentColor.opacity(0.2)
-                            : Color(.tertiarySystemFill),
+                            : Brand.softTan.opacity(0.6),
                         lineWidth: 4
                     )
                     .frame(width: 64, height: 64)
@@ -66,7 +66,7 @@ struct AchievementBadgeView: View {
                     .fill(
                         achievement.isUnlocked
                             ? achievement.accentColor.opacity(0.12)
-                            : Color(.tertiarySystemFill).opacity(0.5)
+                            : Color.white.opacity(0.4)
                     )
                     .frame(width: 54, height: 54)
 
@@ -109,14 +109,14 @@ struct AchievementBadgeView: View {
         .padding(.horizontal, 8)
         .background(
             RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .fill(Brand.surface)
+                .fill(Color.white.opacity(0.58))
         )
         .overlay(
             RoundedRectangle(cornerRadius: 20, style: .continuous)
                 .strokeBorder(
                     achievement.isUnlocked
                         ? achievement.accentColor.opacity(0.4)
-                        : Brand.warmGray.opacity(0.2),
+                        : Color.white.opacity(0.7),
                     lineWidth: 2
                 )
         )
@@ -145,5 +145,5 @@ struct AchievementBadgeView: View {
         ))
     }
     .padding()
-    .background(Color(.systemGroupedBackground))
+    .background(Brand.cream)
 }

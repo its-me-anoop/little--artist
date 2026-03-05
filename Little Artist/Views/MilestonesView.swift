@@ -103,23 +103,49 @@ struct MilestonesView: View {
     }
 
     private var emptyState: some View {
-        VStack(spacing: 16) {
+        VStack {
             Spacer()
-            Image("crayon_wand")
-                .renderingMode(.original)
-                .resizable()
-                .scaledToFit()
-                .frame(width: 80, height: 80)
-                .crayonStyle()
-                .padding(.bottom, 8)
-            Text("No milestones yet")
-                .font(Brand.title2Font.bold())
-                .foregroundStyle(Brand.charcoal)
-            Text("Capture your first artwork\nto start tracking milestones.")
-                .font(Brand.title3Font)
-                .foregroundStyle(Brand.warmGray)
-                .multilineTextAlignment(.center)
-                .crayonStyle()
+
+            VStack(spacing: 14) {
+                Image("LaunchFox")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 72, height: 72)
+
+                Text("No milestones yet")
+                    .font(Brand.title1Font)
+                    .foregroundStyle(Brand.charcoal)
+                    .multilineTextAlignment(.center)
+
+                Text("Add your first artwork from Gallery to start tracking milestones.")
+                    .font(Brand.title3Font)
+                    .foregroundStyle(Brand.warmGray)
+                    .multilineTextAlignment(.center)
+                    .lineSpacing(3)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                Text("Your achievements will appear here")
+                    .font(Brand.captionFont)
+                    .foregroundStyle(Brand.warmGray.opacity(0.9))
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 8)
+                    .background(Color.white.opacity(0.75))
+                    .clipShape(Capsule())
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.horizontal, 20)
+            .padding(.vertical, 24)
+            .background(
+                RoundedRectangle(cornerRadius: 28, style: .continuous)
+                    .fill(Color.white.opacity(0.58))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 28, style: .continuous)
+                    .stroke(Color.white.opacity(0.75), lineWidth: 2)
+            )
+            .brandCardShadow()
+            .padding(.horizontal, 16)
+
             Spacer()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -174,11 +200,13 @@ struct MilestonesView: View {
                 }
                 .padding(.vertical, 24)
                 .frame(maxWidth: sizeClass == .regular ? Brand.Adaptive.maxContentWidth : .infinity)
-                .background(Brand.surface)
-                .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+                .background(
+                    RoundedRectangle(cornerRadius: 26, style: .continuous)
+                        .fill(Color.white.opacity(0.58))
+                )
                 .overlay(
-                    RoundedRectangle(cornerRadius: 24, style: .continuous)
-                        .stroke(Brand.warmGray.opacity(0.2), lineWidth: 2)
+                    RoundedRectangle(cornerRadius: 26, style: .continuous)
+                        .stroke(Color.white.opacity(0.7), lineWidth: 2)
                 )
                 .crayonStyle()
                 .brandCardShadow()
@@ -264,11 +292,13 @@ struct MilestonesView: View {
                             }
                         }
                         .frame(maxWidth: sizeClass == .regular ? Brand.Adaptive.maxContentWidth : .infinity)
-                        .background(Brand.surface)
-                        .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+                        .background(
+                            RoundedRectangle(cornerRadius: 26, style: .continuous)
+                                .fill(Color.white.opacity(0.58))
+                        )
                         .overlay(
-                            RoundedRectangle(cornerRadius: 24, style: .continuous)
-                                .stroke(Brand.warmGray.opacity(0.2), lineWidth: 2)
+                            RoundedRectangle(cornerRadius: 26, style: .continuous)
+                                .stroke(Color.white.opacity(0.7), lineWidth: 2)
                         )
                         .crayonStyle()
                         .frame(maxWidth: .infinity)

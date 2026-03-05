@@ -81,12 +81,12 @@ struct HomeView: View {
                                 .crayonStyle()
                                 .padding(.horizontal, 18)
                                 .padding(.vertical, 10)
-                                .background(selectedChild == nil ? Brand.primary.gradient : Color(.tertiarySystemFill).gradient)
+                                .background(selectedChild == nil ? Brand.primary.gradient : Color.white.opacity(0.58).gradient)
                                 .foregroundStyle(selectedChild == nil ? .white : Brand.charcoal)
                                 .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                                 .overlay(
                                     RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                        .stroke(selectedChild == nil ? Color.white.opacity(0.4) : Color.clear, lineWidth: 2)
+                                        .stroke(selectedChild == nil ? Color.white.opacity(0.4) : Color.white.opacity(0.7), lineWidth: 2)
                                 )
                                 .shadow(color: selectedChild == nil ? Brand.primary.opacity(0.3) : .clear, radius: 4, x: 0, y: 2)
                         }
@@ -134,9 +134,13 @@ struct HomeView: View {
                             }
                             .padding(.horizontal, 14)
                             .padding(.vertical, 10)
-                            .background(Color(.tertiarySystemFill).gradient)
+                            .background(Color.white.opacity(0.58).gradient)
                             .foregroundStyle(Brand.primary)
                             .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                    .stroke(Color.white.opacity(0.7), lineWidth: 1.5)
+                            )
                         }
                         .buttonStyle(.plain)
                     }
@@ -205,7 +209,7 @@ struct HomeView: View {
                 .foregroundStyle(Brand.warmGray)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color(.systemGroupedBackground))
+        .background(Brand.cream)
     }
 
     // MARK: - Body
@@ -283,6 +287,7 @@ struct HomeView: View {
                     })
                 }
             }
+            .background(Brand.cream.ignoresSafeArea())
             .navigationTitle("Gallery")
             .toolbar {
                 if let selectedChild {

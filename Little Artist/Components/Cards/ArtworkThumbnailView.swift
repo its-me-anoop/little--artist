@@ -39,7 +39,7 @@ struct ArtworkThumbnailView: View {
                     .clipShape(RoundedRectangle(cornerRadius: 12))
             } else {
                 RoundedRectangle(cornerRadius: 12)
-                    .fill(Color(.tertiarySystemBackground))
+                    .fill(Color.white.opacity(0.5))
                     .aspectRatio(164.0 / 180.0, contentMode: .fill)
                     .overlay {
                         Image(systemName: "paintpalette")
@@ -70,8 +70,8 @@ struct ArtworkThumbnailView: View {
         .padding(8)
         .background {
             RoundedRectangle(cornerRadius: 18)
-                .fill(Color(.secondarySystemGroupedBackground))
-                .stroke(colorScheme == .dark ? Color.white.opacity(0.08) : .clear, lineWidth: 1)
+                .fill(Color.white.opacity(0.58))
+                .stroke(Color.white.opacity(0.7), lineWidth: 1.5)
                 .brandCardShadow()
         }
         .accessibilityElement(children: .combine)
@@ -86,7 +86,7 @@ struct ArtworkThumbnailView: View {
     ArtworkThumbnailView(artwork: PreviewSampleData.singleArtwork)
         .padding()
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color(.systemGroupedBackground))
+        .background(Brand.cream)
         .modelContainer(for: [Child.self, Artwork.self], inMemory: true)
 }
 
@@ -94,7 +94,7 @@ struct ArtworkThumbnailView: View {
     ArtworkThumbnailView(artwork: PreviewSampleData.singleArtwork)
         .padding()
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color(.systemGroupedBackground))
+        .background(Brand.cream)
         .preferredColorScheme(.dark)
         .modelContainer(for: [Child.self, Artwork.self], inMemory: true)
 }

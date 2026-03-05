@@ -105,7 +105,7 @@ struct TimelineView: View {
                                         .foregroundStyle(Brand.warmGray)
                                 }
                                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-                                .background(Color(.systemGroupedBackground))
+                                .background(Brand.cream)
                             }
                         }
                         .frame(maxWidth: .infinity)
@@ -120,24 +120,49 @@ struct TimelineView: View {
     }
 
     private var emptyState: some View {
-        VStack(spacing: 16) {
+        VStack {
             Spacer()
-            Image("crayon_photos")
-                .renderingMode(.original)
-                .resizable()
-                .scaledToFit()
-                .frame(width: 80, height: 80)
-                .crayonStyle()
-                .padding(.bottom, 8)
-            Text("No artwork yet")
-                .font(Brand.title2Font.bold())
-                .foregroundStyle(Brand.charcoal)
-                .crayonStyle()
-            Text("Capture your first artwork\nto start building your timeline.")
-                .font(Brand.title3Font)
-                .foregroundStyle(Brand.warmGray)
-                .multilineTextAlignment(.center)
-                .crayonStyle()
+
+            VStack(spacing: 14) {
+                Image("LaunchFox")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 72, height: 72)
+
+                Text("No artwork yet")
+                    .font(Brand.title1Font)
+                    .foregroundStyle(Brand.charcoal)
+                    .multilineTextAlignment(.center)
+
+                Text("Add your first artwork from Gallery by tapping the + button.")
+                    .font(Brand.title3Font)
+                    .foregroundStyle(Brand.warmGray)
+                    .multilineTextAlignment(.center)
+                    .lineSpacing(3)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                Text("Your timeline will appear here")
+                    .font(Brand.captionFont)
+                    .foregroundStyle(Brand.warmGray.opacity(0.9))
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 8)
+                    .background(Color.white.opacity(0.75))
+                    .clipShape(Capsule())
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.horizontal, 20)
+            .padding(.vertical, 24)
+            .background(
+                RoundedRectangle(cornerRadius: 28, style: .continuous)
+                    .fill(Color.white.opacity(0.58))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 28, style: .continuous)
+                    .stroke(Color.white.opacity(0.75), lineWidth: 2)
+            )
+            .brandCardShadow()
+            .padding(.horizontal, 16)
+
             Spacer()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -276,7 +301,7 @@ struct TimelineView: View {
                             .padding(.horizontal, adaptivePadding)
                             .padding(.vertical, 12)
                             .frame(maxWidth: .infinity, alignment: .leading)
-                            .background(.ultraThinMaterial)
+                            .background(Brand.cream.opacity(0.95))
                     }
                 }
             }

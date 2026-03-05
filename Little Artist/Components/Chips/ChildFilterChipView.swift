@@ -40,12 +40,12 @@ struct ChildFilterChipView: View {
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 10)
-            .background(isSelected ? Brand.primary.gradient : Color(.tertiarySystemFill).gradient)
+            .background(isSelected ? Brand.primary.gradient : Color.white.opacity(0.58).gradient)
             .foregroundStyle(isSelected ? .white : Brand.charcoal)
             .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .stroke(isSelected ? Color.white.opacity(0.4) : Color.clear, lineWidth: 2)
+                    .stroke(isSelected ? Color.white.opacity(0.4) : Color.white.opacity(0.7), lineWidth: 2)
             )
             .shadow(color: isSelected ? Brand.primary.opacity(0.3) : .clear, radius: 4, x: 0, y: 2)
         }

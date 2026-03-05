@@ -11,6 +11,7 @@ import CryptoKit
 import FirebaseAuth
 import Foundation
 import os
+import SwiftData
 import UIKit
 
 /// Manages Firebase Authentication lifecycle.
@@ -75,6 +76,15 @@ final class FirebaseAuthService: NSObject {
         authStateHandle = Auth.auth().addStateDidChangeListener { [weak self] _, user in
             Task { @MainActor in
                 self?.currentUser = user
+                guard user != nil else { return }
+
+                FirestoreSyncService.shared.start()
+
+                if let container = FirestoreRepository.shared.modelContainer {
+                    let uploadContext = ModelContext(container)
+                    await FirestoreRepository.shared.uploadAllLocalData(from: uploadContext)
+                    await FirestoreRepository.shared.syncUserPreferencesToFirestore()
+                }
             }
         }
 
@@ -165,6 +175,18 @@ final class FirebaseAuthService: NSObject {
         currentUser = nil
         logger.info("Signed out — will re-authenticate anonymously")
         Task { await signInAnonymously() }
+    }
+
+    /// Deletes the current Firebase account, then falls back to anonymous auth.
+    func deleteAccount() async throws {
+        guard let user = Auth.auth().currentUser else {
+            throw AuthError.noCurrentUser
+        }
+
+        try await user.delete()
+        currentUser = nil
+        logger.info("Account deleted — will re-authenticate anonymously")
+        await signInAnonymously()
     }
 
     // MARK: - Apple Auth Helpers

@@ -127,9 +127,11 @@ struct AddArtworkView: View {
             )
             .padding(.horizontal, fieldPadding)
 
-            // Voice memo (optional)
-            VoiceMemoRecorderView(voiceNoteData: $voiceNoteData)
-                .padding(.horizontal, fieldPadding)
+            // Voice memo (premium only)
+            if PremiumManager.isPremium {
+                VoiceMemoRecorderView(voiceNoteData: $voiceNoteData)
+                    .padding(.horizontal, fieldPadding)
+            }
 
             // Tag selection
             TagPickerView(selectedTags: $selectedTags)
@@ -156,7 +158,7 @@ struct AddArtworkView: View {
                         .padding(.vertical, 12)
                         .background(
                             RoundedRectangle(cornerRadius: 12)
-                                .fill(aiSuggestionsEnabled ? Brand.primaryTint : Color(.tertiarySystemFill))
+                                .fill(aiSuggestionsEnabled ? Brand.primaryTint : Color.white.opacity(0.4))
                         )
                     }
                     .buttonStyle(.plain)
@@ -351,8 +353,8 @@ struct AddArtworkView: View {
             }
             .padding(.horizontal, sizeClass == .regular ? 0 : 32)
         } else {
-            RoundedRectangle(cornerRadius: 20)
-                .fill(Color(.tertiarySystemBackground))
+            RoundedRectangle(cornerRadius: 20, style: .continuous)
+                .fill(Color.white.opacity(0.5))
                 .frame(height: sizeClass == .regular ? 300 : 220)
                 .overlay {
                     VStack(spacing: 12) {
@@ -544,7 +546,13 @@ struct AddArtworkView: View {
     // MARK: - Image Validation
 
     /// Validates a captured image to check if it looks like children's artwork.
+    /// Uses Gemini cloud validation for premium users, skips for free tier.
     private func validateCapturedImage(_ imageData: Data) {
+        guard PremiumManager.isPremium else {
+            // Free users skip cloud validation
+            validationResult = .valid
+            return
+        }
         isValidatingImage = true
         Task {
             let result = await AISuggestionService.validateArtwork(imageData: imageData)
@@ -555,9 +563,9 @@ struct AddArtworkView: View {
         }
     }
 
-    /// Whether AI suggestions can be used (cloud or on-device).
+    /// Whether AI suggestions can be used (requires premium subscription).
     private var aiSuggestionsEnabled: Bool {
-        AISuggestionService.isAvailable
+        PremiumManager.isPremium && AISuggestionService.isAvailable
     }
 
     /// Generates AI-powered title and caption suggestions for the captured artwork.
