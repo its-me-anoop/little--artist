@@ -14,30 +14,75 @@ import SwiftUI
 /// Prompts the user to capture their first masterpiece using the camera button.
 struct NoArtworkView: View {
     var body: some View {
-        VStack(spacing: 16) {
-            Spacer()
+        ZStack {
+            backgroundLayer
 
-            Image("crayon_palette")
-                .renderingMode(.original)
-                .resizable()
-                .scaledToFit()
-                .frame(width: 80, height: 80)
-                .crayonStyle()
-                .padding(.bottom, 8)
+            VStack {
+                Spacer()
 
-            Text("No artwork yet")
-                .font(Brand.title2Font.bold())
-                .foregroundStyle(Brand.charcoal)
+                VStack(spacing: 14) {
+                    Image("LaunchFox")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 72, height: 72)
 
-            Text("Capture your first masterpiece\nby tapping the camera button.")
-                .font(Brand.title3Font)
-                .foregroundStyle(Brand.warmGray)
-                .multilineTextAlignment(.center)
-                .crayonStyle()
+                    Text("No artwork yet")
+                        .font(Brand.title1Font)
+                        .foregroundStyle(Brand.charcoal)
+                        .multilineTextAlignment(.center)
 
-            Spacer()
+                    Text("Capture your first masterpiece by tapping the camera button.")
+                        .font(Brand.title3Font)
+                        .foregroundStyle(Brand.warmGray)
+                        .multilineTextAlignment(.center)
+                        .lineSpacing(3)
+                        .fixedSize(horizontal: false, vertical: true)
+
+                    Text("Your gallery will appear here")
+                        .font(Brand.captionFont)
+                        .foregroundStyle(Brand.warmGray.opacity(0.9))
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 8)
+                        .background(Color.white.opacity(0.75))
+                        .clipShape(Capsule())
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.horizontal, 20)
+                .padding(.vertical, 24)
+                .background(
+                    RoundedRectangle(cornerRadius: 28, style: .continuous)
+                        .fill(Color.white.opacity(0.58))
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 28, style: .continuous)
+                        .stroke(Color.white.opacity(0.75), lineWidth: 2)
+                )
+                .brandCardShadow()
+                .padding(.horizontal, 16)
+
+                Spacer()
+            }
         }
-        .padding(.horizontal, 32)
+    }
+
+    private var backgroundLayer: some View {
+        GeometryReader { geo in
+            ZStack {
+                Brand.cream.ignoresSafeArea()
+
+                Circle()
+                    .fill(Brand.sky.opacity(0.12))
+                    .frame(width: geo.size.width * 1.2, height: geo.size.width * 1.2)
+                    .blur(radius: 58)
+                    .offset(x: -geo.size.width * 0.25, y: -geo.size.height * 0.22)
+
+                Circle()
+                    .fill(Brand.primary.opacity(0.12))
+                    .frame(width: geo.size.width * 1.1, height: geo.size.width * 1.1)
+                    .blur(radius: 66)
+                    .offset(x: geo.size.width * 0.3, y: geo.size.height * 0.28)
+            }
+        }
     }
 }
 
