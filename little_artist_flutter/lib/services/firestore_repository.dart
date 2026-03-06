@@ -61,9 +61,6 @@ class FirestoreRepository {
 
   String? get _userId => authService.userId;
   bool get isSyncActive => _userId != null;
-  // Premium check will be wired later
-  // ignore: unused_element
-  bool get _canUsePremiumFeatures => true; // TODO: wire to PremiumManager
 
   FirestoreRepository({
     required this.db,

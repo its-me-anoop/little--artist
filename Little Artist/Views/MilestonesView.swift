@@ -72,7 +72,9 @@ struct MilestonesView: View {
                 }
             }
             .navigationTitle("Milestones")
-            .background(Brand.cream.ignoresSafeArea())
+            .background(Brand.cream.ignoresSafeArea(.all))
+            .toolbarBackground(Brand.cream, for: .navigationBar)
+            .toolbarBackground(.visible, for: .navigationBar)
             .overlay {
                 if let achievement = celebratingAchievement {
                     AchievementCelebrationView(achievement: achievement) {

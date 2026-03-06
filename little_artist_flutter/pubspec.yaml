@@ -67,6 +67,9 @@ dependencies:
   collection: ^1.19.0
   timezone: any
 
+dependency_overrides:
+  record_linux: ^1.0.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

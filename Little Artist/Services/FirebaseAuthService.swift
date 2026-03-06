@@ -78,6 +78,11 @@ final class FirebaseAuthService: NSObject {
                 self?.currentUser = user
                 guard user != nil else { return }
 
+                // Only start sync if the user has completed onboarding.
+                // This prevents sync from restarting after sign-out
+                // (which resets hasCompletedOnboarding and re-creates an anonymous user).
+                guard UserDefaults.standard.bool(forKey: "hasCompletedOnboarding") else { return }
+
                 FirestoreSyncService.shared.start()
 
                 if let container = FirestoreRepository.shared.modelContainer {
@@ -153,10 +158,18 @@ final class FirebaseAuthService: NSObject {
                 logger.info("Apple account linked to anonymous: \(result.user.uid, privacy: .public)")
                 return true
             } catch let error as NSError where error.code == AuthErrorCode.credentialAlreadyInUse.rawValue {
-                // Apple credential already linked to a different account — sign in directly
-                logger.warning("Credential already in use — signing in instead of linking")
+                // Apple credential already linked to a different Firebase account.
+                // This happens when the user previously deleted their account but
+                // the credential association persists in Firebase.
+                //
+                // The credential token is single-use, so we must:
+                // 1. Delete the current anonymous user to avoid conflicts
+                // 2. Sign in with the credential (first and only consumption)
+                logger.warning("Credential already in use — deleting anonymous user and signing in directly")
+                try? await user.delete()
                 let result = try await Auth.auth().signIn(with: firebaseCredential)
                 currentUser = result.user
+                logger.info("Apple sign-in OK (credential reuse recovery): \(result.user.uid, privacy: .public)")
                 return true
             }
         }

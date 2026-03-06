@@ -58,6 +58,8 @@ struct NoChildrenView: View {
             Spacer()
         }
         .padding(.horizontal, 32)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Brand.cream)
     }
 }
 

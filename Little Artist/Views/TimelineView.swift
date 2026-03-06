@@ -115,7 +115,9 @@ struct TimelineView: View {
                 }
             }
             .navigationTitle("Timeline")
-            .background(Brand.cream.ignoresSafeArea())
+            .background(Brand.cream.ignoresSafeArea(.all))
+            .toolbarBackground(Brand.cream, for: .navigationBar)
+            .toolbarBackground(.visible, for: .navigationBar)
         }
     }
 

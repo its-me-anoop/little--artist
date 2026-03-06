@@ -206,6 +206,8 @@ struct SettingsView: View {
                 Text(accountError ?? "")
             }
         }
+        .toolbarBackground(Brand.cream, for: .navigationBar)
+        .toolbarBackground(.visible, for: .navigationBar)
     }
 
     private var childrenSection: some View {
@@ -434,7 +436,7 @@ struct SettingsView: View {
     private var dataSection: some View {
         Section {
             HStack {
-                Label("Cloud Sync", systemImage: "arrow.triangle.2.circlepath.cloud.fill")
+                Label("Cloud Sync", systemImage: "arrow.triangle.2.circlepath.icloud.fill")
                 Spacer()
                 Text("Always On")
                     .font(Brand.caption2Font)
@@ -593,6 +595,8 @@ struct SettingsView: View {
     private func performSignOut() async {
         do {
             FirestoreSyncService.shared.stop()
+            purgeLocalData()
+            UserDefaults.standard.set(false, forKey: "hasCompletedOnboarding")
             try FirebaseAuthService.shared.signOut()
         } catch {
             accountError = error.localizedDescription
@@ -607,8 +611,11 @@ struct SettingsView: View {
             }
 
             FirestoreSyncService.shared.stop()
-            await FirestoreRepository.shared.deleteAllUserData(userId: userId)
+            // Purge local data first to prevent SwiftData fault errors
+            // when the UI tries to access deleted objects during async cleanup
             purgeLocalData()
+            UserDefaults.standard.set(false, forKey: "hasCompletedOnboarding")
+            await FirestoreRepository.shared.deleteAllUserData(userId: userId)
             try await FirebaseAuthService.shared.deleteAccount()
         } catch {
             accountError = error.localizedDescription

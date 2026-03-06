@@ -110,6 +110,7 @@ struct Little_ArtistApp: App {
                     OnboardingView(hasCompletedOnboarding: $hasCompletedOnboarding)
                 }
             }
+            .background(Brand.cream.ignoresSafeArea(.all))
             #if DEBUG
             .onAppear {
                 // Activate debug premium override via launch argument:
