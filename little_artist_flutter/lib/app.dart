@@ -6,6 +6,8 @@ import 'views/timeline_view.dart';
 import 'views/milestones_view.dart';
 import 'views/settings_view.dart';
 import 'views/search_view.dart';
+import 'views/splash_view.dart';
+import 'views/onboarding/onboarding_view.dart';
 import 'views/artwork/artwork_detail_view.dart';
 import 'views/artwork/add_artwork_view.dart';
 import 'views/children/add_child_view.dart';
@@ -19,8 +21,16 @@ final _rootNavigatorKey = GlobalKey<NavigatorState>();
 
 final GoRouter _router = GoRouter(
   navigatorKey: _rootNavigatorKey,
-  initialLocation: '/gallery',
+  initialLocation: '/',
   routes: [
+    GoRoute(
+      path: '/',
+      builder: (context, state) => const SplashView(),
+    ),
+    GoRoute(
+      path: '/onboarding',
+      builder: (context, state) => const OnboardingView(),
+    ),
     StatefulShellRoute.indexedStack(
       builder: (context, state, navigationShell) {
         return _ScaffoldWithNavBar(navigationShell: navigationShell);
