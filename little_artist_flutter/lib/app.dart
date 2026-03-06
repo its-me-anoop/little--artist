@@ -1,62 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'utils/brand_tokens.dart';
-
-// ---------------------------------------------------------------------------
-// MARK: - Tab placeholder screens
-// ---------------------------------------------------------------------------
-
-class _GalleryScreen extends StatelessWidget {
-  const _GalleryScreen();
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(
-        child: Text('Gallery', style: Brand.title1Font),
-      ),
-    );
-  }
-}
-
-class _TimelineScreen extends StatelessWidget {
-  const _TimelineScreen();
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(
-        child: Text('Timeline', style: Brand.title1Font),
-      ),
-    );
-  }
-}
-
-class _MilestonesScreen extends StatelessWidget {
-  const _MilestonesScreen();
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(
-        child: Text('Milestones', style: Brand.title1Font),
-      ),
-    );
-  }
-}
-
-class _SettingsScreen extends StatelessWidget {
-  const _SettingsScreen();
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(
-        child: Text('Settings', style: Brand.title1Font),
-      ),
-    );
-  }
-}
+import 'views/home_view.dart';
+import 'views/timeline_view.dart';
+import 'views/milestones_view.dart';
+import 'views/settings_view.dart';
+import 'views/search_view.dart';
+import 'views/artwork/artwork_detail_view.dart';
+import 'views/artwork/add_artwork_view.dart';
+import 'views/children/add_child_view.dart';
+import 'views/children/edit_child_view.dart';
 
 // ---------------------------------------------------------------------------
 // MARK: - Router
@@ -77,7 +30,30 @@ final GoRouter _router = GoRouter(
           routes: [
             GoRoute(
               path: '/gallery',
-              builder: (context, state) => const _GalleryScreen(),
+              builder: (context, state) => const HomeView(),
+              routes: [
+                GoRoute(
+                  path: 'artwork/add',
+                  parentNavigatorKey: _rootNavigatorKey,
+                  pageBuilder: (context, state) {
+                    final childId = state.uri.queryParameters['childId'];
+                    return MaterialPage(
+                      fullscreenDialog: true,
+                      child: AddArtworkView(
+                        childId: childId != null ? int.tryParse(childId) : null,
+                      ),
+                    );
+                  },
+                ),
+                GoRoute(
+                  path: 'artwork/:id',
+                  parentNavigatorKey: _rootNavigatorKey,
+                  builder: (context, state) {
+                    final id = int.parse(state.pathParameters['id']!);
+                    return ArtworkDetailView(artworkId: id);
+                  },
+                ),
+              ],
             ),
           ],
         ),
@@ -85,7 +61,7 @@ final GoRouter _router = GoRouter(
           routes: [
             GoRoute(
               path: '/timeline',
-              builder: (context, state) => const _TimelineScreen(),
+              builder: (context, state) => const TimelineView(),
             ),
           ],
         ),
@@ -93,7 +69,7 @@ final GoRouter _router = GoRouter(
           routes: [
             GoRoute(
               path: '/milestones',
-              builder: (context, state) => const _MilestonesScreen(),
+              builder: (context, state) => const MilestonesView(),
             ),
           ],
         ),
@@ -101,11 +77,34 @@ final GoRouter _router = GoRouter(
           routes: [
             GoRoute(
               path: '/settings',
-              builder: (context, state) => const _SettingsScreen(),
+              builder: (context, state) => const SettingsView(),
+              routes: [
+                GoRoute(
+                  path: 'children/add',
+                  parentNavigatorKey: _rootNavigatorKey,
+                  pageBuilder: (context, state) => const MaterialPage(
+                    fullscreenDialog: true,
+                    child: AddChildView(),
+                  ),
+                ),
+                GoRoute(
+                  path: 'children/:id/edit',
+                  parentNavigatorKey: _rootNavigatorKey,
+                  builder: (context, state) {
+                    final id = int.parse(state.pathParameters['id']!);
+                    return EditChildView(childId: id);
+                  },
+                ),
+              ],
             ),
           ],
         ),
       ],
+    ),
+    GoRoute(
+      path: '/search',
+      parentNavigatorKey: _rootNavigatorKey,
+      builder: (context, state) => const SearchView(),
     ),
   ],
 );
