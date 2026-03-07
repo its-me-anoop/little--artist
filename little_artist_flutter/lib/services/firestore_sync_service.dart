@@ -35,7 +35,7 @@ class FirestoreSyncService {
   StreamSubscription<DocumentSnapshot>? _preferencesListener;
   final Map<String, StreamSubscription<QuerySnapshot>> _artworkListeners = {};
   final Map<String, StreamSubscription<QuerySnapshot>>
-      _sharedChildrenListeners = {};
+  _sharedChildrenListeners = {};
   final Map<String, String> _activeShareChildMap = {};
   bool _hasProcessedInitialChildrenSnapshot = false;
 
@@ -121,6 +121,27 @@ class FirestoreSyncService {
             );
           }
 
+          if (data.containsKey('aiCaptionsEnabled')) {
+            await prefs.setBool(
+              'aiCaptionsEnabled',
+              data['aiCaptionsEnabled'] as bool? ?? true,
+            );
+          }
+
+          if (data.containsKey('defaultCameraBack')) {
+            await prefs.setBool(
+              'defaultCameraBack',
+              data['defaultCameraBack'] as bool? ?? true,
+            );
+          }
+
+          if (data.containsKey('notificationsEnabled')) {
+            await prefs.setBool(
+              'notificationsEnabled',
+              data['notificationsEnabled'] as bool? ?? false,
+            );
+          }
+
           if (data.containsKey('selectedChildId') &&
               data['selectedChildId'] != null) {
             await prefs.setInt(
@@ -164,12 +185,7 @@ class FirestoreSyncService {
           switch (change.type) {
             case DocumentChangeType.added:
             case DocumentChangeType.modified:
-              await _upsertChild(
-                change.doc,
-                firestoreId,
-                false,
-                userId,
-              );
+              await _upsertChild(change.doc, firestoreId, false, userId);
               // Attach artwork listener for this child
               if (!_artworkListeners.containsKey(docId)) {
                 _listenToArtworks(userId, docId, firestoreId);
@@ -205,8 +221,9 @@ class FirestoreSyncService {
     String childDocId,
     String childFirestoreId,
   ) {
-    final collectionRef = _firestore
-        .collection('users/$userId/children/$childDocId/artworks');
+    final collectionRef = _firestore.collection(
+      'users/$userId/children/$childDocId/artworks',
+    );
 
     _artworkListeners[childDocId] = collectionRef.snapshots().listen(
       (snapshot) async {
@@ -226,11 +243,7 @@ class FirestoreSyncService {
           switch (change.type) {
             case DocumentChangeType.added:
             case DocumentChangeType.modified:
-              await _upsertArtwork(
-                change.doc,
-                firestoreId,
-                childFirestoreId,
-              );
+              await _upsertArtwork(change.doc, firestoreId, childFirestoreId);
             case DocumentChangeType.removed:
               await _removeArtwork(firestoreId);
           }
@@ -276,8 +289,7 @@ class FirestoreSyncService {
                 userId,
               );
             case DocumentChangeType.removed:
-              final childFirestoreId =
-                  'users/$ownerUserId/children/$childId';
+              final childFirestoreId = 'users/$ownerUserId/children/$childId';
               await _removeSharedChild(childFirestoreId, shareId);
           }
         }
@@ -326,40 +338,36 @@ class FirestoreSyncService {
 
     // Listen to the shared child document via a collection query on the parent
     // that filters to only this child's doc changes.
-    final childDocRef =
-        _firestore.doc('users/$ownerUserId/children/$childId');
+    final childDocRef = _firestore.doc('users/$ownerUserId/children/$childId');
 
     // Listen to the child doc itself using a wrapper query
     // We use the parent collection with a single-doc approach
-    final childCollectionRef =
-        _firestore.collection('users/$ownerUserId/children');
-
-    _sharedChildrenListeners[childFirestoreId] =
-        childCollectionRef.snapshots().listen(
-      (snapshot) async {
-        for (final change in snapshot.docChanges) {
-          if (change.doc.id != childId) continue;
-
-          final fid = 'users/$ownerUserId/children/${change.doc.id}';
-
-          switch (change.type) {
-            case DocumentChangeType.added:
-            case DocumentChangeType.modified:
-              await _upsertChild(
-                change.doc,
-                fid,
-                true,
-                ownerUserId,
-              );
-            case DocumentChangeType.removed:
-              await _removeChild(fid);
-          }
-        }
-      },
-      onError: (Object e) {
-        diag('sharedChild[$childFirestoreId]: listener error - $e');
-      },
+    final childCollectionRef = _firestore.collection(
+      'users/$ownerUserId/children',
     );
+
+    _sharedChildrenListeners[childFirestoreId] = childCollectionRef
+        .snapshots()
+        .listen(
+          (snapshot) async {
+            for (final change in snapshot.docChanges) {
+              if (change.doc.id != childId) continue;
+
+              final fid = 'users/$ownerUserId/children/${change.doc.id}';
+
+              switch (change.type) {
+                case DocumentChangeType.added:
+                case DocumentChangeType.modified:
+                  await _upsertChild(change.doc, fid, true, ownerUserId);
+                case DocumentChangeType.removed:
+                  await _removeChild(fid);
+              }
+            }
+          },
+          onError: (Object e) {
+            diag('sharedChild[$childFirestoreId]: listener error - $e');
+          },
+        );
 
     // Also fetch the child doc once to bootstrap
     try {
@@ -373,8 +381,9 @@ class FirestoreSyncService {
 
     // Listen to shared child's artworks
     if (!_artworkListeners.containsKey('shared_$childId')) {
-      final artworksRef = _firestore
-          .collection('users/$ownerUserId/children/$childId/artworks');
+      final artworksRef = _firestore.collection(
+        'users/$ownerUserId/children/$childId/artworks',
+      );
 
       _artworkListeners['shared_$childId'] = artworksRef.snapshots().listen(
         (snapshot) async {
@@ -386,11 +395,7 @@ class FirestoreSyncService {
             switch (change.type) {
               case DocumentChangeType.added:
               case DocumentChangeType.modified:
-                await _upsertArtwork(
-                  change.doc,
-                  artworkFid,
-                  childFirestoreId,
-                );
+                await _upsertArtwork(change.doc, artworkFid, childFirestoreId);
               case DocumentChangeType.removed:
                 await _removeArtwork(artworkFid);
             }
@@ -420,8 +425,8 @@ class FirestoreSyncService {
       final name = data['name'] as String? ?? '';
       final avatarColor = data['avatarColor'] as String? ?? 'F2784B';
       final avatarURL = data['avatarURL'] as String?;
-      final createdAt = (data['createdAt'] as Timestamp?)?.toDate() ??
-          DateTime.now();
+      final createdAt =
+          (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now();
 
       // Download avatar if URL is present
       Uint8List? avatarImageData;
@@ -537,11 +542,10 @@ class FirestoreSyncService {
       final isFavorited = data['isFavorited'] as bool? ?? false;
       final imageURL = data['imageURL'] as String?;
       final voiceNoteURL = data['voiceNoteURL'] as String?;
-      final createdAt = (data['createdAt'] as Timestamp?)?.toDate() ??
-          DateTime.now();
-      final tagNames = (data['tags'] as List<dynamic>?)
-              ?.map((e) => e as String)
-              .toList() ??
+      final createdAt =
+          (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now();
+      final tagNames =
+          (data['tags'] as List<dynamic>?)?.map((e) => e as String).toList() ??
           [];
 
       // Download image and generate thumbnail
@@ -550,8 +554,9 @@ class FirestoreSyncService {
       if (imageURL != null && imageURL.isNotEmpty) {
         imageData = await storageService.downloadUrl(imageURL);
         if (imageData != null) {
-          thumbnailData =
-              await ImageProcessingService().generateThumbnail(imageData);
+          thumbnailData = await ImageProcessingService().generateThumbnail(
+            imageData,
+          );
         }
       }
 
@@ -562,8 +567,9 @@ class FirestoreSyncService {
       }
 
       // Find parent child by firestoreId
-      final parentChild =
-          await db.childDao.getChildByFirestoreId(childFirestoreId);
+      final parentChild = await db.childDao.getChildByFirestoreId(
+        childFirestoreId,
+      );
       if (parentChild == null) {
         diag('upsertArtwork: parent child not found for $childFirestoreId');
         return;
@@ -577,8 +583,7 @@ class FirestoreSyncService {
       }
 
       // Check for existing artwork by firestoreId
-      final existing =
-          await db.artworkDao.getArtworkByFirestoreId(firestoreId);
+      final existing = await db.artworkDao.getArtworkByFirestoreId(firestoreId);
 
       if (existing != null) {
         // Update existing artwork
@@ -597,9 +602,7 @@ class FirestoreSyncService {
           voiceNoteData: voiceNoteData != null
               ? Value(voiceNoteData)
               : const Value.absent(),
-          imageURL: imageURL != null
-              ? Value(imageURL)
-              : const Value.absent(),
+          imageURL: imageURL != null ? Value(imageURL) : const Value.absent(),
           voiceNoteURL: voiceNoteURL != null
               ? Value(voiceNoteURL)
               : const Value.absent(),
@@ -635,9 +638,7 @@ class FirestoreSyncService {
             voiceNoteData: voiceNoteData != null
                 ? Value(voiceNoteData)
                 : const Value.absent(),
-            imageURL: imageURL != null
-                ? Value(imageURL)
-                : const Value.absent(),
+            imageURL: imageURL != null ? Value(imageURL) : const Value.absent(),
             voiceNoteURL: voiceNoteURL != null
                 ? Value(voiceNoteURL)
                 : const Value.absent(),
@@ -662,8 +663,7 @@ class FirestoreSyncService {
 
   Future<void> _removeArtwork(String firestoreId) async {
     try {
-      final existing =
-          await db.artworkDao.getArtworkByFirestoreId(firestoreId);
+      final existing = await db.artworkDao.getArtworkByFirestoreId(firestoreId);
       if (existing != null) {
         await db.artworkDao.deleteArtwork(existing.id);
         diag('removeArtwork: deleted ${existing.id} (${existing.title})');
@@ -699,8 +699,9 @@ class FirestoreSyncService {
 
     // Delete the local child
     try {
-      final existing =
-          await db.childDao.getChildByFirestoreId(childFirestoreId);
+      final existing = await db.childDao.getChildByFirestoreId(
+        childFirestoreId,
+      );
       if (existing != null) {
         await db.childDao.deleteChild(existing.id);
         diag('removeSharedChild: deleted local child ${existing.id}');
@@ -739,8 +740,9 @@ class FirestoreSyncService {
         // Count artworks for each child
         final counts = <int, int>{};
         for (final child in group) {
-          counts[child.id] =
-              await db.artworkDao.getArtworkCountForChild(child.id);
+          counts[child.id] = await db.artworkDao.getArtworkCountForChild(
+            child.id,
+          );
         }
 
         // Sort: most artworks first, then earliest createdAt
@@ -755,8 +757,9 @@ class FirestoreSyncService {
 
         for (final loser in losers) {
           // Reassign artworks from loser to winner
-          final loserArtworks =
-              await db.artworkDao.watchArtworksByChild(loser.id).first;
+          final loserArtworks = await db.artworkDao
+              .watchArtworksByChild(loser.id)
+              .first;
           for (final artwork in loserArtworks) {
             final updated = artwork.copyWith(childId: Value(winner.id));
             await db.artworkDao.updateArtwork(updated);
@@ -810,8 +813,7 @@ class FirestoreSyncService {
       'sharesListener': (_sharesListener != null).toString(),
       'preferencesListener': (_preferencesListener != null).toString(),
       'artworkListenerCount': _artworkListeners.length.toString(),
-      'sharedChildrenListenerCount':
-          _sharedChildrenListeners.length.toString(),
+      'sharedChildrenListenerCount': _sharedChildrenListeners.length.toString(),
       'activeShareCount': _activeShareChildMap.length.toString(),
       'diagnosticLogCount': diagnosticLog.length.toString(),
     };

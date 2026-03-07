@@ -12,10 +12,7 @@ import 'storage_service.dart';
 // MARK: - Error Enum
 // ---------------------------------------------------------------------------
 
-enum FirestoreError {
-  notAuthenticated,
-  syncFailed,
-}
+enum FirestoreError { notAuthenticated, syncFailed }
 
 // ---------------------------------------------------------------------------
 // MARK: - Sharing Data Classes
@@ -25,11 +22,7 @@ class ShareParticipant {
   final String userId;
   final String role;
   final DateTime? acceptedAt;
-  ShareParticipant({
-    required this.userId,
-    required this.role,
-    this.acceptedAt,
-  });
+  ShareParticipant({required this.userId, required this.role, this.acceptedAt});
 }
 
 class ShareInfo {
@@ -80,14 +73,17 @@ class FirestoreRepository {
     try {
       final prefs = await SharedPreferences.getInstance();
       final data = <String, dynamic>{
-        'hasCompletedOnboarding': prefs.getBool('hasCompletedOnboarding') ?? false,
+        'aiCaptionsEnabled': prefs.getBool('aiCaptionsEnabled') ?? true,
+        'defaultCameraBack': prefs.getBool('defaultCameraBack') ?? true,
+        'hasCompletedOnboarding':
+            prefs.getBool('hasCompletedOnboarding') ?? false,
+        'notificationsEnabled': prefs.getBool('notificationsEnabled') ?? false,
         'selectedChildId': prefs.getInt('selectedChildId'),
         'updatedAt': FieldValue.serverTimestamp(),
       };
-      await _firestore.doc('users/$uid/meta/preferences').set(
-        data,
-        SetOptions(merge: true),
-      );
+      await _firestore
+          .doc('users/$uid/meta/preferences')
+          .set(data, SetOptions(merge: true));
     } catch (e) {
       debugPrint('FirestoreRepository: syncUserPreferences failed – $e');
     }
@@ -153,11 +149,14 @@ class FirestoreRepository {
     String? name,
     String? avatarColor,
     Uint8List? avatarImageData,
+    bool clearAvatarImage = false,
   }) async {
     final updated = child.copyWith(
       name: name ?? child.name,
       avatarColor: avatarColor ?? child.avatarColor,
-      avatarImageData: avatarImageData != null
+      avatarImageData: clearAvatarImage
+          ? const Value(null)
+          : avatarImageData != null
           ? Value(avatarImageData)
           : const Value.absent(),
     );
@@ -176,6 +175,7 @@ class FirestoreRepository {
         name: name,
         avatarColor: avatarColor,
         avatarImageData: avatarImageData,
+        clearAvatarImage: clearAvatarImage,
       );
     }
   }
@@ -297,14 +297,17 @@ class FirestoreRepository {
 
   /// Creates multiple artworks, offsetting dates by index to avoid collisions.
   Future<void> batchCreateArtworks({
-    required List<({
-      String title,
-      String caption,
-      Uint8List? imageData,
-      Uint8List? thumbnailData,
-      Uint8List? voiceNoteData,
-      List<String>? tagNames,
-    })> items,
+    required List<
+      ({
+        String title,
+        String caption,
+        Uint8List? imageData,
+        Uint8List? thumbnailData,
+        Uint8List? voiceNoteData,
+        List<String>? tagNames,
+      })
+    >
+    items,
     required int childId,
   }) async {
     final baseDate = DateTime.now();
@@ -444,7 +447,9 @@ class FirestoreRepository {
     }
 
     // Ensure child is synced to Firestore first
-    if (child.firestoreId == null) {
+    var effectiveFirestoreId = child.firestoreId;
+
+    if (effectiveFirestoreId == null) {
       final childDocId = _uuid.v4();
       final firestoreId = 'users/$uid/children/$childDocId';
       await _syncChildToFirestore(
@@ -457,9 +462,10 @@ class FirestoreRepository {
       );
       final updated = child.copyWith(firestoreId: Value(firestoreId));
       await db.childDao.updateChild(updated);
+      effectiveFirestoreId = firestoreId;
     }
 
-    final childDocId = _extractDocId(child.firestoreId!);
+    final childDocId = _extractDocId(effectiveFirestoreId);
     final childPath = 'users/$uid/children/$childDocId';
 
     final shareRef = _firestore.collection('shares').doc();
@@ -483,9 +489,7 @@ class FirestoreRepository {
     final uid = _userId;
     if (uid == null) throw FirestoreError.notAuthenticated;
 
-    await _firestore
-        .doc('shares/$shareId/participants/$uid')
-        .set({
+    await _firestore.doc('shares/$shareId/participants/$uid').set({
       'userId': uid,
       'role': 'viewer',
       'acceptedAt': FieldValue.serverTimestamp(),
@@ -508,9 +512,7 @@ class FirestoreRepository {
     final uid = _userId;
     if (uid == null) throw FirestoreError.notAuthenticated;
 
-    await _firestore
-        .doc('shares/$shareId/participants/$uid')
-        .delete();
+    await _firestore.doc('shares/$shareId/participants/$uid').delete();
   }
 
   /// Fetches all participants for a share.
@@ -658,7 +660,11 @@ class FirestoreRepository {
           // Delete storage files
           try {
             await storageService.delete(
-              StorageService.artworkImagePath(userId, childDoc.id, artworkDoc.id),
+              StorageService.artworkImagePath(
+                userId,
+                childDoc.id,
+                artworkDoc.id,
+              ),
             );
           } catch (_) {}
           try {
@@ -748,9 +754,7 @@ class FirestoreRepository {
 
       // Delete avatar
       try {
-        await storageService.delete(
-          StorageService.avatarPath(uid, childDocId),
-        );
+        await storageService.delete(StorageService.avatarPath(uid, childDocId));
       } catch (_) {}
 
       // Delete child doc
@@ -788,12 +792,10 @@ class FirestoreRepository {
         'avatarColor': avatarColor,
         'createdAt': Timestamp.fromDate(createdAt),
         'updatedAt': FieldValue.serverTimestamp(),
-        'avatarURL': ?avatarURL,
+        'avatarURL': avatarURL,
       };
 
-      await _firestore
-          .doc('users/$uid/children/$childDocId')
-          .set(data);
+      await _firestore.doc('users/$uid/children/$childDocId').set(data);
     } catch (e) {
       debugPrint('FirestoreRepository: _syncChildToFirestore failed – $e');
     }
@@ -809,11 +811,10 @@ class FirestoreRepository {
     String? name,
     String? avatarColor,
     Uint8List? avatarImageData,
+    bool clearAvatarImage = false,
   }) async {
     try {
-      final data = <String, dynamic>{
-        'updatedAt': FieldValue.serverTimestamp(),
-      };
+      final data = <String, dynamic>{'updatedAt': FieldValue.serverTimestamp()};
 
       if (name != null) data['name'] = name;
       if (avatarColor != null) data['avatarColor'] = avatarColor;
@@ -821,18 +822,23 @@ class FirestoreRepository {
       // Re-upload avatar if changed
       if (avatarImageData != null) {
         final path = StorageService.avatarPath(uid, childDocId);
-        final avatarURL =
-            await storageService.uploadWithRetry(avatarImageData, path);
+        final avatarURL = await storageService.uploadWithRetry(
+          avatarImageData,
+          path,
+        );
         if (avatarURL != null) data['avatarURL'] = avatarURL;
+      } else if (clearAvatarImage) {
+        try {
+          await storageService.delete(
+            StorageService.avatarPath(uid, childDocId),
+          );
+        } catch (_) {}
+        data['avatarURL'] = null;
       }
 
-      await _firestore
-          .doc('users/$uid/children/$childDocId')
-          .update(data);
+      await _firestore.doc('users/$uid/children/$childDocId').update(data);
     } catch (e) {
-      debugPrint(
-        'FirestoreRepository: _updateChildInFirestore failed – $e',
-      );
+      debugPrint('FirestoreRepository: _updateChildInFirestore failed – $e');
     }
   }
 
@@ -866,17 +872,13 @@ class FirestoreRepository {
 
       // Delete avatar from storage
       try {
-        await storageService.delete(
-          StorageService.avatarPath(uid, childDocId),
-        );
+        await storageService.delete(StorageService.avatarPath(uid, childDocId));
       } catch (_) {}
 
       // Delete child document
       await _firestore.doc('users/$uid/children/$childDocId').delete();
     } catch (e) {
-      debugPrint(
-        'FirestoreRepository: _deleteChildFromFirestore failed – $e',
-      );
+      debugPrint('FirestoreRepository: _deleteChildFromFirestore failed – $e');
     }
   }
 
@@ -903,13 +905,21 @@ class FirestoreRepository {
 
       // Upload image
       if (imageData != null) {
-        final path = StorageService.artworkImagePath(uid, childDocId, artworkDocId);
+        final path = StorageService.artworkImagePath(
+          uid,
+          childDocId,
+          artworkDocId,
+        );
         imageURL = await storageService.uploadWithRetry(imageData, path);
       }
 
       // Upload voice note
       if (voiceNoteData != null) {
-        final path = StorageService.voiceNotePath(uid, childDocId, artworkDocId);
+        final path = StorageService.voiceNotePath(
+          uid,
+          childDocId,
+          artworkDocId,
+        );
         voiceNoteURL = await storageService.uploadWithRetry(
           voiceNoteData,
           path,
@@ -967,9 +977,7 @@ class FirestoreRepository {
     List<String>? tagNames,
   }) async {
     try {
-      final data = <String, dynamic>{
-        'updatedAt': FieldValue.serverTimestamp(),
-      };
+      final data = <String, dynamic>{'updatedAt': FieldValue.serverTimestamp()};
 
       if (title != null) data['title'] = title;
       if (caption != null) data['caption'] = caption;
@@ -978,10 +986,12 @@ class FirestoreRepository {
 
       // Re-upload image if changed
       if (imageData != null) {
-        final path =
-            StorageService.artworkImagePath(uid, childDocId, artworkDocId);
-        final imageURL =
-            await storageService.uploadWithRetry(imageData, path);
+        final path = StorageService.artworkImagePath(
+          uid,
+          childDocId,
+          artworkDocId,
+        );
+        final imageURL = await storageService.uploadWithRetry(imageData, path);
         if (imageURL != null) {
           data['imageURL'] = imageURL;
           // Update local URL
@@ -995,8 +1005,11 @@ class FirestoreRepository {
 
       // Re-upload voice note if changed
       if (voiceNoteData != null) {
-        final path =
-            StorageService.voiceNotePath(uid, childDocId, artworkDocId);
+        final path = StorageService.voiceNotePath(
+          uid,
+          childDocId,
+          artworkDocId,
+        );
         final voiceNoteURL = await storageService.uploadWithRetry(
           voiceNoteData,
           path,
@@ -1016,9 +1029,7 @@ class FirestoreRepository {
           .doc('users/$uid/children/$childDocId/artworks/$artworkDocId')
           .update(data);
     } catch (e) {
-      debugPrint(
-        'FirestoreRepository: _updateArtworkInFirestore failed – $e',
-      );
+      debugPrint('FirestoreRepository: _updateArtworkInFirestore failed – $e');
     }
   }
 
@@ -1100,14 +1111,10 @@ class FirestoreRepository {
           StorageService.voiceNotePath(uid, childDocId, artworkDocId),
         );
       } else {
-        await storageService.delete(
-          StorageService.avatarPath(uid, childDocId),
-        );
+        await storageService.delete(StorageService.avatarPath(uid, childDocId));
       }
     } catch (e) {
-      debugPrint(
-        'FirestoreRepository: _deleteOrphanedStorage failed – $e',
-      );
+      debugPrint('FirestoreRepository: _deleteOrphanedStorage failed – $e');
     }
   }
 

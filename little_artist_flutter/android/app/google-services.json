@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "576887246267",
+    "project_id": "little-artist-fb9a8",
+    "storage_bucket": "little-artist-fb9a8.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:576887246267:android:58a4a0e0a286485f5a089e",
+        "android_client_info": {
+          "package_name": "uk.co.flutterly.little_artist"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC2eaVNnsOrAqvLZZ6ogMgxpXoKrG61Y8k"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

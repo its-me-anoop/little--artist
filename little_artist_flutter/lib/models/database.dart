@@ -10,10 +10,8 @@ part 'database.g.dart';
 class Children extends Table {
   IntColumn get id => integer().autoIncrement()();
   TextColumn get name => text().withDefault(const Constant(''))();
-  TextColumn get avatarColor =>
-      text().withDefault(const Constant('F2784B'))();
-  DateTimeColumn get createdAt =>
-      dateTime().withDefault(currentDateAndTime)();
+  TextColumn get avatarColor => text().withDefault(const Constant('F2784B'))();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
   BlobColumn get avatarImageData => blob().nullable()();
   TextColumn get firestoreId => text().nullable()();
   BoolColumn get isShared => boolean().withDefault(const Constant(false))();
@@ -27,12 +25,13 @@ class Artworks extends Table {
   BlobColumn get imageData => blob().nullable()();
   BlobColumn get thumbnailData => blob().nullable()();
   BlobColumn get voiceNoteData => blob().nullable()();
-  BoolColumn get isFavorited =>
-      boolean().withDefault(const Constant(false))();
-  DateTimeColumn get createdAt =>
-      dateTime().withDefault(currentDateAndTime)();
-  IntColumn get childId =>
-      integer().nullable().references(Children, #id, onDelete: KeyAction.cascade)();
+  BoolColumn get isFavorited => boolean().withDefault(const Constant(false))();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  IntColumn get childId => integer().nullable().references(
+    Children,
+    #id,
+    onDelete: KeyAction.cascade,
+  )();
   TextColumn get firestoreId => text().nullable()();
   TextColumn get imageURL => text().nullable()();
   TextColumn get voiceNoteURL => text().nullable()();
@@ -62,19 +61,19 @@ class ChildDao extends DatabaseAccessor<AppDatabase> with _$ChildDaoMixin {
   ChildDao(super.db);
 
   Stream<List<Child>> watchAllChildren() {
-    return (select(children)
-          ..orderBy([(t) => OrderingTerm.asc(t.createdAt)]))
-        .watch();
+    return (select(
+      children,
+    )..orderBy([(t) => OrderingTerm.asc(t.createdAt)])).watch();
   }
 
   Future<Child?> getChildById(int id) {
-    return (select(children)..where((t) => t.id.equals(id)))
-        .getSingleOrNull();
+    return (select(children)..where((t) => t.id.equals(id))).getSingleOrNull();
   }
 
   Future<Child?> getChildByFirestoreId(String firestoreId) {
-    return (select(children)..where((t) => t.firestoreId.equals(firestoreId)))
-        .getSingleOrNull();
+    return (select(
+      children,
+    )..where((t) => t.firestoreId.equals(firestoreId))).getSingleOrNull();
   }
 
   Future<int> insertChild(ChildrenCompanion child) {
@@ -98,8 +97,7 @@ class ChildDao extends DatabaseAccessor<AppDatabase> with _$ChildDaoMixin {
 }
 
 @DriftAccessor(tables: [Artworks])
-class ArtworkDao extends DatabaseAccessor<AppDatabase>
-    with _$ArtworkDaoMixin {
+class ArtworkDao extends DatabaseAccessor<AppDatabase> with _$ArtworkDaoMixin {
   ArtworkDao(super.db);
 
   Stream<List<Artwork>> watchArtworksByChild(int childId) {
@@ -110,20 +108,19 @@ class ArtworkDao extends DatabaseAccessor<AppDatabase>
   }
 
   Stream<List<Artwork>> watchAllArtworks() {
-    return (select(artworks)
-          ..orderBy([(t) => OrderingTerm.desc(t.createdAt)]))
-        .watch();
+    return (select(
+      artworks,
+    )..orderBy([(t) => OrderingTerm.desc(t.createdAt)])).watch();
   }
 
   Future<Artwork?> getArtworkById(int id) {
-    return (select(artworks)..where((t) => t.id.equals(id)))
-        .getSingleOrNull();
+    return (select(artworks)..where((t) => t.id.equals(id))).getSingleOrNull();
   }
 
   Future<Artwork?> getArtworkByFirestoreId(String firestoreId) {
-    return (select(artworks)
-          ..where((t) => t.firestoreId.equals(firestoreId)))
-        .getSingleOrNull();
+    return (select(
+      artworks,
+    )..where((t) => t.firestoreId.equals(firestoreId))).getSingleOrNull();
   }
 
   Future<int> insertArtwork(ArtworksCompanion artwork) {
@@ -157,8 +154,7 @@ class ArtworkDao extends DatabaseAccessor<AppDatabase>
   Future<List<Artwork>> searchArtworks(String query) {
     final pattern = '%$query%';
     return (select(artworks)
-          ..where(
-              (t) => t.title.like(pattern) | t.caption.like(pattern))
+          ..where((t) => t.title.like(pattern) | t.caption.like(pattern))
           ..orderBy([(t) => OrderingTerm.desc(t.createdAt)]))
         .get();
   }
@@ -180,9 +176,9 @@ class TagDao extends DatabaseAccessor<AppDatabase> with _$TagDaoMixin {
   }
 
   Future<int> getOrCreateTag(String name) async {
-    final existing = await (select(tags)
-          ..where((t) => t.name.equals(name)))
-        .getSingleOrNull();
+    final existing = await (select(
+      tags,
+    )..where((t) => t.name.equals(name))).getSingleOrNull();
     if (existing != null) return existing.id;
     return into(tags).insert(TagsCompanion.insert(name: name));
   }
@@ -196,27 +192,31 @@ class TagDao extends DatabaseAccessor<AppDatabase> with _$TagDaoMixin {
 
   Future<void> removeTagFromArtwork(int artworkId, int tagId) {
     return (delete(artworkTags)
-          ..where(
-              (t) => t.artworkId.equals(artworkId) & t.tagId.equals(tagId)))
+          ..where((t) => t.artworkId.equals(artworkId) & t.tagId.equals(tagId)))
         .go()
         .then((_) {});
   }
 
   Future<List<Tag>> getTagsForArtwork(int artworkId) {
-    final query = select(tags).join([
-      innerJoin(artworkTags, artworkTags.tagId.equalsExp(tags.id)),
-    ])
-      ..where(artworkTags.artworkId.equals(artworkId))
-      ..orderBy([OrderingTerm.asc(tags.name)]);
+    final query =
+        select(
+            tags,
+          ).join([innerJoin(artworkTags, artworkTags.tagId.equalsExp(tags.id))])
+          ..where(artworkTags.artworkId.equals(artworkId))
+          ..orderBy([OrderingTerm.asc(tags.name)]);
     return query.map((row) => row.readTable(tags)).get();
   }
 
   Stream<List<Artwork>> getArtworksByTag(int tagId) {
-    final query = select(artworks).join([
-      innerJoin(artworkTags, artworkTags.artworkId.equalsExp(artworks.id)),
-    ])
-      ..where(artworkTags.tagId.equals(tagId))
-      ..orderBy([OrderingTerm.desc(artworks.createdAt)]);
+    final query =
+        select(artworks).join([
+            innerJoin(
+              artworkTags,
+              artworkTags.artworkId.equalsExp(artworks.id),
+            ),
+          ])
+          ..where(artworkTags.tagId.equals(tagId))
+          ..orderBy([OrderingTerm.desc(artworks.createdAt)]);
     return query.map((row) => row.readTable(artworks)).watch();
   }
 }
@@ -234,4 +234,13 @@ class AppDatabase extends _$AppDatabase {
 
   @override
   int get schemaVersion => 1;
+
+  Future<void> clearAllData() async {
+    await transaction(() async {
+      await delete(artworkTags).go();
+      await delete(artworks).go();
+      await delete(children).go();
+      await delete(tags).go();
+    });
+  }
 }

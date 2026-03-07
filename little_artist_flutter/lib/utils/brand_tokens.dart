@@ -28,39 +28,6 @@ class Brand {
   static const Color disabled = Color(0xFF8A8680);
 
   // ---------------------------------------------------------------------------
-  // MARK: - Colors (Dark)
-  // ---------------------------------------------------------------------------
-
-  static const Color creamDark = Color(0xFF1C1C1E);
-  static const Color surfaceDark = Color(0xFF2C2C2C);
-  static const Color charcoalDark = Color(0xFFE5E5EA);
-  static const Color warmGrayDark = Color(0xFF9E9EA3);
-  static const Color softTanDark = Color(0xFF38383A);
-
-  // ---------------------------------------------------------------------------
-  // MARK: - Adaptive color helpers
-  // ---------------------------------------------------------------------------
-
-  static Color adaptiveCream(BuildContext context) =>
-      Theme.of(context).brightness == Brightness.dark ? creamDark : cream;
-
-  static Color adaptiveSurface(BuildContext context) =>
-      Theme.of(context).brightness == Brightness.dark ? surfaceDark : surface;
-
-  static Color adaptiveCharcoal(BuildContext context) =>
-      Theme.of(context).brightness == Brightness.dark
-          ? charcoalDark
-          : charcoal;
-
-  static Color adaptiveWarmGray(BuildContext context) =>
-      Theme.of(context).brightness == Brightness.dark
-          ? warmGrayDark
-          : warmGray;
-
-  static Color adaptiveSoftTan(BuildContext context) =>
-      Theme.of(context).brightness == Brightness.dark ? softTanDark : softTan;
-
-  // ---------------------------------------------------------------------------
   // MARK: - Avatar Palette
   // ---------------------------------------------------------------------------
 
@@ -181,20 +148,9 @@ class Brand {
   // MARK: - ThemeData
   // ---------------------------------------------------------------------------
 
-  static ThemeData get lightTheme => _buildTheme(Brightness.light);
-  static ThemeData get darkTheme => _buildTheme(Brightness.dark);
-
-  static ThemeData _buildTheme(Brightness brightness) {
-    final bool isDark = brightness == Brightness.dark;
-
-    final Color bg = isDark ? creamDark : cream;
-    final Color surfaceColor = isDark ? surfaceDark : surface;
-    final Color textColor = isDark ? charcoalDark : charcoal;
-    final Color subtitleColor = isDark ? warmGrayDark : warmGray;
-    final Color divider = isDark ? softTanDark : softTan;
-
+  static ThemeData get lightTheme {
     final colorScheme = ColorScheme(
-      brightness: brightness,
+      brightness: Brightness.light,
       primary: primary,
       onPrimary: Colors.white,
       secondary: sage,
@@ -203,50 +159,53 @@ class Brand {
       onTertiary: charcoal,
       error: dustyRose,
       onError: Colors.white,
-      surface: surfaceColor,
-      onSurface: textColor,
-      surfaceContainerHighest: divider,
+      surface: surface,
+      onSurface: charcoal,
+      surfaceContainerHighest: softTan,
     );
 
     final textTheme = TextTheme(
-      displayLarge: displayFont.copyWith(color: textColor),
-      headlineLarge: title1Font.copyWith(color: textColor),
-      headlineMedium: title2Font.copyWith(color: textColor),
-      headlineSmall: title3Font.copyWith(color: textColor),
-      titleLarge: headlineFont.copyWith(color: textColor),
-      bodyLarge: bodyFont.copyWith(color: textColor),
-      bodyMedium: subheadlineFont.copyWith(color: textColor),
-      bodySmall: captionFont.copyWith(color: subtitleColor),
-      labelSmall: caption2Font.copyWith(color: subtitleColor),
+      displayLarge: displayFont.copyWith(color: charcoal),
+      headlineLarge: title1Font.copyWith(color: charcoal),
+      headlineMedium: title2Font.copyWith(color: charcoal),
+      headlineSmall: title3Font.copyWith(color: charcoal),
+      titleLarge: headlineFont.copyWith(color: charcoal),
+      bodyLarge: bodyFont.copyWith(color: charcoal),
+      bodyMedium: subheadlineFont.copyWith(color: charcoal),
+      bodySmall: captionFont.copyWith(color: warmGray),
+      labelSmall: caption2Font.copyWith(color: warmGray),
     );
 
     return ThemeData(
-      brightness: brightness,
+      brightness: Brightness.light,
       colorScheme: colorScheme,
-      scaffoldBackgroundColor: bg,
-      dividerColor: divider,
+      scaffoldBackgroundColor: cream,
+      dividerColor: softTan,
       textTheme: textTheme,
       appBarTheme: AppBarTheme(
-        backgroundColor: bg,
-        foregroundColor: textColor,
+        backgroundColor: cream,
+        foregroundColor: charcoal,
         elevation: 0,
         scrolledUnderElevation: 0,
-        titleTextStyle: title2Font.copyWith(color: textColor),
+        titleTextStyle: title2Font.copyWith(color: charcoal),
       ),
       navigationBarTheme: NavigationBarThemeData(
-        backgroundColor: bg,
+        backgroundColor: cream,
         indicatorColor: primaryTint,
         labelTextStyle: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
-            return captionFont.copyWith(color: primary, fontWeight: FontWeight.w600);
+            return captionFont.copyWith(
+              color: primary,
+              fontWeight: FontWeight.w600,
+            );
           }
-          return captionFont.copyWith(color: subtitleColor);
+          return captionFont.copyWith(color: warmGray);
         }),
         iconTheme: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
             return const IconThemeData(color: primary);
           }
-          return IconThemeData(color: subtitleColor);
+          return const IconThemeData(color: warmGray);
         }),
       ),
       floatingActionButtonTheme: FloatingActionButtonThemeData(
@@ -258,7 +217,7 @@ class Brand {
         ),
       ),
       cardTheme: CardThemeData(
-        color: surfaceColor,
+        color: surface,
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(radiusCard),

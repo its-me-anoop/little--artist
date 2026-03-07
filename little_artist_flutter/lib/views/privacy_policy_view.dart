@@ -12,9 +12,7 @@ class PrivacyPolicyView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Privacy Policy'),
-      ),
+      appBar: AppBar(title: const Text('Privacy Policy')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(Brand.screenPadding),
         child: Column(
@@ -22,14 +20,12 @@ class PrivacyPolicyView extends StatelessWidget {
           children: [
             Text(
               'Privacy Policy',
-              style: Brand.title1Font
-                  .copyWith(color: Brand.adaptiveCharcoal(context)),
+              style: Brand.title1Font.copyWith(color: Brand.charcoal),
             ),
             const SizedBox(height: 8),
             Text(
               'Last updated: March 2026',
-              style: Brand.captionFont
-                  .copyWith(color: Brand.adaptiveWarmGray(context)),
+              style: Brand.captionFont.copyWith(color: Brand.warmGray),
             ),
             const SizedBox(height: Brand.sectionSpacing),
             _buildSection(
@@ -128,16 +124,12 @@ class PrivacyPolicyView extends StatelessWidget {
         children: [
           Text(
             title,
-            style: Brand.headlineFont
-                .copyWith(color: Brand.adaptiveCharcoal(context)),
+            style: Brand.headlineFont.copyWith(color: Brand.charcoal),
           ),
           const SizedBox(height: 8),
           Text(
             body,
-            style: Brand.bodyFont.copyWith(
-              color: Brand.adaptiveCharcoal(context),
-              height: 1.5,
-            ),
+            style: Brand.bodyFont.copyWith(color: Brand.charcoal, height: 1.5),
           ),
         ],
       ),

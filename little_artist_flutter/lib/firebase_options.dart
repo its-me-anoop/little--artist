@@ -22,15 +22,15 @@ class DefaultFirebaseOptions {
     messagingSenderId: '576887246267',
     projectId: 'little-artist-fb9a8',
     storageBucket: 'little-artist-fb9a8.firebasestorage.app',
-    iosBundleId: 'uk.co.flutterly.littleArtist',
+    iosBundleId: 'uk.co.flutterly.Little-Artist',
   );
 
-  // Android config — needs to be added from Firebase Console
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyBXlRK2gSeKbELsPoNQ-uGQx_8QHEv7_WM',
-    appId: '1:576887246267:android:placeholder',
+    apiKey: 'AIzaSyC2eaVNnsOrAqvLZZ6ogMgxpXoKrG61Y8k',
+    appId: '1:576887246267:android:58a4a0e0a286485f5a089e',
     messagingSenderId: '576887246267',
     projectId: 'little-artist-fb9a8',
     storageBucket: 'little-artist-fb9a8.firebasestorage.app',
   );
+
 }

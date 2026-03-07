@@ -103,9 +103,23 @@ class FirebaseAuthService extends ChangeNotifier {
         nonce: sha256Nonce,
       );
 
-      final oauthCredential = OAuthProvider('apple.com').credential(
-        idToken: appleCredential.identityToken,
-        rawNonce: rawNonce,
+      final identityToken = appleCredential.identityToken;
+      if (identityToken == null || identityToken.isEmpty) {
+        throw FirebaseAuthException(
+          code: 'missing-apple-identity-token',
+          message: 'Apple sign-in did not return an identity token.',
+        );
+      }
+
+      final fullName = AppleFullPersonName(
+        givenName: appleCredential.givenName,
+        familyName: appleCredential.familyName,
+      );
+
+      final oauthCredential = AppleAuthProvider.credentialWithIDToken(
+        identityToken,
+        rawNonce,
+        fullName,
       );
 
       // If the current user is anonymous, try to link the Apple credential
@@ -154,7 +168,7 @@ class FirebaseAuthService extends ChangeNotifier {
       debugPrint('Apple sign-in cancelled or failed: ${e.message}');
     } on FirebaseAuthException catch (e) {
       _authError = e.message ?? 'Apple sign-in failed.';
-      debugPrint('Apple sign-in failed: ${e.message}');
+      debugPrint('Apple sign-in failed [${e.code}]: ${e.message}');
     } catch (e) {
       _authError = e.toString();
       debugPrint('Apple sign-in failed: $e');
