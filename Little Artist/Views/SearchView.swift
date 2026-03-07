@@ -247,7 +247,7 @@ struct SearchView: View {
             .padding(.bottom, 24)
         }
         .navigationTitle("Search")
-        .navigationBarTitleDisplayMode(.inline)
+        .navigationBarTitleDisplayMode(.large)
         .searchable(text: $searchText, prompt: "Search artwork...")
         .onSubmit(of: .search) {
             saveSearch(searchText)

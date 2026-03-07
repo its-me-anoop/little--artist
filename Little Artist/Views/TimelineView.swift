@@ -114,7 +114,6 @@ struct TimelineView: View {
                     timelineContent
                 }
             }
-            .navigationTitle("Timeline")
             .background(BrandAppBackground())
             .toolbarBackground(Brand.backgroundBase, for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
@@ -168,6 +167,8 @@ struct TimelineView: View {
             Spacer()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .navigationTitle("Timeline")
+        .navigationBarTitleDisplayMode(.large)
     }
 
     private var adaptivePadding: CGFloat {
@@ -309,6 +310,8 @@ struct TimelineView: View {
             }
             .padding(.bottom, 24)
         }
+        .navigationTitle("Timeline")
+        .navigationBarTitleDisplayMode(.large)
     }
 }
 

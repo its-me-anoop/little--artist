@@ -348,7 +348,7 @@ struct ArtworkGalleryView: View {
         .padding(.top, 60)
     }
 
-    private func galleryContent(width: CGFloat) -> some View {
+    private func galleryContent(width: CGFloat, bottomInset: CGFloat) -> some View {
         LazyVStack(alignment: .leading, spacing: 22) {
             ForEach(groupedSections) { yearGroup in
                 VStack(alignment: .leading, spacing: 16) {
@@ -435,10 +435,10 @@ struct ArtworkGalleryView: View {
             }
         }
         .padding(.top, 12)
-        .padding(.bottom, 80)
+        .padding(.bottom, 80 + bottomInset)
     }
 
-    private func galleryScrollBody(width: CGFloat) -> some View {
+    private func galleryScrollBody(width: CGFloat, bottomInset: CGFloat) -> some View {
         ScrollView {
             scrollTopTracker
 
@@ -451,7 +451,7 @@ struct ArtworkGalleryView: View {
             if displayedArtworks.isEmpty && showFavoritesOnly {
                 emptyFavoritesState
             } else {
-                galleryContent(width: width)
+                galleryContent(width: width, bottomInset: bottomInset)
             }
         }
         .coordinateSpace(name: "galleryScroll")
@@ -470,8 +470,10 @@ struct ArtworkGalleryView: View {
     var body: some View {
         GeometryReader { geo in
             let width = max(geo.size.width, 1)
+            let bottomInset = geo.safeAreaInsets.bottom
 
-            galleryScrollBody(width: width)
+            galleryScrollBody(width: width, bottomInset: bottomInset)
+                .ignoresSafeArea(edges: .bottom)
                 .gesture(
                     MagnifyGesture()
                         .onEnded { value in

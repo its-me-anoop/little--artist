@@ -71,7 +71,6 @@ struct MilestonesView: View {
                     content
                 }
             }
-            .navigationTitle("Milestones")
             .background(BrandAppBackground())
             .toolbarBackground(Brand.backgroundBase, for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
@@ -151,6 +150,8 @@ struct MilestonesView: View {
             Spacer()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .navigationTitle("Milestones")
+        .navigationBarTitleDisplayMode(.large)
     }
 
     private var adaptivePadding: CGFloat {
@@ -308,6 +309,8 @@ struct MilestonesView: View {
             }
             .padding(.vertical, adaptivePadding)
         }
+        .navigationTitle("Milestones")
+        .navigationBarTitleDisplayMode(.large)
     }
 }
 

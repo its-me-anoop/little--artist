@@ -153,6 +153,7 @@ struct SettingsView: View {
         .background(settingsBackground)
         .tint(Brand.primary)
         .navigationTitle("Settings")
+        .navigationBarTitleDisplayMode(.large)
     }
 
     private var settingsSheetContent: some View {

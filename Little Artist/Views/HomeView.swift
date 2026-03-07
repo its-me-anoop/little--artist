@@ -231,6 +231,27 @@ struct HomeView: View {
         .background(Brand.backgroundBase)
     }
 
+    private var galleryScreen: some View {
+        Group {
+            if children.isEmpty {
+                NoChildrenView(onAddChild: { showAddChild = true })
+                    .navigationTitle("Gallery")
+                    .navigationBarTitleDisplayMode(.large)
+            } else if filteredArtworks.isEmpty {
+                NoArtworkView()
+                    .navigationTitle("Gallery")
+                    .navigationBarTitleDisplayMode(.large)
+            } else {
+                ArtworkGalleryView(
+                    artworks: filteredArtworks,
+                    topContent: memoriesArtworks.isEmpty ? nil : AnyView(onThisDaySection)
+                )
+                .navigationTitle("Gallery")
+                .navigationBarTitleDisplayMode(.large)
+            }
+        }
+    }
+
     // MARK: - Body
 
     var body: some View {
@@ -282,23 +303,15 @@ struct HomeView: View {
                         }
                         .frame(maxWidth: .infinity)
                     }
+                    .navigationTitle("Gallery")
+                    .navigationBarTitleDisplayMode(.large)
                 } else {
                     // iPhone: single-column
                     VStack(spacing: 0) {
                         masterHeader
                             .zIndex(1)
-
-                        if children.isEmpty {
-                            NoChildrenView(onAddChild: { showAddChild = true })
-                        } else if filteredArtworks.isEmpty {
-                            NoArtworkView()
-                        } else {
-                            ArtworkGalleryView(
-                                artworks: filteredArtworks,
-                                topContent: memoriesArtworks.isEmpty ? nil : AnyView(onThisDaySection)
-                            )
-                                .clipped()
-                        }
+                        galleryScreen
+                            .clipped()
                     }
                 }
             }
@@ -317,7 +330,6 @@ struct HomeView: View {
             .background(BrandAppBackground())
             .toolbarBackground(Brand.backgroundBase, for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
-            .navigationTitle("Gallery")
             .toolbar {
                 if let selectedChild {
                     ToolbarItem(placement: .topBarTrailing) {
