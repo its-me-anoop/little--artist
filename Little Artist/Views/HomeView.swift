@@ -24,16 +24,11 @@ struct HomeView: View {
     private let syncService = FirestoreSyncService.shared
     private var store: StoreKitManager { StoreKitManager.shared }
 
-    @AppStorage("hasSeenFirstArtworkUpsell") private var hasSeenUpsell = false
-
-    @State private var selectedChildID: PersistentIdentifier?
+    @Binding var selectedChildID: PersistentIdentifier?
     @State private var selectedArtwork: Artwork?
     @State private var showAddChild = false
-    @State private var showAddArtwork = false
     @State private var editingChild: Child?
     @State private var paywallReason: PaywallView.LimitReason?
-    @State private var artworkCountBeforeSheet = 0
-    @State private var showPremiumUpsell = false
 
     private var selectedChild: Child? {
         guard let selectedChildID else { return nil }
@@ -69,13 +64,6 @@ struct HomeView: View {
         return allArtworks.sorted { $0.createdAt > $1.createdAt }
     }
 
-    private var premiumUpsellPresented: Binding<Bool> {
-        Binding(
-            get: { showPremiumUpsell && !store.isPremium },
-            set: { showPremiumUpsell = $0 }
-        )
-    }
-
     private var paywallPresented: Binding<PaywallView.LimitReason?> {
         Binding(
             get: { store.isPremium ? nil : paywallReason },
@@ -85,90 +73,149 @@ struct HomeView: View {
 
     // MARK: - Master Header
 
+    private var selectedChildMenuTitle: String {
+        selectedChild?.name ?? "All Children"
+    }
+
+    private var selectedChildArtworkCountLabel: String {
+        let count = filteredArtworks.count
+        return "\(count) \(count == 1 ? "piece" : "pieces")"
+    }
+
+    @ViewBuilder
+    private var selectedChildMenuAvatar: some View {
+        if let selectedChild {
+            Circle()
+                .fill(Color(hex: selectedChild.avatarColor))
+                .frame(width: 28, height: 28)
+                .overlay {
+                    if let data = selectedChild.avatarImageData, let uiImage = UIImage(data: data) {
+                        Image(uiImage: uiImage)
+                            .resizable()
+                            .scaledToFill()
+                            .clipShape(Circle())
+                    } else {
+                        Text(String(selectedChild.name.prefix(1)).uppercased())
+                            .font(.system(size: 12, weight: .bold, design: .rounded))
+                            .foregroundStyle(.white)
+                    }
+                }
+        } else {
+            Image(systemName: "person.3.sequence.fill")
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundStyle(Brand.primary)
+                .frame(width: 28, height: 28)
+                .glassEffect(.regular.tint(Brand.primary.opacity(0.16)), in: .circle)
+        }
+    }
+
+    private var childSelectionMenu: some View {
+        Menu {
+            Button {
+                HapticService.selection()
+                withAnimation(.snappy) {
+                    selectedChildID = nil
+                }
+            } label: {
+                Label("All Children", systemImage: selectedChild == nil ? "checkmark" : "person.3.sequence.fill")
+            }
+
+            if !children.isEmpty {
+                Divider()
+            }
+
+            ForEach(children) { child in
+                Button {
+                    HapticService.selection()
+                    withAnimation(.snappy) {
+                        selectedChildID = child.persistentModelID
+                    }
+                } label: {
+                    Label(child.name, systemImage: selectedChildID == child.persistentModelID ? "checkmark" : "figure.child")
+                }
+            }
+
+            Divider()
+
+            Button {
+                if PremiumManager.canAddChild(currentCount: children.count) {
+                    showAddChild = true
+                } else {
+                    paywallReason = .children
+                }
+            } label: {
+                Label("Add Child", systemImage: "plus")
+            }
+        } label: {
+            HStack(spacing: 12) {
+                selectedChildMenuAvatar
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(selectedChildMenuTitle)
+                        .font(Brand.subheadlineFont.weight(.semibold))
+                        .foregroundStyle(Brand.charcoal)
+                        .lineLimit(1)
+
+                    Text(selectedChildArtworkCountLabel)
+                        .font(Brand.caption2Font)
+                        .foregroundStyle(Brand.warmGray)
+                        .lineLimit(1)
+                }
+
+                Spacer(minLength: 8)
+
+                if let selectedChild, selectedChild.isShared {
+                    Image(systemName: "person.2.badge.gearshape.fill")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(Brand.primary)
+                }
+
+                Image(systemName: "chevron.down")
+                    .font(.system(size: 12, weight: .bold))
+                    .foregroundStyle(Brand.warmGray)
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 10)
+        }
+        .menuStyle(.button)
+        .buttonStyle(.glass)
+        .tint(Brand.primary)
+        .accessibilityLabel("Child filter, \(selectedChildMenuTitle)")
+    }
+
     private var masterHeader: some View {
         VStack(spacing: 0) {
+            artlingHeader
+
             if !children.isEmpty {
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 8) {
-                        Button {
-                            HapticService.selection()
-                            withAnimation(.snappy) {
-                                selectedChildID = nil
-                            }
-                        } label: {
-                            Text("All")
-                                .font(Brand.captionFont.bold())
-                                .crayonStyle()
-                                .padding(.horizontal, 18)
-                                .padding(.vertical, 10)
-                                .background(selectedChild == nil ? Brand.primary.gradient : Brand.glass.gradient)
-                                .foregroundStyle(selectedChild == nil ? .white : Brand.charcoal)
-                                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                        .stroke(selectedChild == nil ? Brand.glassStrokeSoft : Brand.glassStroke, lineWidth: 2)
-                                )
-                                .shadow(color: selectedChild == nil ? Brand.primary.opacity(0.3) : .clear, radius: 4, x: 0, y: 2)
-                        }
-                        .buttonStyle(.plain)
-
-                        ForEach(children) { child in
-                            ChildFilterChipView(
-                                child: child,
-                                isSelected: selectedChildID == child.persistentModelID
-                            ) {
-                                HapticService.selection()
-                                withAnimation(.snappy) {
-                                    if selectedChildID == child.persistentModelID {
-                                        selectedChildID = nil
-                                    } else {
-                                        selectedChildID = child.persistentModelID
-                                    }
-                                }
-                            }
-                            .overlay(alignment: .topTrailing) {
-                                if child.isShared {
-                                    SharedBadgeView(
-                                        participantCount: 0,
-                                        isShared: child.isShared
-                                    )
-                                    .offset(x: 6, y: -6)
-                                    .allowsHitTesting(false)
-                                }
-                            }
-                        }
-
-                        Button {
-                            if PremiumManager.canAddChild(currentCount: children.count) {
-                                showAddChild = true
-                            } else {
-                                paywallReason = .children
-                            }
-                        } label: {
-                            HStack(spacing: 4) {
-                                Image(systemName: "plus")
-                                    .font(.system(size: 11, weight: .bold))
-                                Text("Add")
-                                    .font(Brand.captionFont.bold())
-                                    .crayonStyle()
-                            }
-                            .padding(.horizontal, 14)
-                            .padding(.vertical, 10)
-                            .background(Brand.glass.gradient)
-                            .foregroundStyle(Brand.primary)
-                            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                    .stroke(Brand.glassStroke, lineWidth: 1.5)
-                            )
-                        }
-                        .buttonStyle(.plain)
+                GlassEffectContainer(spacing: 14) {
+                    HStack(spacing: 12) {
+                        childSelectionMenu
                     }
                     .padding(.horizontal, Brand.Adaptive.screenPadding(for: sizeClass))
-                    .padding(.vertical, 8)
+                    .padding(.vertical, 10)
                 }
             }
         }
+    }
+
+    private var artlingHeader: some View {
+        HStack(spacing: 12) {
+            Image("LaunchFox")
+                .renderingMode(.original)
+                .resizable()
+                .scaledToFit()
+                .frame(width: 36, height: 36)
+
+            Text("Artling")
+                .font(.system(size: 34, weight: .bold, design: .rounded))
+                .foregroundStyle(.primary)
+
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, Brand.Adaptive.screenPadding(for: sizeClass))
+        .padding(.top, 8)
+        .padding(.bottom, children.isEmpty ? 16 : 12)
     }
 
     private var onThisDaySection: some View {
@@ -235,102 +282,110 @@ struct HomeView: View {
         Group {
             if children.isEmpty {
                 NoChildrenView(onAddChild: { showAddChild = true })
-                    .navigationTitle("Gallery")
-                    .navigationBarTitleDisplayMode(.large)
             } else if filteredArtworks.isEmpty {
                 NoArtworkView()
-                    .navigationTitle("Gallery")
-                    .navigationBarTitleDisplayMode(.large)
             } else {
                 ArtworkGalleryView(
                     artworks: filteredArtworks,
-                    topContent: memoriesArtworks.isEmpty ? nil : AnyView(onThisDaySection)
+                    headerContent: AnyView(artlingHeader),
+                    topContent: memoriesArtworks.isEmpty ? nil : AnyView(onThisDaySection),
+                    pinsControlsToTop: false,
+                    usesToolbarControls: true
                 )
-                .navigationTitle("Gallery")
-                .navigationBarTitleDisplayMode(.large)
             }
+        }
+    }
+
+    private var compactGalleryScreen: some View {
+        Group {
+            if children.isEmpty {
+                NoChildrenView(onAddChild: { showAddChild = true })
+            } else if filteredArtworks.isEmpty {
+                NoArtworkView()
+            } else {
+                ArtworkGalleryView(
+                    artworks: filteredArtworks,
+                    headerContent: AnyView(EmptyView()),
+                    topContent: memoriesArtworks.isEmpty ? nil : AnyView(onThisDaySection),
+                    pinsControlsToTop: false,
+                    usesToolbarControls: true
+                )
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var mainContent: some View {
+        if sizeClass == .regular {
+            // iPad: master-detail split
+            HStack(spacing: 0) {
+                // Master pane
+                VStack(spacing: 0) {
+                    masterHeader
+                        .zIndex(1)
+
+                    if children.isEmpty {
+                        NoChildrenView(onAddChild: { showAddChild = true })
+                    } else if filteredArtworks.isEmpty {
+                        NoArtworkView()
+                    } else {
+                        ArtworkGalleryView(
+                            artworks: filteredArtworks,
+                            onSelect: { artwork in
+                                withAnimation(.snappy) {
+                                    selectedArtwork = artwork
+                                }
+                            },
+                            selectedArtworkID: selectedArtwork?.persistentModelID,
+                            headerContent: AnyView(EmptyView()),
+                            topContent: memoriesArtworks.isEmpty ? nil : AnyView(onThisDaySection)
+                        )
+                        .clipped()
+                    }
+                }
+                .frame(maxWidth: .infinity)
+
+                Divider()
+
+                // Detail pane
+                Group {
+                    if let selectedArtwork {
+                        ArtworkDetailView(
+                            artwork: selectedArtwork,
+                            onDelete: {
+                                self.selectedArtwork = nil
+                            }
+                        )
+                        .id(selectedArtwork.persistentModelID)
+                    } else {
+                        detailPlaceholder
+                    }
+                }
+                .frame(maxWidth: .infinity)
+            }
+        } else {
+            // iPhone: single-column
+            compactGalleryScreen
         }
     }
 
     // MARK: - Body
 
     var body: some View {
-        NavigationStack {
-            Group {
-                if sizeClass == .regular {
-                    // iPad: master-detail split
-                    HStack(spacing: 0) {
-                        // Master pane
-                        VStack(spacing: 0) {
-                            masterHeader
-                                .zIndex(1)
-
-                            if children.isEmpty {
-                                NoChildrenView(onAddChild: { showAddChild = true })
-                            } else if filteredArtworks.isEmpty {
-                                NoArtworkView()
-                            } else {
-                                ArtworkGalleryView(
-                                    artworks: filteredArtworks,
-                                    onSelect: { artwork in
-                                        withAnimation(.snappy) {
-                                            selectedArtwork = artwork
-                                        }
-                                    },
-                                    selectedArtworkID: selectedArtwork?.persistentModelID,
-                                    topContent: memoriesArtworks.isEmpty ? nil : AnyView(onThisDaySection)
-                                )
-                                .clipped()
-                            }
-                        }
-                        .frame(maxWidth: .infinity)
-
-                        Divider()
-
-                        // Detail pane
-                        Group {
-                            if let selectedArtwork {
-                                ArtworkDetailView(
-                                    artwork: selectedArtwork,
-                                    onDelete: {
-                                        self.selectedArtwork = nil
-                                    }
-                                )
-                                .id(selectedArtwork.persistentModelID)
-                            } else {
-                                detailPlaceholder
-                            }
-                        }
-                        .frame(maxWidth: .infinity)
-                    }
-                    .navigationTitle("Gallery")
-                    .navigationBarTitleDisplayMode(.large)
-                } else {
-                    // iPhone: single-column
-                    VStack(spacing: 0) {
-                        masterHeader
-                            .zIndex(1)
-                        galleryScreen
-                            .clipped()
-                    }
-                }
-            }
-            .overlay(alignment: .bottomTrailing) {
-                if !children.isEmpty {
-                    AddArtworkButton(action: {
-                        if PremiumManager.canAddArtwork(currentCount: allArtworks.count) {
-                            artworkCountBeforeSheet = allArtworks.count
-                            showAddArtwork = true
-                        } else {
-                            paywallReason = .artworks
-                        }
-                    })
-                }
-            }
+        mainContent
+            .navigationTitle("Artling")
+            .navigationBarTitleDisplayMode(.large)
             .background(BrandAppBackground())
-            .toolbarBackground(Brand.backgroundBase, for: .navigationBar)
-            .toolbarBackground(.visible, for: .navigationBar)
             .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Image("LaunchFox")
+                        .renderingMode(.original)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 34, height: 34)
+                        .accessibilityHidden(true)
+                }
+
                 if let selectedChild {
                     ToolbarItem(placement: .topBarTrailing) {
                         NavigationLink {
@@ -343,24 +398,6 @@ struct HomeView: View {
             }
             .sheet(isPresented: $showAddChild) {
                 AddChildView()
-            }
-            .sheet(isPresented: $showAddArtwork, onDismiss: {
-                if artworkCountBeforeSheet == 0
-                    && allArtworks.count > artworkCountBeforeSheet
-                    && !store.isPremium
-                    && !hasSeenUpsell
-                {
-                    hasSeenUpsell = true
-                    showPremiumUpsell = true
-                }
-            }) {
-                if let child = selectedChild ?? children.first {
-                    AddArtworkView(child: child)
-                        .adaptiveSheetSizing(sizeClass: sizeClass)
-                }
-            }
-            .sheet(isPresented: premiumUpsellPresented) {
-                PremiumUpsellView()
             }
             .sheet(item: $editingChild) { child in
                 EditChildView(child: child) {
@@ -381,25 +418,23 @@ struct HomeView: View {
             .onChange(of: store.isPremium) { _, isPremium in
                 guard isPremium else { return }
                 paywallReason = nil
-                showPremiumUpsell = false
             }
             .onAppear {
                 if UserDefaults.standard.bool(forKey: "notificationsEnabled") {
                     NotificationService.scheduleAll(artworks: allArtworks)
                 }
             }
-        }
     }
 }
 
 // MARK: - Previews
 
 #Preview("Empty State") {
-    HomeView()
+    HomeView(selectedChildID: .constant(nil))
         .modelContainer(for: [Child.self, Artwork.self], inMemory: true)
 }
 
 #Preview("With Data") {
-    HomeView()
+    HomeView(selectedChildID: .constant(nil))
         .modelContainer(PreviewSampleData.container)
 }
