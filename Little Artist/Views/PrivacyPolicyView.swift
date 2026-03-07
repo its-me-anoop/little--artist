@@ -24,7 +24,7 @@ private struct SafariView: UIViewControllerRepresentable {
 
 /// Displays the app's privacy policy from the website.
 struct PrivacyPolicyView: View {
-    private let privacyURL = URL(string: "https://www.flutterly.co.uk/little-artist/privacy-policy")!
+    private let privacyURL = URL(string: "https://www.flutterly.co.uk/projects/artling/privacy-policy")!
 
     var body: some View {
         SafariView(url: privacyURL)
