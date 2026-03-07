@@ -72,8 +72,8 @@ struct MilestonesView: View {
                 }
             }
             .navigationTitle("Milestones")
-            .background(Brand.cream.ignoresSafeArea(.all))
-            .toolbarBackground(Brand.cream, for: .navigationBar)
+            .background(BrandAppBackground())
+            .toolbarBackground(Brand.backgroundBase, for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
             .overlay {
                 if let achievement = celebratingAchievement {
@@ -131,7 +131,7 @@ struct MilestonesView: View {
                     .foregroundStyle(Brand.warmGray.opacity(0.9))
                     .padding(.horizontal, 14)
                     .padding(.vertical, 8)
-                    .background(Color.white.opacity(0.75))
+                    .background(Brand.glassStrong)
                     .clipShape(Capsule())
             }
             .frame(maxWidth: .infinity)
@@ -139,11 +139,11 @@ struct MilestonesView: View {
             .padding(.vertical, 24)
             .background(
                 RoundedRectangle(cornerRadius: 28, style: .continuous)
-                    .fill(Color.white.opacity(0.58))
+                    .fill(Brand.glass)
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 28, style: .continuous)
-                    .stroke(Color.white.opacity(0.75), lineWidth: 2)
+                    .stroke(Brand.glassStroke, lineWidth: 2)
             )
             .brandCardShadow()
             .padding(.horizontal, 16)
@@ -202,11 +202,11 @@ struct MilestonesView: View {
                 .frame(maxWidth: sizeClass == .regular ? Brand.Adaptive.maxContentWidth : .infinity)
                 .background(
                     RoundedRectangle(cornerRadius: 26, style: .continuous)
-                        .fill(Color.white.opacity(0.58))
+                        .fill(Brand.glass)
                 )
                 .overlay(
                     RoundedRectangle(cornerRadius: 26, style: .continuous)
-                        .stroke(Color.white.opacity(0.7), lineWidth: 2)
+                        .stroke(Brand.glassStroke, lineWidth: 2)
                 )
                 .crayonStyle()
                 .brandCardShadow()
@@ -294,11 +294,11 @@ struct MilestonesView: View {
                         .frame(maxWidth: sizeClass == .regular ? Brand.Adaptive.maxContentWidth : .infinity)
                         .background(
                             RoundedRectangle(cornerRadius: 26, style: .continuous)
-                                .fill(Color.white.opacity(0.58))
+                                .fill(Brand.glass)
                         )
                         .overlay(
                             RoundedRectangle(cornerRadius: 26, style: .continuous)
-                                .stroke(Color.white.opacity(0.7), lineWidth: 2)
+                                .stroke(Brand.glassStroke, lineWidth: 2)
                         )
                         .crayonStyle()
                         .frame(maxWidth: .infinity)

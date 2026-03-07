@@ -39,7 +39,7 @@ struct ArtworkThumbnailView: View {
                     .clipShape(RoundedRectangle(cornerRadius: 12))
             } else {
                 RoundedRectangle(cornerRadius: 12)
-                    .fill(Color.white.opacity(0.5))
+                    .fill(Brand.glassSubtle)
                     .aspectRatio(164.0 / 180.0, contentMode: .fit)
                     .overlay {
                         Image(systemName: "paintpalette")
@@ -70,8 +70,8 @@ struct ArtworkThumbnailView: View {
         .padding(8)
         .background {
             RoundedRectangle(cornerRadius: 18)
-                .fill(Color.white.opacity(0.58))
-                .stroke(Color.white.opacity(0.7), lineWidth: 1.5)
+                .fill(Brand.glass)
+                .stroke(Brand.glassStroke, lineWidth: 1.5)
                 .brandCardShadow()
         }
         .accessibilityElement(children: .combine)
@@ -98,4 +98,3 @@ struct ArtworkThumbnailView: View {
         .preferredColorScheme(.dark)
         .modelContainer(for: [Child.self, Artwork.self], inMemory: true)
 }
-

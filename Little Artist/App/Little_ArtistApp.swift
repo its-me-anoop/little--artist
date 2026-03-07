@@ -22,7 +22,7 @@ struct Little_ArtistApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
-    @AppStorage("firebaseSyncEnabled") private var firebaseSyncEnabled = false
+    @AppStorage("appAppearance") private var appAppearance = AppAppearance.system.rawValue
     @State private var splashFinished = false
 
     /// Reference to StoreKit manager so transaction listener starts early.
@@ -44,7 +44,6 @@ struct Little_ArtistApp: App {
         #endif
 
         let schema = Schema(versionedSchema: SchemaV7.self)
-        UserDefaults.standard.set(true, forKey: "firebaseSyncEnabled")
 
         // SwiftData uses local-only storage. Firebase handles cloud sync
         // through FirestoreSyncService.
@@ -76,10 +75,7 @@ struct Little_ArtistApp: App {
                 while FirebaseAuthService.shared.userId == nil {
                     try? await Task.sleep(for: .milliseconds(200))
                 }
-                let uploadContext = ModelContext(container)
-                await FirestoreRepository.shared.uploadAllLocalData(from: uploadContext)
-                FirestoreSyncService.shared.start()
-                await FirestoreRepository.shared.syncUserPreferencesToFirestore()
+                await FirestoreRepository.shared.activateCloudSyncIfNeeded()
             }
 
             return container
@@ -101,6 +97,8 @@ struct Little_ArtistApp: App {
 
     var body: some Scene {
         WindowGroup {
+            let selectedAppearance = AppAppearance(rawValue: appAppearance) ?? .system
+
             Group {
                 if !splashFinished {
                     SplashVideoView(isFinished: $splashFinished)
@@ -110,7 +108,14 @@ struct Little_ArtistApp: App {
                     OnboardingView(hasCompletedOnboarding: $hasCompletedOnboarding)
                 }
             }
-            .background(Brand.cream.ignoresSafeArea(.all))
+            .background(BrandAppBackground())
+            .onAppear {
+                applyAppearance(selectedAppearance)
+            }
+            .onChange(of: appAppearance) { _, newValue in
+                let appearance = AppAppearance(rawValue: newValue) ?? .system
+                applyAppearance(appearance)
+            }
             #if DEBUG
             .onAppear {
                 // Activate debug premium override via launch argument:
@@ -123,5 +128,16 @@ struct Little_ArtistApp: App {
             #endif
         }
         .modelContainer(sharedModelContainer)
+    }
+
+    @MainActor
+    private func applyAppearance(_ appearance: AppAppearance) {
+        UIApplication.shared.connectedScenes
+            .compactMap { $0 as? UIWindowScene }
+            .forEach { scene in
+                scene.windows.forEach { window in
+                    window.overrideUserInterfaceStyle = appearance.interfaceStyle
+                }
+            }
     }
 }

@@ -97,11 +97,11 @@ struct AddChildView: View {
         .padding(.vertical, 22)
         .background(
             RoundedRectangle(cornerRadius: 26, style: .continuous)
-                .fill(Color.white.opacity(0.58))
+                .fill(Brand.glass)
         )
         .overlay(
             RoundedRectangle(cornerRadius: 26, style: .continuous)
-                .stroke(Color.white.opacity(0.7), lineWidth: 2)
+                .stroke(Brand.glassStroke, lineWidth: 2)
         )
         .padding(.horizontal, 20)
     }
@@ -116,7 +116,7 @@ struct AddChildView: View {
             .padding(.horizontal, 20)
             .background(
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .fill(Color.white.opacity(0.82))
+                    .fill(Brand.glassStrong)
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
@@ -159,7 +159,7 @@ struct AddChildView: View {
                 .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
                 .overlay(
                     RoundedRectangle(cornerRadius: 24, style: .continuous)
-                        .stroke(Color.white.opacity(0.35), lineWidth: 3)
+                        .stroke(Brand.glassStrokeSoft, lineWidth: 3)
                 )
                 .shadow(color: (isNameValid ? Brand.primary : Brand.disabled).opacity(0.35), radius: 10, x: 0, y: 5)
                 .crayonStyle()
@@ -203,7 +203,7 @@ struct AddChildView: View {
     private var onboardingBackground: some View {
         GeometryReader { geo in
             ZStack {
-                Brand.cream.ignoresSafeArea()
+                BrandAppBackground()
 
                 Circle()
                     .fill(Brand.primary.opacity(0.15))
@@ -257,7 +257,7 @@ struct AddChildView: View {
                 .font(.system(size: 20, design: .rounded))
                 .foregroundStyle(Brand.primary)
                 .frame(width: 56, height: 56)
-                .background(Color.white.opacity(0.75))
+                .background(Brand.glassStrong)
                 .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                 .overlay(
                     RoundedRectangle(cornerRadius: 16, style: .continuous)

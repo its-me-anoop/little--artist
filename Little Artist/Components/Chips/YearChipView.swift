@@ -31,7 +31,7 @@ struct YearChipView: View {
                 .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                 .overlay(
                     RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        .stroke(isSelected ? Color.white.opacity(0.4) : Color.clear, lineWidth: 2)
+                        .stroke(isSelected ? Brand.glassStrokeSoft : Color.clear, lineWidth: 2)
                 )
                 .shadow(color: isSelected ? Brand.primary.opacity(0.3) : .clear, radius: 4, x: 0, y: 2)
                 .crayonStyle()

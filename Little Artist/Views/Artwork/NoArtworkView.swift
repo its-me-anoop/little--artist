@@ -43,7 +43,7 @@ struct NoArtworkView: View {
                         .foregroundStyle(Brand.warmGray.opacity(0.9))
                         .padding(.horizontal, 14)
                         .padding(.vertical, 8)
-                        .background(Color.white.opacity(0.75))
+                        .background(Brand.glassStrong)
                         .clipShape(Capsule())
                 }
                 .frame(maxWidth: .infinity)
@@ -51,11 +51,11 @@ struct NoArtworkView: View {
                 .padding(.vertical, 24)
                 .background(
                     RoundedRectangle(cornerRadius: 28, style: .continuous)
-                        .fill(Color.white.opacity(0.58))
+                        .fill(Brand.glass)
                 )
                 .overlay(
                     RoundedRectangle(cornerRadius: 28, style: .continuous)
-                        .stroke(Color.white.opacity(0.75), lineWidth: 2)
+                        .stroke(Brand.glassStroke, lineWidth: 2)
                 )
                 .brandCardShadow()
                 .padding(.horizontal, 16)
@@ -68,7 +68,7 @@ struct NoArtworkView: View {
     private var backgroundLayer: some View {
         GeometryReader { geo in
             ZStack {
-                Brand.cream.ignoresSafeArea()
+                BrandAppBackground()
 
                 Circle()
                     .fill(Brand.sky.opacity(0.12))

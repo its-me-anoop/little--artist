@@ -105,7 +105,7 @@ struct TimelineView: View {
                                         .foregroundStyle(Brand.warmGray)
                                 }
                                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-                                .background(Brand.cream)
+                                .background(Brand.backgroundBase)
                             }
                         }
                         .frame(maxWidth: .infinity)
@@ -115,8 +115,8 @@ struct TimelineView: View {
                 }
             }
             .navigationTitle("Timeline")
-            .background(Brand.cream.ignoresSafeArea(.all))
-            .toolbarBackground(Brand.cream, for: .navigationBar)
+            .background(BrandAppBackground())
+            .toolbarBackground(Brand.backgroundBase, for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
         }
     }
@@ -148,7 +148,7 @@ struct TimelineView: View {
                     .foregroundStyle(Brand.warmGray.opacity(0.9))
                     .padding(.horizontal, 14)
                     .padding(.vertical, 8)
-                    .background(Color.white.opacity(0.75))
+                    .background(Brand.glassStrong)
                     .clipShape(Capsule())
             }
             .frame(maxWidth: .infinity)
@@ -156,11 +156,11 @@ struct TimelineView: View {
             .padding(.vertical, 24)
             .background(
                 RoundedRectangle(cornerRadius: 28, style: .continuous)
-                    .fill(Color.white.opacity(0.58))
+                    .fill(Brand.glass)
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 28, style: .continuous)
-                    .stroke(Color.white.opacity(0.75), lineWidth: 2)
+                    .stroke(Brand.glassStroke, lineWidth: 2)
             )
             .brandCardShadow()
             .padding(.horizontal, 16)
@@ -303,7 +303,7 @@ struct TimelineView: View {
                             .padding(.horizontal, adaptivePadding)
                             .padding(.vertical, 12)
                             .frame(maxWidth: .infinity, alignment: .leading)
-                            .background(Brand.cream.opacity(0.95))
+                            .background(Brand.backgroundBase.opacity(0.95))
                     }
                 }
             }

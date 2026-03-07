@@ -40,7 +40,7 @@ struct ContentView: View {
             }
         }
         .tint(Brand.primary)
-        .toolbarBackground(Brand.cream, for: .tabBar)
+        .toolbarBackground(Brand.backgroundBase, for: .tabBar)
         .toolbarBackground(.visible, for: .tabBar)
     }
 }

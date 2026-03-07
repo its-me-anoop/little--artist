@@ -67,7 +67,7 @@ struct ArtworkComparisonView: View {
             }
             .padding(.bottom, Brand.sectionSpacing)
         }
-        .background(Brand.cream)
+        .background(BrandAppBackground())
         .navigationTitle("Compare Artworks")
         .navigationBarTitleDisplayMode(.inline)
         .sheet(isPresented: $showLeftPicker) {
@@ -211,7 +211,7 @@ struct ArtworkComparisonView: View {
                     .padding(Brand.screenPadding)
                 }
             }
-            .background(Brand.cream)
+            .background(BrandAppBackground())
             .navigationTitle(title)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

@@ -27,7 +27,7 @@ struct AddArtworkButton: View {
                     .shadow(color: Brand.primary.opacity(0.4), radius: 8, x: 0, y: 4)
 
                 Circle()
-                    .stroke(Color.white.opacity(0.8), style: StrokeStyle(lineWidth: 4, lineCap: .round, lineJoin: .round))
+                    .stroke(Brand.glassStroke, style: StrokeStyle(lineWidth: 4, lineCap: .round, lineJoin: .round))
                     .frame(width: 64, height: 64)
                     .padding(2)
 

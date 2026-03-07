@@ -28,7 +28,7 @@ struct TimelineEntryCardView: View {
                     .clipShape(RoundedRectangle(cornerRadius: thumbRadius))
             } else {
                 RoundedRectangle(cornerRadius: thumbRadius)
-                    .fill(Color.white.opacity(0.5))
+                    .fill(Brand.glassSubtle)
                     .frame(width: thumbSize, height: thumbSize)
                     .overlay {
                         Image("crayon_palette")
@@ -70,11 +70,11 @@ struct TimelineEntryCardView: View {
             }
         }
         .padding(sizeClass == .regular ? 16 : 12)
-        .background(Color.white.opacity(0.58))
+        .background(Brand.glass)
         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
         .overlay {
             RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .stroke(isSelected ? Brand.primary : Color.white.opacity(0.7), lineWidth: 2)
+                .stroke(isSelected ? Brand.primary : Brand.glassStroke, lineWidth: 2)
         }
         .crayonStyle()
         .brandCardShadow()

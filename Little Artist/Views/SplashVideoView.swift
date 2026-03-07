@@ -13,17 +13,36 @@ import SwiftUI
 struct SplashVideoView: View {
     @Binding var isFinished: Bool
 
+    @Environment(\.colorScheme) private var colorScheme
+
     @State private var player: AVPlayer?
     @State private var opacity: Double = 1.0
 
+    private var backgroundGradient: LinearGradient {
+        let colors = colorScheme == .dark
+            ? [Brand.splashDarkStart, Color(hex: "2B1911"), Brand.splashDarkEnd]
+            : [Brand.splashLightStart, Color(hex: "FBEFDF"), Brand.splashLightEnd]
+
+        return LinearGradient(
+            colors: colors,
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
+    }
+
     var body: some View {
         ZStack {
-            Color(white: 1).ignoresSafeArea()
+            backgroundGradient.ignoresSafeArea()
 
             if let player {
                 VideoPlayerView(player: player)
-                    .frame(width: 250, height: 350)
-                    .clipShape(RoundedRectangle(cornerRadius: Brand.radiusCard))
+                    .frame(width: 280, height: 280)
+                    .clipShape(Circle())
+                    .overlay {
+                        Circle()
+                            .stroke(Brand.glassStroke, lineWidth: 3)
+                    }
+                    .shadow(color: Brand.charcoal.opacity(colorScheme == .dark ? 0.28 : 0.12), radius: 24, x: 0, y: 12)
             }
         }
         .opacity(opacity)

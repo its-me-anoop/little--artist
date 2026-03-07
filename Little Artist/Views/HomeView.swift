@@ -22,6 +22,7 @@ struct HomeView: View {
     @Environment(\.horizontalSizeClass) private var sizeClass
 
     private let syncService = FirestoreSyncService.shared
+    private var store: StoreKitManager { StoreKitManager.shared }
 
     @AppStorage("hasSeenFirstArtworkUpsell") private var hasSeenUpsell = false
 
@@ -59,22 +60,36 @@ struct HomeView: View {
     }
 
     private var filteredArtworks: [Artwork] {
-        if let child = selectedChild {
-            return (child.artworks ?? []).sorted { $0.createdAt > $1.createdAt }
+        if let selectedChildID {
+            return allArtworks
+                .filter { $0.child?.persistentModelID == selectedChildID }
+                .sorted { $0.createdAt > $1.createdAt }
         }
-        // "All" selected — return all children's artworks
-        return children.flatMap { $0.artworks ?? [] }.sorted { $0.createdAt > $1.createdAt }
+
+        return allArtworks.sorted { $0.createdAt > $1.createdAt }
+    }
+
+    private var premiumUpsellPresented: Binding<Bool> {
+        Binding(
+            get: { showPremiumUpsell && !store.isPremium },
+            set: { showPremiumUpsell = $0 }
+        )
+    }
+
+    private var paywallPresented: Binding<PaywallView.LimitReason?> {
+        Binding(
+            get: { store.isPremium ? nil : paywallReason },
+            set: { paywallReason = $0 }
+        )
     }
 
     // MARK: - Master Header
 
     private var masterHeader: some View {
         VStack(spacing: 0) {
-            // Child filter chips
             if !children.isEmpty {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 8) {
-                        // "All" chip
                         Button {
                             HapticService.selection()
                             withAnimation(.snappy) {
@@ -86,12 +101,12 @@ struct HomeView: View {
                                 .crayonStyle()
                                 .padding(.horizontal, 18)
                                 .padding(.vertical, 10)
-                                .background(selectedChild == nil ? Brand.primary.gradient : Color.white.opacity(0.58).gradient)
+                                .background(selectedChild == nil ? Brand.primary.gradient : Brand.glass.gradient)
                                 .foregroundStyle(selectedChild == nil ? .white : Brand.charcoal)
                                 .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                                 .overlay(
                                     RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                        .stroke(selectedChild == nil ? Color.white.opacity(0.4) : Color.white.opacity(0.7), lineWidth: 2)
+                                        .stroke(selectedChild == nil ? Brand.glassStrokeSoft : Brand.glassStroke, lineWidth: 2)
                                 )
                                 .shadow(color: selectedChild == nil ? Brand.primary.opacity(0.3) : .clear, radius: 4, x: 0, y: 2)
                         }
@@ -123,7 +138,6 @@ struct HomeView: View {
                             }
                         }
 
-                        // Add child chip
                         Button {
                             if PremiumManager.canAddChild(currentCount: children.count) {
                                 showAddChild = true
@@ -140,12 +154,12 @@ struct HomeView: View {
                             }
                             .padding(.horizontal, 14)
                             .padding(.vertical, 10)
-                            .background(Color.white.opacity(0.58).gradient)
+                            .background(Brand.glass.gradient)
                             .foregroundStyle(Brand.primary)
                             .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                             .overlay(
                                 RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                    .stroke(Color.white.opacity(0.7), lineWidth: 1.5)
+                                    .stroke(Brand.glassStroke, lineWidth: 1.5)
                             )
                         }
                         .buttonStyle(.plain)
@@ -154,53 +168,52 @@ struct HomeView: View {
                     .padding(.vertical, 8)
                 }
             }
+        }
+    }
 
-            // On This Day memories
-            if !memoriesArtworks.isEmpty {
-                VStack(alignment: .leading, spacing: 10) {
-                    HStack {
-                        Image(systemName: "clock.arrow.circlepath")
-                            .foregroundStyle(Brand.primary)
-                        Text("On This Day")
-                            .font(Brand.headlineFont)
-                            .foregroundStyle(Brand.charcoal)
-                    }
-                    .padding(.horizontal, Brand.Adaptive.screenPadding(for: sizeClass))
+    private var onThisDaySection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                Image(systemName: "clock.arrow.circlepath")
+                    .foregroundStyle(Brand.primary)
+                Text("On This Day")
+                    .font(Brand.headlineFont)
+                    .foregroundStyle(Brand.charcoal)
+            }
+            .padding(.horizontal, Brand.Adaptive.screenPadding(for: sizeClass))
 
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 12) {
-                            ForEach(memoriesArtworks, id: \.artwork.persistentModelID) { memory in
-                                if sizeClass == .regular {
-                                    Button {
-                                        selectedArtwork = memory.artwork
-                                    } label: {
-                                        MemoryCardView(
-                                            artwork: memory.artwork,
-                                            yearsAgo: memory.yearsAgo,
-                                            cardWidth: 200
-                                        )
-                                    }
-                                    .buttonStyle(.plain)
-                                } else {
-                                    NavigationLink {
-                                        ArtworkDetailView(artwork: memory.artwork)
-                                    } label: {
-                                        MemoryCardView(
-                                            artwork: memory.artwork,
-                                            yearsAgo: memory.yearsAgo,
-                                            cardWidth: 160
-                                        )
-                                    }
-                                    .buttonStyle(.plain)
-                                }
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 12) {
+                    ForEach(memoriesArtworks, id: \.artwork.persistentModelID) { memory in
+                        if sizeClass == .regular {
+                            Button {
+                                selectedArtwork = memory.artwork
+                            } label: {
+                                MemoryCardView(
+                                    artwork: memory.artwork,
+                                    yearsAgo: memory.yearsAgo,
+                                    cardWidth: 200
+                                )
                             }
+                            .buttonStyle(.plain)
+                        } else {
+                            NavigationLink {
+                                ArtworkDetailView(artwork: memory.artwork)
+                            } label: {
+                                MemoryCardView(
+                                    artwork: memory.artwork,
+                                    yearsAgo: memory.yearsAgo,
+                                    cardWidth: 160
+                                )
+                            }
+                            .buttonStyle(.plain)
                         }
-                        .padding(.horizontal, Brand.Adaptive.screenPadding(for: sizeClass))
                     }
                 }
-                .padding(.vertical, 8)
+                .padding(.horizontal, Brand.Adaptive.screenPadding(for: sizeClass))
             }
         }
+        .padding(.vertical, 8)
     }
 
     // MARK: - Detail Placeholder
@@ -215,7 +228,7 @@ struct HomeView: View {
                 .foregroundStyle(Brand.warmGray)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Brand.cream)
+        .background(Brand.backgroundBase)
     }
 
     // MARK: - Body
@@ -243,7 +256,8 @@ struct HomeView: View {
                                             selectedArtwork = artwork
                                         }
                                     },
-                                    selectedArtworkID: selectedArtwork?.persistentModelID
+                                    selectedArtworkID: selectedArtwork?.persistentModelID,
+                                    topContent: memoriesArtworks.isEmpty ? nil : AnyView(onThisDaySection)
                                 )
                                 .clipped()
                             }
@@ -279,7 +293,10 @@ struct HomeView: View {
                         } else if filteredArtworks.isEmpty {
                             NoArtworkView()
                         } else {
-                            ArtworkGalleryView(artworks: filteredArtworks)
+                            ArtworkGalleryView(
+                                artworks: filteredArtworks,
+                                topContent: memoriesArtworks.isEmpty ? nil : AnyView(onThisDaySection)
+                            )
                                 .clipped()
                         }
                     }
@@ -297,8 +314,8 @@ struct HomeView: View {
                     })
                 }
             }
-            .background(Brand.cream.ignoresSafeArea(.all))
-            .toolbarBackground(Brand.cream, for: .navigationBar)
+            .background(BrandAppBackground())
+            .toolbarBackground(Brand.backgroundBase, for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
             .navigationTitle("Gallery")
             .toolbar {
@@ -318,7 +335,7 @@ struct HomeView: View {
             .sheet(isPresented: $showAddArtwork, onDismiss: {
                 if artworkCountBeforeSheet == 0
                     && allArtworks.count > artworkCountBeforeSheet
-                    && !PremiumManager.isPremium
+                    && !store.isPremium
                     && !hasSeenUpsell
                 {
                     hasSeenUpsell = true
@@ -330,7 +347,7 @@ struct HomeView: View {
                         .adaptiveSheetSizing(sizeClass: sizeClass)
                 }
             }
-            .sheet(isPresented: $showPremiumUpsell) {
+            .sheet(isPresented: premiumUpsellPresented) {
                 PremiumUpsellView()
             }
             .sheet(item: $editingChild) { child in
@@ -340,7 +357,7 @@ struct HomeView: View {
                     }
                 }
             }
-            .sheet(item: $paywallReason) { reason in
+            .sheet(item: paywallPresented) { reason in
                 PaywallView(reason: reason)
             }
             .onChange(of: selectedChildID) { _, _ in
@@ -348,6 +365,11 @@ struct HomeView: View {
                 if let selectedArtwork, !filteredArtworks.contains(where: { $0.persistentModelID == selectedArtwork.persistentModelID }) {
                     self.selectedArtwork = nil
                 }
+            }
+            .onChange(of: store.isPremium) { _, isPremium in
+                guard isPremium else { return }
+                paywallReason = nil
+                showPremiumUpsell = false
             }
             .onAppear {
                 if UserDefaults.standard.bool(forKey: "notificationsEnabled") {

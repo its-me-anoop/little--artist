@@ -66,7 +66,7 @@ struct AchievementBadgeView: View {
                     .fill(
                         achievement.isUnlocked
                             ? achievement.accentColor.opacity(0.12)
-                            : Color.white.opacity(0.4)
+                            : Brand.glassMuted
                     )
                     .frame(width: 54, height: 54)
 
@@ -109,14 +109,14 @@ struct AchievementBadgeView: View {
         .padding(.horizontal, 8)
         .background(
             RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .fill(Color.white.opacity(0.58))
+                .fill(Brand.glass)
         )
         .overlay(
             RoundedRectangle(cornerRadius: 20, style: .continuous)
                 .strokeBorder(
                     achievement.isUnlocked
                         ? achievement.accentColor.opacity(0.4)
-                        : Color.white.opacity(0.7),
+                        : Brand.glassStroke,
                     lineWidth: 2
                 )
         )

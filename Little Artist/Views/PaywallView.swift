@@ -174,13 +174,13 @@ struct PaywallView: View {
 
                 // Auto-renewal disclosure & legal links
                 VStack(spacing: 6) {
-                    Text("Subscription automatically renews unless cancelled at least 24 hours before the end of the current period. Manage subscriptions in Settings > Apple ID.")
+                    Text("Subscription automatically renews unless cancelled at least 24 hours before the end of the current period. Manage subscriptions in your Apple Account subscriptions settings.")
                         .font(Brand.caption2Font)
                         .foregroundStyle(Brand.warmGray)
                         .multilineTextAlignment(.center)
 
                     HStack(spacing: 16) {
-                        Link("Privacy Policy", destination: URL(string: "https://www.flutterly.co.uk/little-artist/privacy-policy")!)
+                        Link("Privacy Policy", destination: URL(string: "https://www.flutterly.co.uk/projects/artling/privacy-policy")!)
                         Link("Terms of Use", destination: URL(string: "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/")!)
                     }
                     .font(Brand.caption2Font)
@@ -191,7 +191,12 @@ struct PaywallView: View {
             }
             .padding(.bottom, 32)
         }
-        .background(Brand.cream)
+        .background(BrandAppBackground())
+        .task(id: store.isPremium) {
+            if store.isPremium {
+                dismiss()
+            }
+        }
         .onChange(of: store.isPremium) { _, isPremium in
             if isPremium { dismiss() }
         }

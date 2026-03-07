@@ -24,6 +24,8 @@ struct OnboardingView: View {
     @Binding var hasCompletedOnboarding: Bool
     @Environment(\.horizontalSizeClass) private var sizeClass
     @Query private var children: [Child]
+    @AppStorage("firebaseSyncEnabled") private var firebaseSyncEnabled = false
+    private var auth: FirebaseAuthService { FirebaseAuthService.shared }
     @State private var currentPage = 0
     @State private var showAddChild = false
     @State private var showSignInScreen = false
@@ -32,6 +34,13 @@ struct OnboardingView: View {
 
     private let selectionFeedback = UISelectionFeedbackGenerator()
     private let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
+
+    private var signInFlowPresented: Binding<Bool> {
+        Binding(
+            get: { showSignInScreen && !auth.hasPersistentAccount },
+            set: { showSignInScreen = $0 }
+        )
+    }
 
     private let pages: [OnboardingPage] = [
         OnboardingPage(
@@ -143,7 +152,11 @@ struct OnboardingView: View {
                 if currentPage < pages.count - 1 {
                     currentPage += 1
                 } else {
-                    showSignInScreen = true
+                    if auth.hasPersistentAccount {
+                        completeOnboarding()
+                    } else {
+                        showSignInScreen = true
+                    }
                 }
             }
         } label: {
@@ -162,7 +175,7 @@ struct OnboardingView: View {
             .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: 24, style: .continuous)
-                    .stroke(Color.white.opacity(0.4), lineWidth: 3)
+                    .stroke(Brand.glassStrokeSoft, lineWidth: 3)
             )
             .shadow(color: pages[currentPage].color.opacity(0.4), radius: 12, x: 0, y: 6)
             .scaleEffect(currentPage < pages.count ? 1.0 : 0.95)
@@ -185,12 +198,21 @@ struct OnboardingView: View {
         .onChange(of: currentPage) { _, _ in
             selectionFeedback.selectionChanged()
         }
+        .onChange(of: auth.hasPersistentAccount) { _, hasPersistentAccount in
+            guard hasPersistentAccount else { return }
+            if showSignInScreen {
+                completeOnboarding()
+            }
+        }
         .sheet(isPresented: $showAddChild, onDismiss: {
             hasCompletedOnboarding = true
+            if firebaseSyncEnabled {
+                Task { await FirestoreRepository.shared.activateCloudSyncIfNeeded() }
+            }
         }) {
             AddChildView()
         }
-        .fullScreenCover(isPresented: $showSignInScreen) {
+        .fullScreenCover(isPresented: signInFlowPresented) {
             onboardingSignInScreen
         }
         .alert("Sign In Failed", isPresented: Binding(
@@ -207,7 +229,7 @@ struct OnboardingView: View {
 
     private var animatedBackground: some View {
         ZStack {
-            Brand.cream.ignoresSafeArea()
+            BrandAppBackground()
             
             GeometryReader { geo in
                 Circle()
@@ -352,13 +374,13 @@ struct OnboardingView: View {
                     .scaledToFit()
                     .frame(width: 132, height: 132)
 
-                Text("Sign In to Sync Across Devices")
+                Text("Enable Cloud Sync")
                     .font(Brand.displayFont)
                     .foregroundStyle(Brand.charcoal)
                     .multilineTextAlignment(.center)
                     .crayonStyle()
 
-                Text("Use Sign in with Apple to access your account on a new device. You can also continue without signing in.")
+                Text("Enable Cloud Sync with Sign in with Apple to upload artwork, child profiles, and voice memos for syncing and sharing. You can also continue with local-only storage.")
                     .font(Brand.title3Font)
                     .foregroundStyle(Brand.warmGray)
                     .multilineTextAlignment(.center)
@@ -368,37 +390,26 @@ struct OnboardingView: View {
 
                 Spacer()
 
-                Button {
-                    Task { await signInAndFinishOnboarding() }
-                } label: {
-                    HStack(spacing: 10) {
-                        Image(systemName: "applelogo")
-                        Text("Sign in with Apple")
-                    }
-                    .font(Brand.title2Font.bold())
-                    .foregroundStyle(.white)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 20)
-                    .background(Brand.charcoal.gradient)
-                    .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 24, style: .continuous)
-                            .stroke(Color.white.opacity(0.35), lineWidth: 3)
-                    )
-                    .shadow(color: Brand.charcoal.opacity(0.35), radius: 10, x: 0, y: 5)
-                    .crayonStyle()
+                SignInWithAppleButton(.continue) { request in
+                    FirebaseAuthService.shared.configureSignInWithAppleRequest(request)
+                } onCompletion: { result in
+                    Task { await signInAndFinishOnboarding(result) }
                 }
+                .signInWithAppleButtonStyle(.black)
+                .frame(maxWidth: .infinity)
+                .frame(height: 56)
+                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                 .disabled(isSigningIn)
 
                 Button {
                     completeOnboarding()
                 } label: {
-                    Text("Continue without sign in")
+                    Text("Continue with Local Only")
                         .font(Brand.title3Font.bold())
                         .foregroundStyle(Brand.primary)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 16)
-                        .background(Color.white.opacity(0.75))
+                        .background(Brand.glassStrong)
                         .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
                         .overlay(
                             RoundedRectangle(cornerRadius: 20, style: .continuous)
@@ -434,17 +445,21 @@ struct OnboardingView: View {
             showAddChild = true
         } else {
             hasCompletedOnboarding = true
+            if firebaseSyncEnabled {
+                Task { await FirestoreRepository.shared.activateCloudSyncIfNeeded() }
+            }
         }
     }
 
     @MainActor
-    private func signInAndFinishOnboarding() async {
+    private func signInAndFinishOnboarding(_ result: Result<ASAuthorization, Error>) async {
         guard !isSigningIn else { return }
         isSigningIn = true
         defer { isSigningIn = false }
 
         do {
-            try await FirebaseAuthService.shared.signInWithApple()
+            try await FirebaseAuthService.shared.handleSignInWithAppleResult(result)
+            firebaseSyncEnabled = true
             completeOnboarding()
         } catch let error as ASAuthorizationError where error.code == .canceled {
             // User canceled the Apple sheet; stay on this screen.

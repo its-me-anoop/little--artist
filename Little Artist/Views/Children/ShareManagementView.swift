@@ -63,7 +63,7 @@ struct ShareManagementView: View {
                 .padding(.horizontal, Brand.screenPadding)
                 .padding(.bottom, 32)
             }
-            .background(Brand.cream)
+            .background(BrandAppBackground())
             .navigationTitle("Sharing")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

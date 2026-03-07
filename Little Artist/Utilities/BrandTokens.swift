@@ -11,6 +11,7 @@
 //
 
 import SwiftUI
+import UIKit
 
 // MARK: - Brand
 
@@ -23,12 +24,24 @@ enum Brand {
     static let primary = Color(hex: "F2784B")
     /// Light tint of primary for backgrounds & highlights.
     static let primaryTint = Color(hex: "F2784B").opacity(0.12)
+    /// Cream-to-peach launch gradient used in light appearance.
+    static let splashLightStart = Color(hex: "FFF8F0")
+    static let splashLightEnd = Color(hex: "F6E5D6")
+    /// Deep brown launch gradient used in dark appearance.
+    static let splashDarkStart = Color(hex: "120B08")
+    static let splashDarkEnd = Color(hex: "4A2B1E")
     /// Warm cream – main background colour.
     /// Adapts to dark mode: warm cream in light, system background in dark.
     static let cream = Color(UIColor { traits in
         traits.userInterfaceStyle == .dark
             ? UIColor.systemBackground
             : UIColor(red: 1.0, green: 0.973, blue: 0.941, alpha: 1)  // #FFF8F0
+    })
+    /// Base background tone used for bars and solid surfaces over the app gradient.
+    static let backgroundBase = Color(UIColor { traits in
+        traits.userInterfaceStyle == .dark
+            ? UIColor(red: 0.17, green: 0.10, blue: 0.08, alpha: 1)
+            : UIColor(red: 1.0, green: 0.973, blue: 0.941, alpha: 1)
     })
     /// Slightly lighter cream – cards, sheets and elevated surfaces.
     /// Adapts to dark mode: near-white in light, dark gray in dark.
@@ -57,6 +70,42 @@ enum Brand {
         traits.userInterfaceStyle == .dark
             ? UIColor.separator
             : UIColor(red: 0.91, green: 0.88, blue: 0.85, alpha: 1)   // #E8E0D8
+    })
+    /// Warm translucent card fill used by chips and floating surfaces.
+    static let glass = Color(UIColor { traits in
+        traits.userInterfaceStyle == .dark
+            ? UIColor(red: 0.22, green: 0.18, blue: 0.15, alpha: 0.94) // warm espresso
+            : UIColor(red: 1.0, green: 0.984, blue: 0.969, alpha: 0.90) // #FFFBF7
+    })
+    /// Stronger warm surface for empty states and input controls.
+    static let glassStrong = Color(UIColor { traits in
+        traits.userInterfaceStyle == .dark
+            ? UIColor(red: 0.27, green: 0.22, blue: 0.19, alpha: 0.97)
+            : UIColor(red: 1.0, green: 0.992, blue: 0.984, alpha: 0.96)
+    })
+    /// Subtle warm placeholder surface.
+    static let glassSubtle = Color(UIColor { traits in
+        traits.userInterfaceStyle == .dark
+            ? UIColor(red: 0.18, green: 0.15, blue: 0.13, alpha: 0.90)
+            : UIColor(red: 0.98, green: 0.95, blue: 0.92, alpha: 0.82)
+    })
+    /// Muted fill for disabled states that still reads in dark mode.
+    static let glassMuted = Color(UIColor { traits in
+        traits.userInterfaceStyle == .dark
+            ? UIColor(red: 0.17, green: 0.14, blue: 0.12, alpha: 0.82)
+            : UIColor(red: 0.95, green: 0.91, blue: 0.87, alpha: 0.82)
+    })
+    /// Warm border for elevated surfaces in both appearances.
+    static let glassStroke = Color(UIColor { traits in
+        traits.userInterfaceStyle == .dark
+            ? UIColor(red: 0.53, green: 0.44, blue: 0.37, alpha: 0.55)
+            : UIColor(red: 1.0, green: 1.0, blue: 1.0, alpha: 0.78)
+    })
+    /// Softer border used over accent-filled controls.
+    static let glassStrokeSoft = Color(UIColor { traits in
+        traits.userInterfaceStyle == .dark
+            ? UIColor(red: 0.83, green: 0.74, blue: 0.66, alpha: 0.22)
+            : UIColor(red: 1.0, green: 1.0, blue: 1.0, alpha: 0.40)
     })
     /// Sage green – accent 1.
     static let sage = Color(hex: "A8C5A0")
@@ -243,6 +292,87 @@ extension View {
             }
         } else {
             self.presentationDetents([.medium, .large])
+        }
+    }
+}
+
+struct BrandAppBackground: View {
+    @Environment(\.colorScheme) private var colorScheme
+
+    private var gradientColors: [Color] {
+        if colorScheme == .dark {
+            return [Brand.splashDarkStart, Color(hex: "2B1911"), Brand.splashDarkEnd]
+        }
+
+        return [Brand.splashLightStart, Color(hex: "FBEFDF"), Brand.splashLightEnd]
+    }
+
+    var body: some View {
+        GeometryReader { geo in
+            ZStack {
+                LinearGradient(
+                    colors: gradientColors,
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+                .ignoresSafeArea()
+
+                Circle()
+                    .fill(Brand.primary.opacity(colorScheme == .dark ? 0.14 : 0.12))
+                    .frame(width: geo.size.width * 1.2, height: geo.size.width * 1.2)
+                    .blur(radius: 64)
+                    .offset(x: -geo.size.width * 0.28, y: -geo.size.height * 0.18)
+
+                Circle()
+                    .fill((colorScheme == .dark ? Color(hex: "6C4A37") : Brand.sky).opacity(colorScheme == .dark ? 0.16 : 0.10))
+                    .frame(width: geo.size.width * 1.1, height: geo.size.width * 1.1)
+                    .blur(radius: 78)
+                    .offset(x: geo.size.width * 0.3, y: geo.size.height * 0.3)
+            }
+        }
+        .ignoresSafeArea()
+    }
+}
+
+// MARK: - Appearance
+
+enum AppAppearance: String, CaseIterable, Identifiable {
+    case system
+    case light
+    case dark
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .system:
+            return "System"
+        case .light:
+            return "Light"
+        case .dark:
+            return "Dark"
+        }
+    }
+
+    var colorScheme: ColorScheme? {
+        switch self {
+        case .system:
+            return nil
+        case .light:
+            return .light
+        case .dark:
+            return .dark
+        }
+    }
+
+    var interfaceStyle: UIUserInterfaceStyle {
+        switch self {
+        case .system:
+            return .unspecified
+        case .light:
+            return .light
+        case .dark:
+            return .dark
         }
     }
 }

@@ -15,6 +15,9 @@
                         <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
+                            <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="LaunchGradient" translatesAutoresizingMaskIntoConstraints="NO" id="Bgd-gra-dnt">
+                                <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
+                            </imageView>
                             <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" misplaced="YES" image="LaunchIcon" translatesAutoresizingMaskIntoConstraints="NO" id="Img-la-unc">
                                 <rect key="frame" x="77" y="290" width="238" height="273"/>
                                 <constraints>
@@ -24,8 +27,12 @@
                             </imageView>
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="Bcu-3y-fUS"/>
-                        <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                        <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                         <constraints>
+                            <constraint firstItem="Bgd-gra-dnt" firstAttribute="bottom" secondItem="Ze5-6b-2t3" secondAttribute="bottom" id="Bgd-bot-pin"/>
+                            <constraint firstItem="Bgd-gra-dnt" firstAttribute="leading" secondItem="Ze5-6b-2t3" secondAttribute="leading" id="Bgd-lead-pin"/>
+                            <constraint firstItem="Bgd-gra-dnt" firstAttribute="top" secondItem="Ze5-6b-2t3" secondAttribute="top" id="Bgd-top-pin"/>
+                            <constraint firstAttribute="trailing" secondItem="Bgd-gra-dnt" secondAttribute="trailing" id="Bgd-trail-pin"/>
                             <constraint firstItem="Img-la-unc" firstAttribute="centerX" secondItem="Ze5-6b-2t3" secondAttribute="centerX" id="CnX-la-unc"/>
                             <constraint firstItem="Img-la-unc" firstAttribute="centerY" secondItem="Ze5-6b-2t3" secondAttribute="centerY" id="CnY-la-unc"/>
                         </constraints>
@@ -38,5 +45,9 @@
     </scenes>
     <resources>
         <image name="LaunchIcon" width="107" height="150"/>
+        <image name="LaunchGradient" width="393" height="852"/>
+        <systemColor name="systemBackgroundColor">
+            <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+        </systemColor>
     </resources>
 </document>

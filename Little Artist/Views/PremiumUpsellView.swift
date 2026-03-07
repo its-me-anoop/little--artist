@@ -11,7 +11,15 @@ import SwiftUI
 /// A compact celebratory sheet nudging users toward premium after their first artwork.
 struct PremiumUpsellView: View {
     @Environment(\.dismiss) private var dismiss
+    private var store: StoreKitManager { StoreKitManager.shared }
     @State private var showPaywall = false
+
+    private var paywallPresented: Binding<Bool> {
+        Binding(
+            get: { showPaywall && !store.isPremium },
+            set: { showPaywall = $0 }
+        )
+    }
 
     var body: some View {
         VStack(spacing: Brand.sectionSpacing) {
@@ -50,6 +58,10 @@ struct PremiumUpsellView: View {
             // Actions
             VStack(spacing: 12) {
                 Button {
+                    guard !store.isPremium else {
+                        dismiss()
+                        return
+                    }
                     showPaywall = true
                 } label: {
                     Text("See Plans")
@@ -73,9 +85,15 @@ struct PremiumUpsellView: View {
             }
             .padding(.bottom, 32)
         }
-        .background(Brand.cream)
-        .sheet(isPresented: $showPaywall) {
+        .background(BrandAppBackground())
+        .sheet(isPresented: paywallPresented) {
             PaywallView(reason: .artworks)
+        }
+        .task(id: store.isPremium) {
+            if store.isPremium {
+                showPaywall = false
+                dismiss()
+            }
         }
     }
 

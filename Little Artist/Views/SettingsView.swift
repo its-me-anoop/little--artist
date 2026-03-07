@@ -17,10 +17,12 @@ struct SettingsView: View {
     @Query private var artworks: [Artwork]
 
     private var store: StoreKitManager { StoreKitManager.shared }
+    private var auth: FirebaseAuthService { FirebaseAuthService.shared }
     private let syncService = FirestoreSyncService.shared
 
     @AppStorage("aiCaptionsEnabled") private var aiCaptionsEnabled = true
     @AppStorage("defaultCameraBack") private var defaultCameraBack = true
+    @AppStorage("appAppearance") private var appAppearance = AppAppearance.system.rawValue
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = true
     @AppStorage("firebaseSyncEnabled") private var firebaseSyncEnabled = false
     @AppStorage("notificationsEnabled") private var notificationsEnabled = false
@@ -32,8 +34,10 @@ struct SettingsView: View {
     @State private var childToLeave: Child?
     @State private var paywallReason: PaywallView.LimitReason?
     @State private var isRestoring = false
+    @State private var isEnablingCloudSync = false
     @State private var exportPayload: SharePayload?
     @State private var isExporting = false
+    @State private var showCloudSyncSetup = false
     @State private var showSyncEnabledConfirmation = false
     @State private var syncError: String?
     @State private var showJoinShare = false
@@ -56,10 +60,58 @@ struct SettingsView: View {
         Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
     }
 
+    private var deleteAccountMessage: String {
+        var parts = [
+            "This permanently deletes your account and data from this device and cloud storage. Other signed-in devices will remove this data when they reconnect online."
+        ]
+
+        if store.isPremium {
+            parts.append("Any active subscription must still be cancelled separately in Apple Subscriptions.")
+        }
+
+        if auth.isLinkedWithApple {
+            parts.append("You'll be asked to confirm with Apple before deletion.")
+        }
+
+        return parts.joined(separator: " ")
+    }
+
+    private var isCloudSyncEnabled: Bool {
+        firebaseSyncEnabled && auth.isLinkedWithApple
+    }
+
+    private var paywallPresented: Binding<PaywallView.LimitReason?> {
+        Binding(
+            get: { store.isPremium ? nil : paywallReason },
+            set: { paywallReason = $0 }
+        )
+    }
+
+    private var syncErrorPresented: Binding<Bool> {
+        Binding(
+            get: { syncError != nil },
+            set: { if !$0 { syncError = nil } }
+        )
+    }
+
+    private var joinShareErrorPresented: Binding<Bool> {
+        Binding(
+            get: { joinShareError != nil },
+            set: { if !$0 { joinShareError = nil } }
+        )
+    }
+
+    private var accountErrorPresented: Binding<Bool> {
+        Binding(
+            get: { accountError != nil },
+            set: { if !$0 { accountError = nil } }
+        )
+    }
+
     private var settingsBackground: some View {
         GeometryReader { geo in
             ZStack {
-                Brand.cream.ignoresSafeArea()
+                BrandAppBackground()
 
                 Circle()
                     .fill(Brand.sky.opacity(0.10))
@@ -78,34 +130,59 @@ struct SettingsView: View {
 
     var body: some View {
         NavigationStack {
-            Form {
-                childrenSection
-                preferencesSection
-                aiUsageSection
-                subscriptionSection
-                dataSection
-                accountSection
-                syncDiagnosticsSection
-                aboutSection
-            }
-            .listStyle(.insetGrouped)
-            .listSectionSpacing(20)
-            .scrollContentBackground(.hidden)
-            .background(settingsBackground)
-            .tint(Brand.primary)
-            .navigationTitle("Settings")
+            settingsAlertContent
+        }
+        .toolbarBackground(Brand.backgroundBase, for: .navigationBar)
+        .toolbarBackground(.visible, for: .navigationBar)
+    }
+
+    private var settingsForm: some View {
+        Form {
+            childrenSection
+            preferencesSection
+            aiUsageSection
+            subscriptionSection
+            dataSection
+            accountSection
+            syncDiagnosticsSection
+            aboutSection
+        }
+        .listStyle(.insetGrouped)
+        .listSectionSpacing(20)
+        .scrollContentBackground(.hidden)
+        .background(settingsBackground)
+        .tint(Brand.primary)
+        .navigationTitle("Settings")
+    }
+
+    private var settingsSheetContent: some View {
+        settingsForm
             .onAppear {
-                firebaseSyncEnabled = true
+                if isCloudSyncEnabled {
+                    Task { await FirestoreRepository.shared.activateCloudSyncIfNeeded() }
+                }
             }
             .sheet(isPresented: $showAddChild) {
                 AddChildView()
             }
-            .sheet(item: $paywallReason) { reason in
+            .sheet(isPresented: $showCloudSyncSetup) {
+                cloudSyncSetupView
+            }
+            .sheet(item: paywallPresented) { reason in
                 PaywallView(reason: reason)
             }
             .sheet(item: $exportPayload) { payload in
                 ActivityView(activityItems: payload.items)
             }
+            .onChange(of: store.isPremium) { _, isPremium in
+                if isPremium {
+                    paywallReason = nil
+                }
+            }
+    }
+
+    private var settingsAlertContent: some View {
+        settingsSheetContent
             .alert("Delete Child?", isPresented: $showDeleteChildConfirmation) {
                 Button("Cancel", role: .cancel) {
                     childToDelete = nil
@@ -117,13 +194,7 @@ struct SettingsView: View {
                     }
                 }
             } message: {
-                if let child = childToDelete {
-                    if child.isShared {
-                        Text("This will permanently delete \(child.name) and all their artworks for everyone this profile is shared with.")
-                    } else {
-                        Text("This will permanently delete \(child.name) and all their \(child.artworks?.count ?? 0) artworks.")
-                    }
-                }
+                deleteChildMessageView
             }
             .alert("Leave Shared Profile?", isPresented: $showLeaveChildConfirmation) {
                 Button("Cancel", role: .cancel) {
@@ -137,19 +208,14 @@ struct SettingsView: View {
                     }
                 }
             } message: {
-                if let child = childToLeave {
-                    Text("\(child.name)'s profile will be removed from your device. The owner will keep their copy.")
-                }
+                leaveSharedProfileMessageView
             }
             .alert("Sync Enabled", isPresented: $showSyncEnabledConfirmation) {
                 Button("OK") {}
             } message: {
-                Text("Your data will now sync across your devices. You can share child profiles from the Edit Profile screen.")
+                Text("Artwork, child profiles, voice memos, and preferences will now sync across your devices. You can share child profiles from the Edit Profile screen.")
             }
-            .alert("Sync Unavailable", isPresented: Binding(
-                get: { syncError != nil },
-                set: { if !$0 { syncError = nil } }
-            )) {
+            .alert("Sync Unavailable", isPresented: syncErrorPresented) {
                 Button("OK") { syncError = nil }
             } message: {
                 Text(syncError ?? "")
@@ -173,10 +239,7 @@ struct SettingsView: View {
             } message: {
                 Text("The shared profile will appear shortly.")
             }
-            .alert("Join Failed", isPresented: Binding(
-                get: { joinShareError != nil },
-                set: { if !$0 { joinShareError = nil } }
-            )) {
+            .alert("Join Failed", isPresented: joinShareErrorPresented) {
                 Button("OK") { joinShareError = nil }
             } message: {
                 Text(joinShareError ?? "")
@@ -195,19 +258,31 @@ struct SettingsView: View {
                     Task { await performDeleteAccount() }
                 }
             } message: {
-                Text("This permanently deletes your account and data from this device and cloud storage. Other signed-in devices will remove this data when they reconnect online.")
+                Text(deleteAccountMessage)
             }
-            .alert("Account Action Failed", isPresented: Binding(
-                get: { accountError != nil },
-                set: { if !$0 { accountError = nil } }
-            )) {
+            .alert("Account Action Failed", isPresented: accountErrorPresented) {
                 Button("OK") { accountError = nil }
             } message: {
                 Text(accountError ?? "")
             }
+    }
+
+    @ViewBuilder
+    private var deleteChildMessageView: some View {
+        if let child = childToDelete {
+            if child.isShared {
+                Text("This will permanently delete \(child.name) and all their artworks for everyone this profile is shared with.")
+            } else {
+                Text("This will permanently delete \(child.name) and all their \(child.artworks?.count ?? 0) artworks.")
+            }
         }
-        .toolbarBackground(Brand.cream, for: .navigationBar)
-        .toolbarBackground(.visible, for: .navigationBar)
+    }
+
+    @ViewBuilder
+    private var leaveSharedProfileMessageView: some View {
+        if let child = childToLeave {
+            Text("\(child.name)'s profile will be removed from your device. The owner will keep their copy.")
+        }
     }
 
     private var childrenSection: some View {
@@ -288,6 +363,12 @@ struct SettingsView: View {
 
     private var preferencesSection: some View {
         Section {
+            Picker("Appearance", selection: $appAppearance) {
+                ForEach(AppAppearance.allCases) { appearance in
+                    Text(appearance.title).tag(appearance.rawValue)
+                }
+            }
+
             if store.isPremium {
                 Toggle(isOn: $aiCaptionsEnabled) {
                     Label("AI Captions", systemImage: "sparkles")
@@ -296,6 +377,14 @@ struct SettingsView: View {
                 .onChange(of: aiCaptionsEnabled) { _, _ in
                     Task { await FirestoreRepository.shared.syncUserPreferencesToFirestore() }
                 }
+
+                Text(
+                    aiCaptionsEnabled
+                    ? AISuggestionService.engineDescription
+                    : "Turn this on to generate titles and captions entirely on-device."
+                )
+                .font(Brand.caption2Font)
+                .foregroundStyle(Brand.warmGray)
             } else {
                 Button {
                     paywallReason = .artworks
@@ -369,22 +458,30 @@ struct SettingsView: View {
     private var aiUsageSection: some View {
         if store.isPremium && aiCaptionsEnabled {
             Section {
-                let summary = GeminiUsageTracker.shared.usageSummary
-
-                UsageRow(label: "Today", usage: summary.daily)
-                UsageRow(label: "This Week", usage: summary.weekly)
-                UsageRow(label: "This Month", usage: summary.monthly)
-
-                if let exceeded = GeminiUsageTracker.shared.exceededLimit {
-                    Label(exceeded.message, systemImage: "exclamationmark.triangle.fill")
-                        .font(Brand.captionFont)
-                        .foregroundStyle(Brand.dustyRose)
+                HStack {
+                    Label("Engine", systemImage: "brain.head.profile")
+                    Spacer()
+                    Text(AISuggestionService.engineName)
+                        .font(Brand.caption2Font)
+                        .foregroundStyle(Brand.primary)
                 }
+
+                HStack {
+                    Label("Processing", systemImage: "iphone")
+                    Spacer()
+                    Text("On Device")
+                        .font(Brand.caption2Font)
+                        .foregroundStyle(Brand.sage)
+                }
+
+                Text(AISuggestionService.engineDescription)
+                    .font(Brand.captionFont)
+                    .foregroundStyle(Brand.warmGray)
             } header: {
-                Text("AI Usage")
+                Text("AI Engine")
                     .crayonStyle()
             } footer: {
-                Text("Limits help manage cloud AI costs. Counters reset automatically.")
+                Text("Apple Intelligence is used when available. Other devices fall back to a lightweight local Vision pipeline.")
                     .font(Brand.caption2Font)
             }
         }
@@ -427,6 +524,11 @@ struct SettingsView: View {
                 }
             }
             .disabled(isRestoring)
+
+            Link(destination: URL(string: "https://apps.apple.com/account/subscriptions")!) {
+                Label("Manage Subscription", systemImage: "arrow.up.right.square")
+                    .crayonStyle()
+            }
         } header: {
             Text("Subscription")
                 .crayonStyle()
@@ -435,21 +537,39 @@ struct SettingsView: View {
 
     private var dataSection: some View {
         Section {
-            HStack {
-                Label("Cloud Sync", systemImage: "arrow.triangle.2.circlepath.icloud.fill")
-                Spacer()
-                Text("Always On")
-                    .font(Brand.caption2Font)
-                    .foregroundStyle(Brand.sage)
-            }
+            if isCloudSyncEnabled {
+                HStack {
+                    Label("Cloud Sync", systemImage: "arrow.triangle.2.circlepath.icloud.fill")
+                    Spacer()
+                    Text("Enabled")
+                        .font(Brand.caption2Font)
+                        .foregroundStyle(Brand.sage)
+                }
 
-            if firebaseSyncEnabled {
                 Button {
                     showJoinShare = true
                 } label: {
                     Label("Join Shared Profile", systemImage: "person.badge.plus")
                         .crayonStyle()
                 }
+            } else {
+                Button {
+                    showCloudSyncSetup = true
+                } label: {
+                    HStack {
+                        Label("Enable Cloud Sync", systemImage: "icloud.and.arrow.up")
+                            .foregroundStyle(Brand.primary)
+                            .crayonStyle()
+                        Spacer()
+                        if isEnablingCloudSync {
+                            ProgressView()
+                        }
+                    }
+                }
+
+                Text("Cloud sync stays off until you explicitly enable it with Sign in with Apple.")
+                    .font(Brand.caption2Font)
+                    .foregroundStyle(Brand.warmGray)
             }
 
             HStack {
@@ -574,6 +694,121 @@ struct SettingsView: View {
                 .crayonStyle()
         }
     }
+
+    private var cloudSyncSetupView: some View {
+        NavigationStack {
+            VStack(spacing: 24) {
+                Spacer()
+
+                Image("LaunchFox")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 120, height: 120)
+
+                Text("Enable Cloud Sync")
+                    .font(Brand.displayFont)
+                    .foregroundStyle(Brand.charcoal)
+                    .multilineTextAlignment(.center)
+                    .crayonStyle()
+
+                Text("Cloud Sync uploads artwork, child profiles, voice memos, and preferences to your account for backup, multi-device sync, and sharing.")
+                    .font(Brand.title3Font)
+                    .foregroundStyle(Brand.warmGray)
+                    .multilineTextAlignment(.center)
+                    .lineSpacing(4)
+                    .padding(.horizontal, 16)
+                    .crayonStyle()
+
+                Spacer()
+
+                if auth.isLinkedWithApple {
+                    Button {
+                        Task { await enableCloudSync() }
+                    } label: {
+                        HStack {
+                            Text("Enable Cloud Sync")
+                            if isEnablingCloudSync {
+                                ProgressView()
+                            }
+                        }
+                        .font(Brand.title2Font.bold())
+                        .foregroundStyle(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 20)
+                        .background(Brand.primary.gradient)
+                        .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                                .stroke(Brand.glassStrokeSoft, lineWidth: 3)
+                        )
+                        .crayonStyle()
+                    }
+                    .disabled(isEnablingCloudSync)
+                } else {
+                    SignInWithAppleButton(.continue) { request in
+                        auth.configureSignInWithAppleRequest(request)
+                    } onCompletion: { result in
+                        Task { await handleCloudSyncAuthorization(result) }
+                    }
+                    .signInWithAppleButtonStyle(.black)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 56)
+                    .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                    .disabled(isEnablingCloudSync)
+                }
+
+                Button("Not Now") {
+                    showCloudSyncSetup = false
+                }
+                .font(Brand.captionFont)
+                .foregroundStyle(Brand.warmGray)
+                .disabled(isEnablingCloudSync)
+            }
+            .padding(.horizontal, 32)
+            .padding(.bottom, 32)
+            .background(settingsBackground)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Close") {
+                        showCloudSyncSetup = false
+                    }
+                    .disabled(isEnablingCloudSync)
+                }
+            }
+        }
+    }
+
+    @MainActor
+    private func enableCloudSync() async {
+        guard !isEnablingCloudSync else { return }
+        isEnablingCloudSync = true
+        defer { isEnablingCloudSync = false }
+
+        firebaseSyncEnabled = true
+        await FirestoreRepository.shared.activateCloudSyncIfNeeded()
+        showCloudSyncSetup = false
+        showSyncEnabledConfirmation = true
+    }
+
+    @MainActor
+    private func handleCloudSyncAuthorization(_ result: Result<ASAuthorization, Error>) async {
+        guard !isEnablingCloudSync else { return }
+        isEnablingCloudSync = true
+        defer { isEnablingCloudSync = false }
+
+        do {
+            try await auth.handleSignInWithAppleResult(result)
+            firebaseSyncEnabled = true
+            await FirestoreRepository.shared.activateCloudSyncIfNeeded()
+            showCloudSyncSetup = false
+            showSyncEnabledConfirmation = true
+        } catch let error as ASAuthorizationError where error.code == .canceled {
+            return
+        } catch {
+            syncError = error.localizedDescription
+        }
+    }
+
     private func joinSharedProfile() async {
         let code = shareCodeInput.trimmingCharacters(in: .whitespaces)
         guard !code.isEmpty else { return }
@@ -595,6 +830,7 @@ struct SettingsView: View {
     private func performSignOut() async {
         do {
             FirestoreSyncService.shared.stop()
+            firebaseSyncEnabled = false
             purgeLocalData()
             UserDefaults.standard.set(false, forKey: "hasCompletedOnboarding")
             try FirebaseAuthService.shared.signOut()
@@ -611,6 +847,10 @@ struct SettingsView: View {
             }
 
             FirestoreSyncService.shared.stop()
+            if FirebaseAuthService.shared.isLinkedWithApple {
+                try await FirebaseAuthService.shared.revokeAppleTokenForCurrentUser()
+            }
+            firebaseSyncEnabled = false
             // Purge local data first to prevent SwiftData fault errors
             // when the UI tries to access deleted objects during async cleanup
             purgeLocalData()
@@ -642,43 +882,13 @@ struct SettingsView: View {
         let name = child.name
 
         Task {
-            let pdfData = PDFExportService.generatePortfolio(childName: name, artworks: childArtworks)
+            let pdfData = PDFExportService.generatePortfolio(child: child, artworks: childArtworks)
             let tempURL = FileManager.default.temporaryDirectory
                 .appendingPathComponent("\(name)_Portfolio.pdf")
             try? pdfData.write(to: tempURL)
             isExporting = false
             exportPayload = SharePayload(items: [tempURL])
         }
-    }
-}
-
-// MARK: - Usage Row
-
-/// A single row showing usage progress for a tracking period.
-private struct UsageRow: View {
-    let label: String
-    let usage: PeriodUsage
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            HStack {
-                Text(label)
-                    .font(Brand.captionFont)
-                Spacer()
-                Text("\(usage.used)/\(usage.limit)")
-                    .font(Brand.caption2Font)
-                    .foregroundStyle(usage.isExceeded ? Brand.dustyRose : Brand.warmGray)
-            }
-            ProgressView(value: min(usage.fraction, 1.0))
-                .tint(progressColor)
-        }
-        .padding(.vertical, 2)
-    }
-
-    private var progressColor: Color {
-        if usage.fraction >= 1.0 { return Brand.dustyRose }
-        if usage.fraction >= 0.8 { return Brand.primary }
-        return Brand.sage
     }
 }
 

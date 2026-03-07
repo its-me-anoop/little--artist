@@ -48,7 +48,7 @@ struct NoChildrenView: View {
                     .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
                     .overlay(
                         RoundedRectangle(cornerRadius: 24, style: .continuous)
-                            .stroke(Color.white.opacity(0.4), lineWidth: 3)
+                            .stroke(Brand.glassStrokeSoft, lineWidth: 3)
                     )
                     .shadow(color: Brand.primary.opacity(0.4), radius: 8, x: 0, y: 4)
                     .crayonStyle()
@@ -59,7 +59,7 @@ struct NoChildrenView: View {
         }
         .padding(.horizontal, 32)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Brand.cream)
+        .background(BrandAppBackground())
     }
 }
 

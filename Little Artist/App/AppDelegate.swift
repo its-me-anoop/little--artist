@@ -3,7 +3,7 @@
 //  Little Artist
 //
 //  UIApplicationDelegate + UIWindowSceneDelegate for handling
-//  Firebase share link acceptance and remote notification delivery.
+//  Firebase share link acceptance.
 //
 
 import UIKit
@@ -16,8 +16,6 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         _ application: UIApplication,
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
     ) -> Bool {
-        // Register for remote notifications (used by Firebase for real-time sync)
-        application.registerForRemoteNotifications()
         return true
     }
 

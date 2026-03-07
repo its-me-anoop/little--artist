@@ -16,6 +16,7 @@ struct ArtworkDetailView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     @Environment(\.horizontalSizeClass) private var sizeClass
+    @AppStorage("aiCaptionsEnabled") private var aiCaptionsEnabled = true
 
     let artwork: Artwork
     /// When set, called after deletion instead of dismissing (for master-detail pane).
@@ -33,6 +34,7 @@ struct ArtworkDetailView: View {
     @State private var imageScale: CGFloat = 1.0
     @State private var imageOffset: CGSize = .zero
     @State private var lastScale: CGFloat = 1.0
+    @State private var showAIPermissionCard = false
 
     private var displayTitle: String {
         let trimmed = artwork.title.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -55,7 +57,7 @@ struct ArtworkDetailView: View {
                     .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
                     .overlay(
                         RoundedRectangle(cornerRadius: 20, style: .continuous)
-                            .stroke(Color.white.opacity(0.6), lineWidth: 2)
+                            .stroke(Brand.glassStroke, lineWidth: 2)
                     )
                     .scaleEffect(imageScale)
                     .offset(imageOffset)
@@ -75,7 +77,7 @@ struct ArtworkDetailView: View {
                     .brandCardShadow()
             } else {
                 RoundedRectangle(cornerRadius: 20, style: .continuous)
-                    .fill(Color.white.opacity(0.58))
+                    .fill(Brand.glass)
                     .frame(maxWidth: .infinity, minHeight: 320)
                     .overlay {
                         Image(systemName: "paintpalette")
@@ -84,7 +86,7 @@ struct ArtworkDetailView: View {
                     }
                     .overlay(
                         RoundedRectangle(cornerRadius: 20, style: .continuous)
-                            .stroke(Color.white.opacity(0.7), lineWidth: 2)
+                            .stroke(Brand.glassStroke, lineWidth: 2)
                     )
             }
 
@@ -224,11 +226,11 @@ struct ArtworkDetailView: View {
             .padding(.vertical, 22)
             .background(
                 RoundedRectangle(cornerRadius: 26, style: .continuous)
-                    .fill(Color.white.opacity(0.58))
+                    .fill(Brand.glass)
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 26, style: .continuous)
-                    .stroke(Color.white.opacity(0.7), lineWidth: 2)
+                    .stroke(Brand.glassStroke, lineWidth: 2)
             )
 
             // Action buttons row
@@ -240,11 +242,11 @@ struct ArtworkDetailView: View {
                         .padding(.vertical, 14)
                         .background(
                             RoundedRectangle(cornerRadius: Brand.radiusButton, style: .continuous)
-                                .fill(Color.white.opacity(0.58))
+                                .fill(Brand.glass)
                         )
                         .overlay(
                             RoundedRectangle(cornerRadius: Brand.radiusButton, style: .continuous)
-                                .stroke(Color.white.opacity(0.7), lineWidth: 1.5)
+                                .stroke(Brand.glassStroke, lineWidth: 1.5)
                         )
                         .foregroundStyle(Brand.primary)
                 }
@@ -256,11 +258,11 @@ struct ArtworkDetailView: View {
                         .padding(.vertical, 14)
                         .background(
                             RoundedRectangle(cornerRadius: Brand.radiusButton, style: .continuous)
-                                .fill(Color.white.opacity(0.58))
+                                .fill(Brand.glass)
                         )
                         .overlay(
                             RoundedRectangle(cornerRadius: Brand.radiusButton, style: .continuous)
-                                .stroke(Color.white.opacity(0.7), lineWidth: 1.5)
+                                .stroke(Brand.glassStroke, lineWidth: 1.5)
                         )
                         .foregroundStyle(Brand.primary)
                 }
@@ -290,7 +292,7 @@ struct ArtworkDetailView: View {
     private var detailBackground: some View {
         GeometryReader { geo in
             ZStack {
-                Brand.cream.ignoresSafeArea()
+                BrandAppBackground()
 
                 Circle()
                     .fill(Brand.primary.opacity(0.10))
@@ -341,7 +343,7 @@ struct ArtworkDetailView: View {
                             .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
                             .overlay(
                                 RoundedRectangle(cornerRadius: 24, style: .continuous)
-                                    .stroke(Color.white.opacity(0.35), lineWidth: 3)
+                                    .stroke(Brand.glassStrokeSoft, lineWidth: 3)
                             )
                             .shadow(color: Brand.primary.opacity(0.35), radius: 10, x: 0, y: 5)
                             .crayonStyle()
@@ -389,7 +391,7 @@ struct ArtworkDetailView: View {
                     .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
                     .overlay(
                         RoundedRectangle(cornerRadius: 20, style: .continuous)
-                            .stroke(Color.white.opacity(0.6), lineWidth: 2)
+                            .stroke(Brand.glassStroke, lineWidth: 2)
                     )
                     .brandCardShadow()
                     .padding(.horizontal, 32)
@@ -414,7 +416,7 @@ struct ArtworkDetailView: View {
                     .padding(.horizontal, 20)
                     .background(
                         RoundedRectangle(cornerRadius: 16, style: .continuous)
-                            .fill(Color.white.opacity(0.82))
+                            .fill(Brand.glassStrong)
                     )
                     .overlay(
                         RoundedRectangle(cornerRadius: 16, style: .continuous)
@@ -430,7 +432,7 @@ struct ArtworkDetailView: View {
                     .padding(.horizontal, 16)
                     .background(
                         RoundedRectangle(cornerRadius: 16, style: .continuous)
-                            .fill(Color.white.opacity(0.82))
+                            .fill(Brand.glassStrong)
                     )
                     .overlay(
                         RoundedRectangle(cornerRadius: 16, style: .continuous)
@@ -451,7 +453,7 @@ struct ArtworkDetailView: View {
                 .padding(.horizontal, 16)
                 .background(
                     RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .fill(Color.white.opacity(0.82))
+                        .fill(Brand.glassStrong)
                 )
                 .overlay(
                     RoundedRectangle(cornerRadius: 16, style: .continuous)
@@ -462,11 +464,11 @@ struct ArtworkDetailView: View {
             .padding(.vertical, 22)
             .background(
                 RoundedRectangle(cornerRadius: 26, style: .continuous)
-                    .fill(Color.white.opacity(0.58))
+                    .fill(Brand.glass)
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 26, style: .continuous)
-                    .stroke(Color.white.opacity(0.7), lineWidth: 2)
+                    .stroke(Brand.glassStroke, lineWidth: 2)
             )
             .padding(.horizontal, 20)
 
@@ -485,11 +487,11 @@ struct ArtworkDetailView: View {
                 .padding(.vertical, 22)
                 .background(
                     RoundedRectangle(cornerRadius: 26, style: .continuous)
-                        .fill(Color.white.opacity(0.58))
+                        .fill(Brand.glass)
                 )
                 .overlay(
                     RoundedRectangle(cornerRadius: 26, style: .continuous)
-                        .stroke(Color.white.opacity(0.7), lineWidth: 2)
+                        .stroke(Brand.glassStroke, lineWidth: 2)
                 )
                 .padding(.horizontal, 20)
             }
@@ -508,19 +510,31 @@ struct ArtworkDetailView: View {
             .padding(.vertical, 22)
             .background(
                 RoundedRectangle(cornerRadius: 26, style: .continuous)
-                    .fill(Color.white.opacity(0.58))
+                    .fill(Brand.glass)
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 26, style: .continuous)
-                    .stroke(Color.white.opacity(0.7), lineWidth: 2)
+                    .stroke(Brand.glassStroke, lineWidth: 2)
             )
             .padding(.horizontal, 20)
 
             // AI suggestion button
             if PremiumManager.isPremium {
+                if showAIPermissionCard {
+                    AIPermissionRequestCardView(
+                        title: "Turn on AI captions?",
+                        message: "AI captions are currently off. Enable them to improve titles and captions entirely on-device.",
+                        actionTitle: "Enable AI Captions",
+                        onEnable: enableAICaptionsAndContinue,
+                        onDismiss: { withAnimation(.snappy) { showAIPermissionCard = false } }
+                    )
+                    .padding(.horizontal, 28)
+                    .transition(.move(edge: .top).combined(with: .opacity))
+                }
+
                 AIShimmerView(isAnimating: isGeneratingSuggestions) {
                     Button {
-                        generateAISuggestionsForEdits()
+                        handleAITap()
                     } label: {
                         HStack(spacing: 8) {
                             if isGeneratingSuggestions {
@@ -529,23 +543,23 @@ struct ArtworkDetailView: View {
                             } else {
                                 Image(systemName: "sparkles")
                             }
-                            Text(isGeneratingSuggestions ? "Creating magic..." : "Improve with AI")
+                            Text(aiButtonTitle)
                                 .font(Brand.subheadlineFont.weight(.semibold))
                         }
-                        .foregroundStyle(aiSuggestionsEnabled ? Brand.primary : Brand.disabled)
+                        .foregroundStyle(canRequestAISuggestions ? Brand.primary : Brand.disabled)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 14)
                         .background(
                             RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                .fill(aiSuggestionsEnabled ? Brand.primaryTint : Color.white.opacity(0.4))
+                                .fill(canRequestAISuggestions ? Brand.primaryTint : Brand.glassMuted)
                         )
                         .overlay(
                             RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                .stroke(aiSuggestionsEnabled ? Brand.primary.opacity(0.25) : Color.clear, lineWidth: 1.5)
+                                .stroke(canRequestAISuggestions ? Brand.primary.opacity(0.25) : Color.clear, lineWidth: 1.5)
                         )
                     }
                     .buttonStyle(.plain)
-                    .disabled(!aiSuggestionsEnabled || isGeneratingSuggestions)
+                    .disabled(!canRequestAISuggestions || isGeneratingSuggestions)
                 }
                 .padding(.horizontal, 28)
 
@@ -563,7 +577,7 @@ struct ArtworkDetailView: View {
     private var editSheetBackground: some View {
         GeometryReader { geo in
             ZStack {
-                Brand.cream.ignoresSafeArea()
+                BrandAppBackground()
 
                 Circle()
                     .fill(Brand.primary.opacity(0.12))
@@ -592,16 +606,16 @@ struct ArtworkDetailView: View {
     }
 
     private func saveEdits() {
+        let anchoredDate = ArtworkDate.dayAnchored(editDate)
         FirestoreRepository.shared.updateArtwork(
             artwork,
             title: editTitle.trimmingCharacters(in: .whitespacesAndNewlines),
             caption: editCaption.trimmingCharacters(in: .whitespacesAndNewlines),
             voiceNoteData: editVoiceNoteData,
+            createdAt: anchoredDate,
             tags: editTags,
             in: modelContext
         )
-        artwork.createdAt = editDate
-        try? modelContext.save()
         HapticService.success()
         showEditSheet = false
     }
@@ -634,13 +648,52 @@ struct ArtworkDetailView: View {
 
     /// Whether AI suggestions can be used (requires premium subscription).
     private var aiSuggestionsEnabled: Bool {
+        canRequestAISuggestions && aiCaptionsEnabled
+    }
+
+    private var canRequestAISuggestions: Bool {
         PremiumManager.isPremium && AISuggestionService.isAvailable
+    }
+
+    private var aiButtonTitle: String {
+        if isGeneratingSuggestions {
+            return "Creating magic..."
+        }
+        if !AISuggestionService.isAvailable {
+            return "AI Unavailable"
+        }
+        return "Improve with AI"
+    }
+
+    private func handleAITap() {
+        if !aiCaptionsEnabled {
+            withAnimation(.snappy) {
+                showAIPermissionCard = true
+            }
+            return
+        }
+        generateAISuggestionsForEdits()
+    }
+
+    @MainActor
+    private func enableAICaptionsAndContinue() {
+        aiCaptionsEnabled = true
+        showAIPermissionCard = false
+        Task { await FirestoreRepository.shared.syncUserPreferencesToFirestore() }
+        generateAISuggestionsForEdits()
     }
 
     /// Uses the shared AI service to improve the current title and caption.
     private func generateAISuggestionsForEdits() {
-        guard !isGeneratingSuggestions else { return }
+        guard !isGeneratingSuggestions, canRequestAISuggestions else { return }
+        guard aiCaptionsEnabled else {
+            withAnimation(.snappy) {
+                showAIPermissionCard = true
+            }
+            return
+        }
         suggestionErrorMessage = nil
+        showAIPermissionCard = false
         isGeneratingSuggestions = true
 
         let currentTitle = editTitle

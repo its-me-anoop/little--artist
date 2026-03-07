@@ -32,11 +32,11 @@ struct StatCardView: View {
         .padding(.vertical, 16)
         .background(
             RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .fill(Color.white.opacity(0.58))
+                .fill(Brand.glass)
         )
         .overlay(
             RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .stroke(Color.white.opacity(0.7), lineWidth: 2)
+                .stroke(Brand.glassStroke, lineWidth: 2)
         )
         .brandCardShadow()
         .crayonStyle()

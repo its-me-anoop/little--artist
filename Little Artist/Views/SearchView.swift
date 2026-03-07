@@ -96,12 +96,12 @@ struct SearchView: View {
                                                 .font(Brand.captionFont.bold())
                                                 .padding(.horizontal, 14)
                                                 .padding(.vertical, 8)
-                                                .background(Color.white.opacity(0.58).gradient)
+                                                .background(Brand.glass.gradient)
                                                 .foregroundStyle(Brand.charcoal)
                                                 .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                                                 .overlay(
                                                     RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                                        .stroke(Color.white.opacity(0.7), lineWidth: 1.5)
+                                                        .stroke(Brand.glassStroke, lineWidth: 1.5)
                                                 )
                                                 .crayonStyle()
                                     }
@@ -151,12 +151,12 @@ struct SearchView: View {
                             }
                             .padding(.horizontal, 14)
                             .padding(.vertical, 10)
-                            .background(showFavoritesOnly ? Brand.dustyRose.gradient : Color.white.opacity(0.58).gradient)
+                            .background(showFavoritesOnly ? Brand.dustyRose.gradient : Brand.glass.gradient)
                             .foregroundStyle(showFavoritesOnly ? .white : Brand.charcoal)
                             .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                             .overlay(
                                 RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                    .stroke(showFavoritesOnly ? Color.white.opacity(0.4) : Color.white.opacity(0.7), lineWidth: 2)
+                                    .stroke(showFavoritesOnly ? Brand.glassStrokeSoft : Brand.glassStroke, lineWidth: 2)
                             )
                             .shadow(color: showFavoritesOnly ? Brand.dustyRose.opacity(0.3) : .clear, radius: 4, x: 0, y: 2)
                             }
@@ -213,11 +213,11 @@ struct SearchView: View {
                         .padding(.vertical, 24)
                         .background(
                             RoundedRectangle(cornerRadius: 26, style: .continuous)
-                                .fill(Color.white.opacity(0.58))
+                                .fill(Brand.glass)
                         )
                         .overlay(
                             RoundedRectangle(cornerRadius: 26, style: .continuous)
-                                .stroke(Color.white.opacity(0.7), lineWidth: 2)
+                                .stroke(Brand.glassStroke, lineWidth: 2)
                         )
                         .brandCardShadow()
                         .padding(.horizontal, Brand.screenPadding)
@@ -255,7 +255,7 @@ struct SearchView: View {
         .scrollDismissesKeyboard(.interactively)
         .background(
             GeometryReader { geo in
-                Brand.cream
+                BrandAppBackground()
                     .ignoresSafeArea()
                     .onAppear { availableWidth = geo.size.width }
                     .onChange(of: geo.size.width) { _, newWidth in availableWidth = newWidth }

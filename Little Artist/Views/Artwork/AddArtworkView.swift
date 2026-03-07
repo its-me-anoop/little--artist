@@ -18,6 +18,7 @@ struct AddArtworkView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     @Environment(\.horizontalSizeClass) private var sizeClass
+    @AppStorage("aiCaptionsEnabled") private var aiCaptionsEnabled = true
 
     let child: Child
 
@@ -38,6 +39,7 @@ struct AddArtworkView: View {
     @State private var validationResult: ArtworkValidationResult?
     @State private var isValidatingImage = false
     @State private var validationDismissed = false
+    @State private var showAIPermissionCard = false
 
     // MARK: - Extracted Subviews
 
@@ -141,7 +143,7 @@ struct AddArtworkView: View {
             if capturedImageData != nil {
                 AIShimmerView(isAnimating: isGeneratingSuggestions) {
                     Button {
-                        generateAISuggestions()
+                        handleAITap()
                     } label: {
                         HStack(spacing: 8) {
                             if isGeneratingSuggestions {
@@ -150,21 +152,33 @@ struct AddArtworkView: View {
                             } else {
                                 Image(systemName: "sparkles")
                             }
-                            Text(isGeneratingSuggestions ? "Creating magic..." : "Suggest Title & Caption")
+                            Text(aiButtonTitle)
                                 .font(Brand.subheadlineFont.weight(.semibold))
                         }
-                        .foregroundStyle(aiSuggestionsEnabled ? Brand.primary : Brand.disabled)
+                        .foregroundStyle(canRequestAISuggestions ? Brand.primary : Brand.disabled)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 12)
                         .background(
                             RoundedRectangle(cornerRadius: 12)
-                                .fill(aiSuggestionsEnabled ? Brand.primaryTint : Color.white.opacity(0.4))
+                                .fill(canRequestAISuggestions ? Brand.primaryTint : Brand.glassMuted)
                         )
                     }
                     .buttonStyle(.plain)
-                    .disabled(!aiSuggestionsEnabled || isGeneratingSuggestions)
+                    .disabled(!canRequestAISuggestions || isGeneratingSuggestions)
                 }
                 .padding(.horizontal, fieldPadding)
+
+                if showAIPermissionCard {
+                    AIPermissionRequestCardView(
+                        title: "Turn on AI captions?",
+                        message: "AI captions are currently off. Enable them to generate titles and captions entirely on-device.",
+                        actionTitle: "Enable AI Captions",
+                        onEnable: enableAICaptionsAndContinue,
+                        onDismiss: { withAnimation(.snappy) { showAIPermissionCard = false } }
+                    )
+                    .padding(.horizontal, fieldPadding)
+                    .transition(.move(edge: .top).combined(with: .opacity))
+                }
             }
 
             if let suggestionErrorMessage {
@@ -354,7 +368,7 @@ struct AddArtworkView: View {
             .padding(.horizontal, sizeClass == .regular ? 0 : 32)
         } else {
             RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .fill(Color.white.opacity(0.5))
+                .fill(Brand.glassSubtle)
                 .frame(height: sizeClass == .regular ? 300 : 220)
                 .overlay {
                     VStack(spacing: 12) {
@@ -431,12 +445,12 @@ struct AddArtworkView: View {
         for (index, item) in items.enumerated() {
             guard let rawData = try? await item.loadTransferable(type: Data.self),
                   let processed = ImageProcessingService.processForStorage(data: rawData) else { continue }
-            // Offset each item's date by its index to avoid key collisions
+            let anchoredDate = ArtworkDate.dayAnchored(artworkDate, offsetSeconds: Double(index))
             repo.createArtwork(
                 title: "",
                 imageData: processed.imageData,
                 thumbnailData: processed.thumbnailData,
-                createdAt: artworkDate.addingTimeInterval(Double(index)),
+                createdAt: anchoredDate,
                 child: child,
                 in: modelContext
             )
@@ -448,13 +462,14 @@ struct AddArtworkView: View {
 
     private func saveArtwork() {
         guard let capturedImageData else { return }
+        let anchoredDate = ArtworkDate.dayAnchored(artworkDate)
         FirestoreRepository.shared.createArtwork(
             title: title.trimmingCharacters(in: .whitespaces),
             caption: caption.trimmingCharacters(in: .whitespacesAndNewlines),
             imageData: capturedImageData,
             thumbnailData: capturedThumbnailData,
             voiceNoteData: voiceNoteData,
-            createdAt: artworkDate,
+            createdAt: anchoredDate,
             child: child,
             tags: selectedTags,
             in: modelContext
@@ -546,16 +561,12 @@ struct AddArtworkView: View {
     // MARK: - Image Validation
 
     /// Validates a captured image to check if it looks like children's artwork.
-    /// Uses Gemini cloud validation for premium users, skips for free tier.
+    /// Uses on-device Vision heuristics so image validation never requires
+    /// sending a newly captured image to a cloud model.
     private func validateCapturedImage(_ imageData: Data) {
-        guard PremiumManager.isPremium else {
-            // Free users skip cloud validation
-            validationResult = .valid
-            return
-        }
         isValidatingImage = true
         Task {
-            let result = await AISuggestionService.validateArtwork(imageData: imageData)
+            let result = AISuggestionService.validateArtworkOnDevice(imageData: imageData)
             await MainActor.run {
                 validationResult = result
                 isValidatingImage = false
@@ -565,13 +576,52 @@ struct AddArtworkView: View {
 
     /// Whether AI suggestions can be used (requires premium subscription).
     private var aiSuggestionsEnabled: Bool {
+        canRequestAISuggestions && aiCaptionsEnabled
+    }
+
+    private var canRequestAISuggestions: Bool {
         PremiumManager.isPremium && AISuggestionService.isAvailable
+    }
+
+    private var aiButtonTitle: String {
+        if isGeneratingSuggestions {
+            return "Creating magic..."
+        }
+        if !AISuggestionService.isAvailable {
+            return "AI Unavailable"
+        }
+        return "Suggest Title & Caption"
+    }
+
+    private func handleAITap() {
+        if !aiCaptionsEnabled {
+            withAnimation(.snappy) {
+                showAIPermissionCard = true
+            }
+            return
+        }
+        generateAISuggestions()
+    }
+
+    @MainActor
+    private func enableAICaptionsAndContinue() {
+        aiCaptionsEnabled = true
+        showAIPermissionCard = false
+        Task { await FirestoreRepository.shared.syncUserPreferencesToFirestore() }
+        generateAISuggestions()
     }
 
     /// Generates AI-powered title and caption suggestions for the captured artwork.
     private func generateAISuggestions() {
-        guard let capturedImageData, !isGeneratingSuggestions else { return }
+        guard let capturedImageData, !isGeneratingSuggestions, canRequestAISuggestions else { return }
+        guard aiCaptionsEnabled else {
+            withAnimation(.snappy) {
+                showAIPermissionCard = true
+            }
+            return
+        }
         suggestionErrorMessage = nil
+        showAIPermissionCard = false
         isGeneratingSuggestions = true
 
         Task {
