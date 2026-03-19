@@ -47,6 +47,10 @@ final class Artwork {
     /// Tags applied to this artwork for categorization.
     var tags: [Tag]?
 
+    /// Comments left by family members on this artwork.
+    @Relationship(deleteRule: .cascade, inverse: \Comment.artwork)
+    var comments: [Comment]?
+
     /// Legacy sync identifier (deprecated — use `firestoreId` instead).
     /// - Note: Deprecated in V7; replaced by ``firestoreId``. Kept for migration.
     var syncIdentifier: String?
@@ -91,5 +95,26 @@ final class Artwork {
         self.firestoreId = firestoreId
         self.imageURL = imageURL
         self.voiceNoteURL = voiceNoteURL
+    }
+}
+
+enum ArtworkDate {
+    /// Anchor day-only artwork dates to midday so timezone changes don't shift them across days.
+    static func dayAnchored(
+        _ date: Date,
+        calendar: Calendar = .current,
+        offsetSeconds: TimeInterval = 0
+    ) -> Date {
+        var components = calendar.dateComponents([.year, .month, .day], from: date)
+        components.hour = 12
+        components.minute = 0
+        components.second = 0
+
+        let baseDate = calendar.date(from: components) ?? date
+        return baseDate.addingTimeInterval(offsetSeconds)
+    }
+
+    static func dayKey(for date: Date, calendar: Calendar = .current) -> Date {
+        calendar.startOfDay(for: dayAnchored(date, calendar: calendar))
     }
 }
