@@ -908,7 +908,6 @@ struct SettingsView: View {
                 Button("Join") {
                     Task { await joinSharedProfile() }
                 }
-                .disabled(shareCodeInput.trimmingCharacters(in: .whitespaces).isEmpty)
             } message: {
                 Text("Enter the share code you received from another parent.")
             }
