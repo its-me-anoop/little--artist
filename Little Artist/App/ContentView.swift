@@ -2,8 +2,8 @@
 //  ContentView.swift
 //  Little Artist
 //
-//  Root view displayed after onboarding. Provides the main tab navigation
-//  shell: Gallery and Search.
+//  Root view displayed after onboarding. Provides the main 4-tab navigation
+//  shell (Gallery, Timeline, Milestones, Settings) with a floating action button.
 //
 //  Created by Anoop Jose on 13/02/2026.
 //
@@ -22,53 +22,17 @@ struct ContentView: View {
 
     @State private var selectedTab: AppTab = .gallery
     @State private var selectedChildID: PersistentIdentifier?
-    @State private var searchText = ""
     @State private var showCreateSheet = false
     @State private var showAddChild = false
     @State private var showPremiumUpsell = false
     @State private var paywallReason: PaywallView.LimitReason?
     @State private var artworkCountBeforeSheet = 0
-    @State private var showSettings = false
 
     private var store: StoreKitManager { StoreKitManager.shared }
 
     private var selectedChild: Child? {
         guard let selectedChildID else { return nil }
         return children.first { $0.persistentModelID == selectedChildID }
-    }
-
-    @ViewBuilder
-    private var galleryTabIcon: some View {
-        if let selectedChild {
-            HStack(spacing: 8) {
-                ZStack {
-                    if let imageData = selectedChild.avatarImageData,
-                       let uiImage = UIImage(data: imageData) {
-                        Image(uiImage: uiImage)
-                            .resizable()
-                            .scaledToFill()
-                    } else {
-                        Circle()
-                            .fill(Color(hex: selectedChild.avatarColor))
-
-                        Text(String(selectedChild.name.prefix(1)).uppercased())
-                            .font(.system(size: 12, weight: .bold, design: .rounded))
-                            .foregroundStyle(.white)
-                    }
-                }
-                .frame(width: 24, height: 24)
-                .clipShape(Circle())
-
-                Text(selectedChild.name)
-                    .font(.system(size: 15, weight: .semibold, design: .rounded))
-                    .foregroundStyle(.primary)
-                    .lineLimit(1)
-            }
-        } else {
-            Image(systemName: "person.3.fill")
-                .font(.system(size: 18, weight: .semibold))
-                .foregroundStyle(.primary)
-        }
     }
 
     private var premiumUpsellPresented: Binding<Bool> {
@@ -96,94 +60,62 @@ struct ContentView: View {
         }
     }
 
-    var body: some View {
+    private var galleryRoot: some View {
         NavigationStack {
-            Group {
-                if selectedTab == .gallery {
-                    HomeView(selectedChildID: $selectedChildID)
-                } else {
-                    SearchView(searchText: $searchText)
-                }
-            }
-            .navigationDestination(isPresented: $showSettings) {
-                SettingsView()
-            }
-            .toolbar {
-                ToolbarItem(placement: .bottomBar) {
-                    Menu {
-                        Button {
-                            selectedTab = .gallery
-                            searchText = ""
-                            selectedChildID = nil
+            HomeView(selectedChildID: $selectedChildID)
+                .toolbar {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        NavigationLink {
+                            SearchView()
                         } label: {
-                            Label(
-                                "All Children",
-                                systemImage: selectedChild == nil ? "checkmark" : "person.3.sequence.fill"
-                            )
+                            Image(systemName: "magnifyingglass")
                         }
-
-                        if !children.isEmpty {
-                            Divider()
-                        }
-
-                        ForEach(children) { child in
-                            Button {
-                                selectedTab = .gallery
-                                searchText = ""
-                                selectedChildID = child.persistentModelID
-                            } label: {
-                                Label(
-                                    child.name,
-                                    systemImage: selectedChildID == child.persistentModelID ? "checkmark" : "figure.child"
-                                )
-                            }
-                        }
-
-                        Divider()
-
-                        Button {
-                            if PremiumManager.canAddChild(currentCount: children.count) {
-                                showAddChild = true
-                            } else {
-                                paywallReason = .children
-                            }
-                        } label: {
-                            Label("Add Child", systemImage: "plus")
-                        }
-
-                        Button {
-                            showSettings = true
-                        } label: {
-                            Label("Settings", systemImage: "gearshape")
-                        }
-                    } label: {
-                        galleryTabIcon
-                            .opacity(selectedTab == .gallery ? 1 : 0.75)
                     }
                 }
-
-                ToolbarSpacer(.flexible, placement: .bottomBar)
-                DefaultToolbarItem(kind: .search, placement: .bottomBar)
-                ToolbarSpacer(.flexible, placement: .bottomBar)
-
-                ToolbarItem(placement: .bottomBar) {
-                    Button {
-                        presentCreateFlow()
-                    } label: {
-                        Image(systemName: "square.and.pencil")
-                            .font(.system(size: 18, weight: .semibold))
-                    }
-                }
-            }
-            .searchable(
-                text: $searchText,
-                placement: .toolbar,
-                prompt: "Search"
-            )
-            .searchToolbarBehavior(.automatic)
         }
-        .toolbarBackground(Brand.backgroundBase, for: .bottomBar)
-        .toolbarBackground(.visible, for: .bottomBar)
+    }
+
+    var body: some View {
+        ZStack(alignment: .bottomTrailing) {
+            TabView(selection: $selectedTab) {
+                Tab("Gallery", systemImage: "photo.on.rectangle.angled", value: .gallery) {
+                    galleryRoot
+                }
+
+                Tab("Timeline", systemImage: "book.pages", value: .timeline) {
+                    NavigationStack {
+                        TimelineView()
+                    }
+                }
+
+                Tab("Milestones", systemImage: "medal", value: .milestones) {
+                    NavigationStack {
+                        MilestonesView()
+                    }
+                }
+
+                Tab("Settings", systemImage: "slider.horizontal.3", value: .settings) {
+                    NavigationStack {
+                        SettingsView()
+                    }
+                }
+            }
+
+            // Floating Action Button
+            Button {
+                presentCreateFlow()
+            } label: {
+                Image(systemName: "plus")
+                    .font(.title2.bold())
+                    .foregroundStyle(.white)
+                    .frame(width: Brand.fabSize, height: Brand.fabSize)
+                    .background(Brand.primary)
+                    .clipShape(Circle())
+                    .brandFABShadow()
+            }
+            .padding(.trailing, Brand.screenPadding)
+            .padding(.bottom, 80)
+        }
         .sheet(isPresented: $showAddChild) {
             AddChildView()
         }
@@ -197,7 +129,7 @@ struct ContentView: View {
                 showPremiumUpsell = true
             }
         }) {
-            if let child = children.first {
+            if let child = selectedChild ?? children.first {
                 AddArtworkView(child: child)
                     .adaptiveSheetSizing(sizeClass: sizeClass)
             }
@@ -213,13 +145,6 @@ struct ContentView: View {
             paywallReason = nil
             showPremiumUpsell = false
         }
-        .onChange(of: searchText) { _, newValue in
-            if !newValue.isEmpty {
-                selectedTab = .search
-            } else {
-                selectedTab = .gallery
-            }
-        }
     }
 }
 
@@ -227,7 +152,9 @@ struct ContentView: View {
 
 enum AppTab: Hashable {
     case gallery
-    case search
+    case timeline
+    case milestones
+    case settings
 }
 
 #Preview {
