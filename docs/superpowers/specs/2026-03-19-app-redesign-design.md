@@ -52,7 +52,7 @@ AppTab enum:
 
 **FAB:** Floating `+` button, bottom-right above tab bar, 60pt (`Brand.fabSize`), `Brand.primary`, `.brandFABShadow()`. Opens `AddArtworkView` as sheet.
 
-**Search:** Moves from dedicated tab to a toolbar button (magnifying glass) on Gallery tab's navigation bar.
+**Search:** Moves from dedicated tab to a toolbar button (magnifying glass) on Gallery tab's navigation bar. The `AppTab.search` case and its `Tab(role: .search)` entry are removed entirely from `ContentView`.
 
 **Child profile:** Tapping a child avatar navigates to `ChildProfileView` via `NavigationLink`.
 
@@ -106,16 +106,43 @@ var comments: [Comment]?
 | `storyteller` | Storyteller | `mic.fill` | Record 10 voice memos |
 | `rainbow_palette` | Rainbow Palette | `paintpalette.fill` | Use all medium tags |
 
+### Medium Tags
+
+The `rainbow_palette` achievement requires tracking which art mediums have been used. A canonical list of medium tag names is defined in `AchievementService`:
+
+```swift
+static let mediumTags = ["Craft", "Painting", "Drawing", "Watercolor", "Collage", "Sculpture", "Digital", "Mixed Media"]
+```
+
+When checking this achievement, the service queries all unique tag names across artworks and intersects with this list. No changes to the `Tag` model are needed — medium tags are identified by matching against this hardcoded list.
+
+### Comment Firestore Sync
+
+Comments sync to Firestore at path: `users/{uid}/children/{childId}/artworks/{artworkId}/comments/{commentId}`
+
+`FirestoreRepository` gets new methods:
+- `saveComment(_ comment: Comment, artworkId: String, childId: String)` — writes comment to subcollection
+- `deleteComment(commentId: String, artworkId: String, childId: String)` — removes comment
+- `observeComments(artworkId: String, childId: String)` — snapshot listener for real-time comment updates
+
+`FirestoreSyncService` adds comment observation when syncing artworks, using the existing `isSyncEnabled` flow.
+
 ### Schema Migration
 
-New `SchemaV7` adding `Comment` entity, `Achievement` entity, and `comments` relationship on `Artwork`.
+New `SchemaV8` (version `8, 0, 0`) adding `Comment` entity, `Achievement` entity, and `comments` relationship on `Artwork`. File: `Models/SchemaMigrationV8.swift`. The models array includes all five entities: `Child`, `Artwork`, `Tag`, `Comment`, `Achievement`.
+
+Note: `SchemaV7` already exists in the codebase — using V7 again would cause a duplicate version checksums crash.
 
 ### AchievementService
 
 New `Services/AchievementService.swift`:
 - `seedAchievements(context:)` — creates all default achievements on first launch
-- `checkMilestones(context:)` — called after artwork save, voice memo save, memory view; queries counts and marks earned
+- `checkMilestones(context:)` — called after artwork save, voice memo save, and memory card tap; queries counts and marks earned
 - Achievements are per-app (family-level), not per-child
+
+**Counting voice memos:** Since `voiceNoteData` uses `@Attribute(.externalStorage)` and `#Predicate` may not reliably filter on optional external-storage Data fields, the service fetches all artworks and filters in memory: `artworks.filter { $0.voiceNoteData != nil }.count`.
+
+**Memory Lane trigger:** The `memory_lane` achievement is earned when the user taps an "On This Day" memory card in `HomeView`. The card's tap action calls `AchievementService.markMemoryViewed(context:)` which sets the achievement as earned. Simply scrolling past the card does not trigger it — an explicit tap is required.
 
 ---
 
@@ -283,7 +310,7 @@ Pushed from child avatar taps.
 Same as Timeline: large avatar, name, age, stat cards.
 
 ### Milestones Carousel
-Reuses `MilestoneCarouselView`, filtered to child context.
+Reuses `MilestoneCarouselView`. In ChildProfileView, the carousel shows achievements that are relevant to the child's artwork — specifically, artwork-count-based achievements (first_masterpiece, prolific, gallery_owner) are evaluated against this child's artwork count, and displayed as earned/locked accordingly. Voice/seasonal/medium achievements show their global earned state since they are family-level.
 
 ### Art Timeline
 Same structure as Timeline tab, scoped to this specific child.
@@ -309,7 +336,7 @@ Toolbar trailing edit button → `EditChildView` sheet.
 
 ### Data & Privacy
 - Grouped container:
-  - iCloud Sync: icon + toggle (maps to `isSyncEnabled`)
+  - iCloud Sync: icon + toggle (maps to existing `@AppStorage("firebaseSyncEnabled")` key)
   - PDF Portfolio Export: icon + download action → `PDFExportConfigView`
 
 ### Support
@@ -384,7 +411,7 @@ Each: tinted icon circle + title + description.
 
 **Bottom bar:** Generate + "Share PDF" primary button + Options
 
-**Data flow:** `PDFExportService` extended with options for time range, AI story inclusion, layout mode. Preview renders artwork + caption pairs.
+**Data flow:** `PDFPreviewView` is a pure SwiftUI layout — it renders artwork images and captions directly from SwiftData queries, not from a pre-generated PDF. The preview is a visual representation of what the PDF will look like, built with SwiftUI views (Image, Text, VStack/HStack). When the user taps "Share PDF", `PDFExportService` generates the actual PDF data on a background task (`Task.detached`) with a loading indicator, then presents the share sheet. The service is extended with options for time range filtering, AI story inclusion, and layout mode (grid vs full-page).
 
 ---
 
@@ -418,11 +445,11 @@ Each: tinted icon circle + title + description.
 ### Created
 - `Models/Comment.swift`
 - `Models/Achievement.swift`
-- `Models/SchemaMigrationV7.swift`
+- `Models/SchemaMigrationV8.swift`
 - `Services/AchievementService.swift`
 - `Views/TimelineView.swift`
 - `Views/MilestonesView.swift`
-- `Views/ChildProfileView.swift` (in `Views/Children/`)
+- `Views/Children/ChildProfileView.swift`
 - `Views/Artwork/PDFExportConfigView.swift`
 - `Views/Artwork/PDFPreviewView.swift`
 - `Components/Cards/MilestoneCarouselView.swift`
