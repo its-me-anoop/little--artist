@@ -150,6 +150,18 @@ struct AchievementCelebrationView: View {
     @State private var showContent = false
     @State private var showConfetti = false
 
+    /// Accent colour derived from the achievement's category.
+    private var accentColor: Color {
+        switch achievement.category {
+        case "artwork": return Brand.primary
+        case "voice": return Brand.sky
+        case "medium": return Brand.lavender
+        case "seasonal": return Brand.sage
+        case "engagement": return Color(hex: "E8C94A")
+        default: return Brand.primary
+        }
+    }
+
     var body: some View {
         ZStack {
             // Dimmed background
@@ -165,29 +177,29 @@ struct AchievementCelebrationView: View {
                 // Badge
                 ZStack {
                     Circle()
-                        .fill(achievement.accentColor.opacity(0.15))
+                        .fill(accentColor.opacity(0.15))
                         .frame(width: 100, height: 100)
 
                     Circle()
-                        .fill(achievement.accentColor.opacity(0.1))
+                        .fill(accentColor.opacity(0.1))
                         .frame(width: 80, height: 80)
 
-                    Image(systemName: achievement.icon)
+                    Image(systemName: achievement.iconName)
                         .font(.system(size: 36, weight: .semibold))
-                        .foregroundStyle(achievement.accentColor)
+                        .foregroundStyle(accentColor)
                         .symbolEffect(.bounce, value: showContent)
                 }
 
                 Text("Achievement Unlocked!")
                     .font(.system(size: 13, weight: .semibold, design: .rounded))
-                    .foregroundStyle(achievement.accentColor)
+                    .foregroundStyle(accentColor)
                     .textCase(.uppercase)
                     .tracking(1.2)
 
-                Text(achievement.name)
+                Text(achievement.title)
                     .font(.system(size: 24, weight: .bold, design: .rounded))
 
-                Text(achievement.description)
+                Text(achievement.subtitle)
                     .font(Brand.subheadlineFont)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
@@ -200,7 +212,7 @@ struct AchievementCelebrationView: View {
                         .foregroundStyle(.white)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 14)
-                        .background(achievement.accentColor)
+                        .background(accentColor)
                         .clipShape(Capsule())
                 }
                 .padding(.top, 4)
@@ -213,7 +225,7 @@ struct AchievementCelebrationView: View {
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 24)
-                    .strokeBorder(achievement.accentColor.opacity(0.2), lineWidth: 1)
+                    .strokeBorder(accentColor.opacity(0.2), lineWidth: 1)
             )
             .padding(.horizontal, 40)
             .scaleEffect(showContent ? 1 : 0.7)
@@ -245,12 +257,11 @@ struct AchievementCelebrationView: View {
 #Preview {
     AchievementCelebrationView(
         achievement: Achievement(
-            name: "First Steps",
-            icon: "star.fill",
-            current: 1,
-            target: 1,
-            description: "You saved your first artwork!",
-            accentColor: Brand.primary
+            identifier: "first_masterpiece",
+            title: "First Steps",
+            subtitle: "You saved your first artwork!",
+            iconName: "star.fill",
+            category: "artwork"
         )
     ) {}
 }
