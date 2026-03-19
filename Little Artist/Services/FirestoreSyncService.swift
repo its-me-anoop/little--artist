@@ -70,6 +70,7 @@ final class FirestoreSyncService {
     private var preferencesListener: ListenerRegistration?
     private var artworkListeners: [String: ListenerRegistration] = [:]
     private var sharedChildrenListeners: [String: ListenerRegistration] = [:]
+    private var commentListeners: [String: ListenerRegistration] = [:]
 
     /// Maps share document IDs to their associated childFirestoreId.
     /// Used to clean up local data when a share is revoked.
@@ -119,6 +120,11 @@ final class FirestoreSyncService {
             listener.remove()
         }
         sharedChildrenListeners.removeAll()
+
+        for (_, listener) in commentListeners {
+            listener.remove()
+        }
+        commentListeners.removeAll()
 
         activeShareChildMap.removeAll()
         hasProcessedInitialChildrenSnapshot = false
@@ -265,6 +271,96 @@ final class FirestoreSyncService {
         }
 
         artworkListeners[childFirestoreId] = listener
+    }
+
+    // MARK: - Comments Listener
+
+    /// Starts a snapshot listener for comments on the given artwork.
+    ///
+    /// Attaches once per artwork — subsequent calls for the same `artworkFirestoreId`
+    /// are no-ops. Call `removeCommentListener(artworkFirestoreId:)` when the
+    /// artwork detail view disappears to avoid accumulating idle listeners.
+    func observeComments(artworkFirestoreId: String, childFirestoreId: String) {
+        guard isListening, let userId = auth.userId else { return }
+        guard commentListeners[artworkFirestoreId] == nil else { return }
+
+        let childDocId = childFirestoreId.components(separatedBy: "/").last ?? childFirestoreId
+        let artworkDocId = artworkFirestoreId.components(separatedBy: "/").last ?? artworkFirestoreId
+        let path = "users/\(userId)/children/\(childDocId)/artworks/\(artworkDocId)/comments"
+
+        let listener = db.collection(path)
+            .addSnapshotListener { [weak self] snapshot, error in
+                guard let self else { return }
+                Task { @MainActor in
+                    guard let snapshot else {
+                        self.diag("Comment listener error: \(error?.localizedDescription ?? "unknown")")
+                        return
+                    }
+                    self.diag("Received \(snapshot.documentChanges.count) comment changes for artwork \(artworkDocId)")
+
+                    guard let context = self.syncContext else { return }
+
+                    for change in snapshot.documentChanges {
+                        let doc = change.document
+                        let commentDocId = doc.documentID
+                        let data = doc.data()
+                        let text = data["text"] as? String ?? ""
+                        let authorName = data["authorName"] as? String ?? ""
+                        let createdAt = (data["createdAt"] as? Timestamp)?.dateValue() ?? Date()
+
+                        switch change.type {
+                        case .added, .modified:
+                            // Find existing comment by firestoreId or insert new
+                            var descriptor = FetchDescriptor<Comment>(
+                                predicate: #Predicate<Comment> { $0.firestoreId == commentDocId }
+                            )
+                            descriptor.fetchLimit = 1
+                            if let existing = try? context.fetch(descriptor).first {
+                                existing.text = text
+                                existing.authorName = authorName
+                                existing.createdAt = createdAt
+                            } else {
+                                // Find parent artwork to attach the comment
+                                var artworkDescriptor = FetchDescriptor<Artwork>(
+                                    predicate: #Predicate<Artwork> { $0.firestoreId == artworkFirestoreId }
+                                )
+                                artworkDescriptor.fetchLimit = 1
+                                let parentArtwork = try? context.fetch(artworkDescriptor).first
+                                let comment = Comment(
+                                    text: text,
+                                    authorName: authorName,
+                                    createdAt: createdAt,
+                                    artwork: parentArtwork,
+                                    firestoreId: commentDocId
+                                )
+                                context.insert(comment)
+                            }
+                        case .removed:
+                            var descriptor = FetchDescriptor<Comment>(
+                                predicate: #Predicate<Comment> { $0.firestoreId == commentDocId }
+                            )
+                            descriptor.fetchLimit = 1
+                            if let comment = try? context.fetch(descriptor).first {
+                                context.delete(comment)
+                                self.diag("Removed comment: \(commentDocId)")
+                            }
+                        }
+                    }
+
+                    try? context.save()
+                    self.lastSyncDate = Date()
+                }
+            }
+
+        commentListeners[artworkFirestoreId] = listener
+        diag("Started comment listener for artwork \(artworkDocId)")
+    }
+
+    /// Removes the snapshot listener for a specific artwork's comments.
+    func removeCommentListener(artworkFirestoreId: String) {
+        commentListeners[artworkFirestoreId]?.remove()
+        commentListeners.removeValue(forKey: artworkFirestoreId)
+        diag("Removed comment listener for artwork \(artworkFirestoreId.components(separatedBy: "/").last ?? artworkFirestoreId)")
     }
 
     // MARK: - Shares Listener
@@ -554,6 +650,7 @@ final class FirestoreSyncService {
             artwork.title = title
             artwork.caption = caption
             artwork.isFavorited = isFavorited
+            artwork.createdAt = createdAt
             artwork.imageURL = imageURL
             artwork.voiceNoteURL = voiceNoteURL
             artwork.tags = tags

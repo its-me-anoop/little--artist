@@ -50,7 +50,9 @@ final class FirestoreRepository {
 
     /// Whether Firestore sync is active for the current authenticated user.
     var isSyncActive: Bool {
-        auth.userId != nil
+        UserDefaults.standard.bool(forKey: "firebaseSyncEnabled")
+        && auth.isLinkedWithApple
+        && auth.userId != nil
     }
 
     /// Whether premium-only artwork authoring features are available.
@@ -67,11 +69,29 @@ final class FirestoreRepository {
         return ModelContext(container)
     }
 
+    /// Uploads local data, starts listeners, and pushes preferences after the
+    /// user explicitly enables cloud sync.
+    func activateCloudSyncIfNeeded() async {
+        guard isSyncActive else {
+            FirestoreSyncService.shared.stop()
+            return
+        }
+
+        if !FirestoreSyncService.shared.isListening {
+            guard let container = modelContainer else { return }
+            let uploadContext = ModelContext(container)
+            await uploadAllLocalData(from: uploadContext)
+            FirestoreSyncService.shared.start()
+        }
+
+        await syncUserPreferencesToFirestore()
+    }
+
     // MARK: - Preferences
 
     /// Pushes local app preferences to Firestore so they stay in sync across devices.
     func syncUserPreferencesToFirestore() async {
-        guard let userId = auth.userId else { return }
+        guard isSyncActive, let userId = auth.userId else { return }
 
         let defaults = UserDefaults.standard
         let data: [String: Any] = [
@@ -286,6 +306,7 @@ final class FirestoreRepository {
         imageData: Data? = nil,
         voiceNoteData: Data? = nil,
         isFavorited: Bool? = nil,
+        createdAt: Date? = nil,
         tags: [Tag]? = nil,
         in modelContext: ModelContext
     ) {
@@ -297,6 +318,7 @@ final class FirestoreRepository {
         if let imageData { artwork.imageData = imageData }
         if let effectiveVoiceNoteData { artwork.voiceNoteData = effectiveVoiceNoteData }
         if let isFavorited { artwork.isFavorited = isFavorited }
+        if let createdAt { artwork.createdAt = createdAt }
         if let tags { artwork.tags = tags }
         try? modelContext.save()
 
@@ -354,7 +376,7 @@ final class FirestoreRepository {
 
     /// One-time upload of all local data to Firestore when user first enables sync.
     func uploadAllLocalData(from modelContext: ModelContext) async {
-        guard let userId = auth.userId else { return }
+        guard isSyncActive, let userId = auth.userId else { return }
         isUploadingAll = true
         logger.info("Starting full local → Firestore upload for \(userId, privacy: .public)")
 
@@ -462,6 +484,9 @@ final class FirestoreRepository {
 
     /// Creates a share for a child profile and returns the share ID for link generation.
     func shareChild(_ child: Child) async throws -> String {
+        guard isSyncActive else {
+            throw FirestoreError.syncNotEnabled
+        }
         guard let userId = auth.userId else {
             throw FirestoreError.notAuthenticated
         }
@@ -509,6 +534,9 @@ final class FirestoreRepository {
 
     /// Accepts a share invitation by adding the current user as a participant.
     func acceptShare(shareId: String) async throws {
+        guard isSyncActive else {
+            throw FirestoreError.syncNotEnabled
+        }
         guard let userId = auth.userId else {
             throw FirestoreError.notAuthenticated
         }
@@ -847,6 +875,7 @@ final class FirestoreRepository {
             "title": artwork.title,
             "caption": artwork.caption,
             "isFavorited": artwork.isFavorited,
+            "createdAt": Timestamp(date: artwork.createdAt),
             "updatedAt": FieldValue.serverTimestamp(),
             "tags": tagNames
         ]
@@ -920,16 +949,51 @@ final class FirestoreRepository {
         }
     }
 
+    // MARK: - Comments
+
+    /// Saves a new comment to Firestore under the given artwork and child paths,
+    /// then persists the assigned `firestoreId` back to the local SwiftData record.
+    func saveComment(_ comment: Comment, artworkFirestoreId: String, childFirestoreId: String) async throws {
+        guard let userId = auth.userId else { return }
+        let childDocId = childFirestoreId.components(separatedBy: "/").last ?? childFirestoreId
+        let artworkDocId = artworkFirestoreId.components(separatedBy: "/").last ?? artworkFirestoreId
+        let path = "users/\(userId)/children/\(childDocId)/artworks/\(artworkDocId)/comments"
+        let ref = db.collection(path).document()
+        try await ref.setData([
+            "text": comment.text,
+            "authorName": comment.authorName,
+            "createdAt": Timestamp(date: comment.createdAt)
+        ])
+        let docId = ref.documentID
+        await MainActor.run {
+            comment.firestoreId = docId
+            try? self.modelContainer?.mainContext.save()
+        }
+        logger.info("Comment saved: \(ref.path, privacy: .public)")
+    }
+
+    /// Deletes a comment document from Firestore.
+    func deleteComment(commentId: String, artworkFirestoreId: String, childFirestoreId: String) async throws {
+        guard let userId = auth.userId else { return }
+        let childDocId = childFirestoreId.components(separatedBy: "/").last ?? childFirestoreId
+        let artworkDocId = artworkFirestoreId.components(separatedBy: "/").last ?? artworkFirestoreId
+        let path = "users/\(userId)/children/\(childDocId)/artworks/\(artworkDocId)/comments/\(commentId)"
+        try await db.document(path).delete()
+        logger.info("Comment deleted: \(path, privacy: .public)")
+    }
+
     // MARK: - Errors
 
     enum FirestoreError: LocalizedError {
         case notAuthenticated
         case syncFailed
+        case syncNotEnabled
 
         var errorDescription: String? {
             switch self {
             case .notAuthenticated: "Not signed in to cloud account."
             case .syncFailed: "Failed to sync data to cloud storage."
+            case .syncNotEnabled: "Enable Cloud Sync before using sharing features."
             }
         }
     }
