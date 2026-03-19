@@ -48,6 +48,8 @@ struct SettingsView: View {
     @State private var showSignOutConfirmation = false
     @State private var showDeleteAccountConfirmation = false
     @State private var accountError: String?
+    @State private var showPaywall = false
+    @State private var showSyncDiagnostics = false
 
     private var storageUsed: String {
         let bytes = artworks.compactMap(\.imageData).reduce(0) { $0 + $1.count }
@@ -128,33 +130,708 @@ struct SettingsView: View {
         }
     }
 
+    // MARK: - Body
+
     var body: some View {
-        NavigationStack {
-            settingsAlertContent
-        }
-        .toolbarBackground(Brand.backgroundBase, for: .navigationBar)
-        .toolbarBackground(.visible, for: .navigationBar)
+        settingsAlertContent
     }
 
+    // MARK: - Main Layout
+
     private var settingsForm: some View {
-        Form {
-            childrenSection
-            preferencesSection
-            aiUsageSection
-            subscriptionSection
-            dataSection
-            accountSection
-            syncDiagnosticsSection
-            aboutSection
+        ScrollView {
+            VStack(spacing: Brand.sectionSpacing) {
+                premiumHeroCard
+                childProfilesSection
+                dataPrivacySection
+                supportSection
+                syncDiagnosticsSection
+                dangerZoneSection
+            }
+            .padding(.horizontal, Brand.screenPadding)
+            .padding(.top, 8)
+            .padding(.bottom, 40)
         }
-        .listStyle(.insetGrouped)
-        .listSectionSpacing(20)
-        .scrollContentBackground(.hidden)
         .background(settingsBackground)
-        .tint(Brand.primary)
         .navigationTitle("Settings")
         .navigationBarTitleDisplayMode(.large)
     }
+
+    // MARK: - 1. Premium Hero Card
+
+    private var premiumHeroCard: some View {
+        Group {
+            if store.isPremium {
+                premiumActiveCard
+            } else {
+                premiumUpsellCard
+            }
+        }
+    }
+
+    private var premiumActiveCard: some View {
+        ZStack(alignment: .topTrailing) {
+            // Decorative medal icon
+            Image(systemName: "medal.fill")
+                .font(.system(size: 80))
+                .foregroundStyle(Brand.primary.opacity(0.12))
+                .offset(x: -8, y: -4)
+
+            VStack(alignment: .leading, spacing: 12) {
+                // Current Plan pill
+                Text("Current Plan")
+                    .font(Brand.caption2Font.weight(.medium))
+                    .foregroundStyle(Brand.charcoal)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 5)
+                    .background(.white.opacity(0.3))
+                    .clipShape(Capsule())
+
+                Text("Premium Account")
+                    .font(Brand.title2Font)
+                    .foregroundStyle(Brand.charcoal)
+
+                // Active status
+                HStack(spacing: 6) {
+                    Circle()
+                        .fill(Brand.sage)
+                        .frame(width: 8, height: 8)
+                    Text("Status: Active")
+                        .font(Brand.captionFont)
+                        .foregroundStyle(Brand.warmGray)
+                }
+
+                Spacer().frame(height: 4)
+
+                // Manage button
+                Button {
+                    paywallReason = .artworks
+                } label: {
+                    Text("Manage")
+                        .font(Brand.captionFont.weight(.semibold))
+                        .foregroundStyle(Brand.primary)
+                        .padding(.horizontal, 20)
+                        .padding(.vertical, 10)
+                        .background(Brand.surface)
+                        .clipShape(Capsule())
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(Brand.screenPadding)
+        }
+        .background(Brand.primary.opacity(0.15))
+        .clipShape(RoundedRectangle(cornerRadius: Brand.radiusCard, style: .continuous))
+        .rotationEffect(.degrees(-1))
+    }
+
+    private var premiumUpsellCard: some View {
+        ZStack(alignment: .topTrailing) {
+            Image(systemName: "sparkles")
+                .font(.system(size: 64))
+                .foregroundStyle(Brand.primary.opacity(0.12))
+                .offset(x: -12, y: 4)
+
+            VStack(alignment: .leading, spacing: 12) {
+                Text("Free Plan")
+                    .font(Brand.caption2Font.weight(.medium))
+                    .foregroundStyle(Brand.charcoal)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 5)
+                    .background(.white.opacity(0.3))
+                    .clipShape(Capsule())
+
+                Text("Upgrade to Premium")
+                    .font(Brand.title2Font)
+                    .foregroundStyle(Brand.charcoal)
+
+                Text("Unlock unlimited children, AI captions, voice memos, cloud sync, and PDF export.")
+                    .font(Brand.captionFont)
+                    .foregroundStyle(Brand.warmGray)
+                    .lineSpacing(2)
+
+                Spacer().frame(height: 4)
+
+                HStack(spacing: 12) {
+                    Button {
+                        paywallReason = .artworks
+                    } label: {
+                        Text("Upgrade")
+                            .font(Brand.captionFont.weight(.semibold))
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 20)
+                            .padding(.vertical, 10)
+                            .background(Brand.primary)
+                            .clipShape(Capsule())
+                    }
+
+                    Button {
+                        isRestoring = true
+                        Task {
+                            await store.restorePurchases()
+                            isRestoring = false
+                        }
+                    } label: {
+                        HStack(spacing: 4) {
+                            Text("Restore")
+                                .font(Brand.captionFont)
+                                .foregroundStyle(Brand.warmGray)
+                            if isRestoring {
+                                ProgressView()
+                                    .controlSize(.mini)
+                            }
+                        }
+                    }
+                    .disabled(isRestoring)
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(Brand.screenPadding)
+        }
+        .background(Brand.primary.opacity(0.15))
+        .clipShape(RoundedRectangle(cornerRadius: Brand.radiusCard, style: .continuous))
+        .rotationEffect(.degrees(-1))
+    }
+
+    // MARK: - 2. Child Profiles Section
+
+    private var childProfilesSection: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            // Section header
+            HStack {
+                Text("Child Profiles")
+                    .font(Brand.title2Font)
+                    .foregroundStyle(Brand.charcoal)
+
+                Spacer()
+
+                Button {
+                    if PremiumManager.canAddChild(currentCount: children.count) {
+                        showAddChild = true
+                    } else {
+                        paywallReason = .children
+                    }
+                } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: "plus")
+                            .font(.system(size: 13, weight: .semibold))
+                        Text("Add New")
+                            .font(Brand.captionFont.weight(.semibold))
+                    }
+                    .foregroundStyle(Brand.sky)
+                }
+            }
+
+            // Child cards
+            VStack(spacing: 0) {
+                ForEach(Array(children.enumerated()), id: \.element.id) { index, child in
+                    NavigationLink {
+                        EditChildView(child: child) {}
+                    } label: {
+                        childCardRow(child: child)
+                    }
+                    .buttonStyle(.plain)
+
+                    if index < children.count - 1 {
+                        Divider()
+                            .padding(.leading, 80)
+                    }
+                }
+            }
+            .padding(.vertical, 4)
+            .background(Brand.surface)
+            .clipShape(RoundedRectangle(cornerRadius: Brand.radiusCard, style: .continuous))
+        }
+    }
+
+    private func childCardRow(child: Child) -> some View {
+        HStack(spacing: 14) {
+            // Avatar
+            Circle()
+                .fill(Color(hex: child.avatarColor))
+                .frame(width: 64, height: 64)
+                .overlay {
+                    if let data = child.avatarImageData,
+                       let uiImage = UIImage(data: data) {
+                        Image(uiImage: uiImage)
+                            .resizable()
+                            .scaledToFill()
+                            .clipShape(Circle())
+                    } else {
+                        Text(String(child.name.prefix(1)).uppercased())
+                            .font(.system(size: 24, weight: .bold, design: .rounded))
+                            .foregroundStyle(.white)
+                    }
+                }
+
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(spacing: 6) {
+                    Text(child.name)
+                        .font(Brand.headlineFont)
+                        .foregroundStyle(Brand.charcoal)
+
+                    if child.isShared || child.firestoreId != nil {
+                        Image(systemName: child.isShared ? "person.2.wave.2" : "person.2.fill")
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundStyle(Brand.sky)
+                    }
+                }
+
+                let artworkCount = child.artworks?.count ?? 0
+                Text("\(artworkCount) Masterpiece\(artworkCount == 1 ? "" : "s")")
+                    .font(Brand.captionFont)
+                    .foregroundStyle(Brand.warmGray)
+            }
+
+            Spacer()
+
+            Image(systemName: "chevron.right")
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(Brand.warmGray.opacity(0.5))
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+        .contentShape(Rectangle())
+    }
+
+    // MARK: - 3. Data & Privacy Section
+
+    private var dataPrivacySection: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Text("Data & Privacy")
+                .font(Brand.title2Font)
+                .foregroundStyle(Brand.charcoal)
+
+            VStack(spacing: 0) {
+                // iCloud Sync row
+                HStack(spacing: 14) {
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 10, style: .continuous)
+                            .fill(Brand.sky.opacity(0.15))
+                            .frame(width: 40, height: 40)
+                        Image(systemName: "icloud.fill")
+                            .font(.system(size: 18))
+                            .foregroundStyle(Brand.sky)
+                    }
+
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("iCloud Sync")
+                            .font(Brand.bodyFont.weight(.medium))
+                            .foregroundStyle(Brand.charcoal)
+                        Text(isCloudSyncEnabled ? "Your data syncs across devices" : "Keep your data backed up")
+                            .font(Brand.caption2Font)
+                            .foregroundStyle(Brand.warmGray)
+                    }
+
+                    Spacer()
+
+                    Toggle("", isOn: Binding(
+                        get: { isCloudSyncEnabled },
+                        set: { newValue in
+                            if newValue {
+                                showCloudSyncSetup = true
+                            } else {
+                                firebaseSyncEnabled = false
+                            }
+                        }
+                    ))
+                    .tint(Brand.primary)
+                    .labelsHidden()
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 14)
+
+                Divider()
+                    .padding(.leading, 70)
+
+                // Join Shared Profile row (only when sync is enabled)
+                if isCloudSyncEnabled {
+                    Button {
+                        showJoinShare = true
+                    } label: {
+                        HStack(spacing: 14) {
+                            ZStack {
+                                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                    .fill(Brand.sage.opacity(0.15))
+                                    .frame(width: 40, height: 40)
+                                Image(systemName: "person.badge.plus")
+                                    .font(.system(size: 18))
+                                    .foregroundStyle(Brand.sage)
+                            }
+
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Join Shared Profile")
+                                    .font(Brand.bodyFont.weight(.medium))
+                                    .foregroundStyle(Brand.charcoal)
+                                Text("Enter a code from another parent")
+                                    .font(Brand.caption2Font)
+                                    .foregroundStyle(Brand.warmGray)
+                            }
+
+                            Spacer()
+
+                            Image(systemName: "chevron.right")
+                                .font(.system(size: 13, weight: .semibold))
+                                .foregroundStyle(Brand.warmGray.opacity(0.5))
+                        }
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 14)
+                    }
+                    .buttonStyle(.plain)
+
+                    Divider()
+                        .padding(.leading, 70)
+                }
+
+                // PDF Portfolio Export row
+                Button {
+                    if store.isPremium {
+                        if let firstChild = children.first {
+                            exportPortfolio(for: firstChild)
+                        }
+                    } else {
+                        paywallReason = .artworks
+                    }
+                } label: {
+                    HStack(spacing: 14) {
+                        ZStack {
+                            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                .fill(Brand.lavender.opacity(0.15))
+                                .frame(width: 40, height: 40)
+                            Image(systemName: "doc.richtext")
+                                .font(.system(size: 18))
+                                .foregroundStyle(Brand.lavender)
+                        }
+
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("PDF Portfolio Export")
+                                .font(Brand.bodyFont.weight(.medium))
+                                .foregroundStyle(Brand.charcoal)
+                            Text("Export a child's artwork collection")
+                                .font(Brand.caption2Font)
+                                .foregroundStyle(Brand.warmGray)
+                        }
+
+                        Spacer()
+
+                        if isExporting {
+                            ProgressView()
+                                .controlSize(.small)
+                        } else {
+                            Image(systemName: "arrow.down.circle")
+                                .font(.system(size: 18))
+                                .foregroundStyle(Brand.warmGray.opacity(0.5))
+                        }
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 14)
+                }
+                .buttonStyle(.plain)
+                .disabled(isExporting || children.isEmpty)
+
+                // Per-child export rows when multiple children exist
+                if children.count > 1 {
+                    ForEach(children) { child in
+                        Divider()
+                            .padding(.leading, 70)
+
+                        Button {
+                            if store.isPremium {
+                                exportPortfolio(for: child)
+                            } else {
+                                paywallReason = .artworks
+                            }
+                        } label: {
+                            HStack(spacing: 14) {
+                                Spacer().frame(width: 40)
+
+                                Text("Export \(child.name)'s Portfolio")
+                                    .font(Brand.captionFont)
+                                    .foregroundStyle(store.isPremium ? Brand.primary : Brand.disabled)
+
+                                Spacer()
+
+                                if isExporting {
+                                    ProgressView()
+                                        .controlSize(.mini)
+                                }
+                            }
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 10)
+                        }
+                        .buttonStyle(.plain)
+                        .disabled(isExporting)
+                    }
+                }
+
+                Divider()
+                    .padding(.leading, 70)
+
+                // Storage row
+                HStack(spacing: 14) {
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 10, style: .continuous)
+                            .fill(Brand.warmGray.opacity(0.12))
+                            .frame(width: 40, height: 40)
+                        Image(systemName: "externaldrive.fill")
+                            .font(.system(size: 18))
+                            .foregroundStyle(Brand.warmGray)
+                    }
+
+                    Text("Storage Used")
+                        .font(Brand.bodyFont.weight(.medium))
+                        .foregroundStyle(Brand.charcoal)
+
+                    Spacer()
+
+                    Text(storageUsed)
+                        .font(Brand.captionFont)
+                        .foregroundStyle(Brand.warmGray)
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 14)
+            }
+            .background(Brand.surface)
+            .clipShape(RoundedRectangle(cornerRadius: Brand.radiusCard, style: .continuous))
+        }
+    }
+
+    // MARK: - 4. Support Section
+
+    private var supportSection: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Text("Support")
+                .font(Brand.title2Font)
+                .foregroundStyle(Brand.charcoal)
+
+            VStack(spacing: 0) {
+                // Privacy Policy
+                NavigationLink {
+                    PrivacyPolicyView()
+                } label: {
+                    settingsRow(
+                        icon: "hand.raised.fill",
+                        iconColor: Brand.sage,
+                        title: "Privacy Policy",
+                        trailing: {
+                            Image(systemName: "arrow.up.right.square")
+                                .font(.system(size: 14))
+                                .foregroundStyle(Brand.warmGray.opacity(0.5))
+                        }
+                    )
+                }
+                .buttonStyle(.plain)
+
+                Divider()
+                    .padding(.leading, 70)
+
+                // About
+                settingsRow(
+                    icon: "info.circle.fill",
+                    iconColor: Brand.sky,
+                    title: "About Little Artist",
+                    trailing: {
+                        Text("v\(appVersion)")
+                            .font(Brand.captionFont)
+                            .foregroundStyle(Brand.warmGray)
+                    }
+                )
+
+                Divider()
+                    .padding(.leading, 70)
+
+                // Appearance
+                HStack(spacing: 14) {
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 10, style: .continuous)
+                            .fill(Brand.lavender.opacity(0.15))
+                            .frame(width: 40, height: 40)
+                        Image(systemName: "circle.lefthalf.filled")
+                            .font(.system(size: 18))
+                            .foregroundStyle(Brand.lavender)
+                    }
+
+                    Text("Appearance")
+                        .font(Brand.bodyFont.weight(.medium))
+                        .foregroundStyle(Brand.charcoal)
+
+                    Spacer()
+
+                    Picker("", selection: $appAppearance) {
+                        ForEach(AppAppearance.allCases) { appearance in
+                            Text(appearance.title).tag(appearance.rawValue)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                    .frame(width: 180)
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 14)
+
+                Divider()
+                    .padding(.leading, 70)
+
+                // Replay Onboarding
+                Button {
+                    hasCompletedOnboarding = false
+                    Task { await FirestoreRepository.shared.syncUserPreferencesToFirestore() }
+                } label: {
+                    settingsRow(
+                        icon: "arrow.counterclockwise",
+                        iconColor: Brand.primary,
+                        title: "Replay Onboarding",
+                        trailing: {
+                            Image(systemName: "chevron.right")
+                                .font(.system(size: 13, weight: .semibold))
+                                .foregroundStyle(Brand.warmGray.opacity(0.5))
+                        }
+                    )
+                }
+                .buttonStyle(.plain)
+            }
+            .background(Brand.surface)
+            .clipShape(RoundedRectangle(cornerRadius: Brand.radiusCard, style: .continuous))
+        }
+    }
+
+    // MARK: - 5. Sync Diagnostics (Debug)
+
+    @ViewBuilder
+    private var syncDiagnosticsSection: some View {
+        if syncService.isListening || !syncService.diagnosticLog.isEmpty {
+            VStack(alignment: .leading, spacing: 14) {
+                Button {
+                    withAnimation { showSyncDiagnostics.toggle() }
+                } label: {
+                    HStack {
+                        Text("Sync Diagnostics")
+                            .font(Brand.title2Font)
+                            .foregroundStyle(Brand.charcoal)
+                        Spacer()
+                        Image(systemName: showSyncDiagnostics ? "chevron.up" : "chevron.down")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundStyle(Brand.warmGray)
+                    }
+                }
+                .buttonStyle(.plain)
+
+                if showSyncDiagnostics {
+                    VStack(spacing: 0) {
+                        let snapshot = syncService.diagnosticSnapshot()
+                        ForEach(Array(snapshot.sorted(by: { $0.key < $1.key })), id: \.key) { key, value in
+                            HStack {
+                                Text(key)
+                                    .font(Brand.captionFont)
+                                    .foregroundStyle(Brand.charcoal)
+                                Spacer()
+                                Text(value)
+                                    .font(Brand.captionFont)
+                                    .foregroundStyle(value.contains("None") || value.contains("No") ? Brand.dustyRose : Brand.sage)
+                            }
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 8)
+                        }
+
+                        if !syncService.diagnosticLog.isEmpty {
+                            Divider()
+                                .padding(.horizontal, 16)
+
+                            DisclosureGroup("Event Log (\(syncService.diagnosticLog.count))") {
+                                ForEach(syncService.diagnosticLog.reversed(), id: \.self) { entry in
+                                    Text(entry)
+                                        .font(.system(size: 10, design: .monospaced))
+                                        .foregroundStyle(Brand.warmGray)
+                                }
+                            }
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 8)
+                        }
+
+                        Divider()
+                            .padding(.horizontal, 16)
+
+                        Button {
+                            syncService.stop()
+                            syncService.start()
+                        } label: {
+                            HStack {
+                                Image(systemName: "arrow.triangle.2.circlepath")
+                                    .font(.system(size: 14))
+                                Text("Force Sync Now")
+                                    .font(Brand.captionFont.weight(.medium))
+                            }
+                            .foregroundStyle(Brand.primary)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 12)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                    .padding(.vertical, 4)
+                    .background(Brand.surface)
+                    .clipShape(RoundedRectangle(cornerRadius: Brand.radiusCard, style: .continuous))
+                }
+            }
+        }
+    }
+
+    // MARK: - 6. Danger Zone
+
+    @ViewBuilder
+    private var dangerZoneSection: some View {
+        if auth.isLinkedWithApple {
+            VStack(spacing: 16) {
+                Button {
+                    showSignOutConfirmation = true
+                } label: {
+                    Text("Log Out of All Devices")
+                        .font(Brand.bodyFont.weight(.medium))
+                        .foregroundStyle(Brand.dustyRose)
+                }
+
+                Button {
+                    showDeleteAccountConfirmation = true
+                } label: {
+                    Text("Delete Account")
+                        .font(Brand.captionFont)
+                        .foregroundStyle(Brand.dustyRose.opacity(0.7))
+                }
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.top, 8)
+        }
+    }
+
+    // MARK: - Reusable Settings Row
+
+    private func settingsRow<Trailing: View>(
+        icon: String,
+        iconColor: Color,
+        title: String,
+        @ViewBuilder trailing: () -> Trailing
+    ) -> some View {
+        HStack(spacing: 14) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .fill(iconColor.opacity(0.15))
+                    .frame(width: 40, height: 40)
+                Image(systemName: icon)
+                    .font(.system(size: 18))
+                    .foregroundStyle(iconColor)
+            }
+
+            Text(title)
+                .font(Brand.bodyFont.weight(.medium))
+                .foregroundStyle(Brand.charcoal)
+
+            Spacer()
+
+            trailing()
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 14)
+        .contentShape(Rectangle())
+    }
+
+    // MARK: - Sheets & Alerts
 
     private var settingsSheetContent: some View {
         settingsForm
@@ -286,415 +963,7 @@ struct SettingsView: View {
         }
     }
 
-    private var childrenSection: some View {
-        Section {
-            ForEach(children) { child in
-                NavigationLink {
-                    EditChildView(child: child) {
-                        // onDelete callback
-                    }
-                } label: {
-                    HStack(spacing: 12) {
-                        Circle()
-                            .fill(Color(hex: child.avatarColor))
-                            .frame(width: 36, height: 36)
-                            .overlay {
-                                if let data = child.avatarImageData,
-                                   let uiImage = UIImage(data: data) {
-                                    Image(uiImage: uiImage)
-                                        .resizable()
-                                        .scaledToFill()
-                                        .clipShape(Circle())
-                                } else {
-                                    Text(String(child.name.prefix(1)).uppercased())
-                                        .font(.system(size: 15, weight: .bold, design: .rounded))
-                                        .foregroundStyle(.white)
-                                }
-                            }
-
-                        Text(child.name)
-                            .font(Brand.bodyFont)
-
-                        if child.isShared || child.firestoreId != nil {
-                            Image(systemName: child.isShared ? "person.2.wave.2" : "person.2.fill")
-                                .font(.system(size: 11, weight: .medium))
-                                .foregroundStyle(Brand.sky)
-                        }
-
-                        Spacer()
-
-                        Text("\(child.artworks?.count ?? 0) artworks")
-                            .font(Brand.caption2Font)
-                            .foregroundStyle(.secondary)
-                    }
-                }
-            }
-            .onDelete { indexSet in
-                for index in indexSet {
-                    let child = children[index]
-                    let isShared = child.isShared
-                    let isOwner = !child.isShared
-
-                    if isShared && !isOwner {
-                        childToLeave = child
-                        showLeaveChildConfirmation = true
-                    } else {
-                        childToDelete = child
-                        showDeleteChildConfirmation = true
-                    }
-                }
-            }
-
-            Button {
-                if PremiumManager.canAddChild(currentCount: children.count) {
-                    showAddChild = true
-                } else {
-                    paywallReason = .children
-                }
-            } label: {
-                Label("Add Child", systemImage: "plus")
-                    .foregroundStyle(Brand.primary)
-                    .crayonStyle()
-            }
-        } header: {
-            Text("Children")
-                .crayonStyle()
-        }
-    }
-
-    private var preferencesSection: some View {
-        Section {
-            Picker("Appearance", selection: $appAppearance) {
-                ForEach(AppAppearance.allCases) { appearance in
-                    Text(appearance.title).tag(appearance.rawValue)
-                }
-            }
-
-            if store.isPremium {
-                Toggle(isOn: $aiCaptionsEnabled) {
-                    Label("AI Captions", systemImage: "sparkles")
-                }
-                .tint(Brand.primary)
-                .onChange(of: aiCaptionsEnabled) { _, _ in
-                    Task { await FirestoreRepository.shared.syncUserPreferencesToFirestore() }
-                }
-
-                Text(
-                    aiCaptionsEnabled
-                    ? AISuggestionService.engineDescription
-                    : "Turn this on to generate titles and captions entirely on-device."
-                )
-                .font(Brand.caption2Font)
-                .foregroundStyle(Brand.warmGray)
-            } else {
-                Button {
-                    paywallReason = .artworks
-                } label: {
-                    HStack {
-                        Label("AI Captions", systemImage: "sparkles")
-                            .foregroundStyle(Brand.disabled)
-                        Spacer()
-                        Text("Premium")
-                            .font(Brand.caption2Font)
-                            .foregroundStyle(Brand.primary)
-                    }
-                }
-            }
-
-            HStack {
-                Label("Default Camera", systemImage: "camera.fill")
-                Spacer()
-                Picker("", selection: $defaultCameraBack) {
-                    Text("Back").tag(true)
-                    Text("Front").tag(false)
-                }
-                .pickerStyle(.segmented)
-                .frame(width: 140)
-            }
-            .onChange(of: defaultCameraBack) { _, _ in
-                Task { await FirestoreRepository.shared.syncUserPreferencesToFirestore() }
-            }
-
-            if !store.isPremium {
-                Button {
-                    paywallReason = .artworks
-                } label: {
-                    HStack {
-                        Label("Voice Memos", systemImage: "mic.fill")
-                            .foregroundStyle(Brand.disabled)
-                        Spacer()
-                        Text("Premium")
-                            .font(Brand.caption2Font)
-                            .foregroundStyle(Brand.primary)
-                    }
-                }
-            }
-
-            Toggle(isOn: $notificationsEnabled) {
-                Label("Notifications", systemImage: "bell.fill")
-            }
-            .tint(Brand.primary)
-            .onChange(of: notificationsEnabled) { _, enabled in
-                if enabled {
-                    Task { @MainActor in
-                        let granted = await NotificationService.requestPermission()
-                        if granted {
-                            NotificationService.scheduleAll(artworks: artworks)
-                        } else {
-                            notificationsEnabled = false
-                        }
-                    }
-                } else {
-                    NotificationService.cancelAll()
-                }
-                Task { await FirestoreRepository.shared.syncUserPreferencesToFirestore() }
-            }
-        } header: {
-            Text("Preferences")
-                .crayonStyle()
-        }
-    }
-
-    @ViewBuilder
-    private var aiUsageSection: some View {
-        if store.isPremium && aiCaptionsEnabled {
-            Section {
-                HStack {
-                    Label("Engine", systemImage: "brain.head.profile")
-                    Spacer()
-                    Text(AISuggestionService.engineName)
-                        .font(Brand.caption2Font)
-                        .foregroundStyle(Brand.primary)
-                }
-
-                HStack {
-                    Label("Processing", systemImage: "iphone")
-                    Spacer()
-                    Text("On Device")
-                        .font(Brand.caption2Font)
-                        .foregroundStyle(Brand.sage)
-                }
-
-                Text(AISuggestionService.engineDescription)
-                    .font(Brand.captionFont)
-                    .foregroundStyle(Brand.warmGray)
-            } header: {
-                Text("AI Engine")
-                    .crayonStyle()
-            } footer: {
-                Text("Apple Intelligence is used when available. Other devices fall back to a lightweight local Vision pipeline.")
-                    .font(Brand.caption2Font)
-            }
-        }
-    }
-
-    private var subscriptionSection: some View {
-        Section {
-            HStack {
-                Label("Plan", systemImage: "crown.fill")
-                Spacer()
-                Text(store.isPremium ? "Premium" : "Free")
-                    .foregroundStyle(store.isPremium ? Brand.primary : .secondary)
-                    .fontWeight(store.isPremium ? .semibold : .regular)
-            }
-
-            if !store.isPremium {
-                Button {
-                    paywallReason = .artworks
-                } label: {
-                    Label("Upgrade to Premium", systemImage: "sparkles")
-                        .foregroundStyle(Brand.primary)
-                        .crayonStyle()
-                }
-            }
-
-            Button {
-                isRestoring = true
-                Task {
-                    await store.restorePurchases()
-                    isRestoring = false
-                }
-            } label: {
-                HStack {
-                    Label("Restore Purchases", systemImage: "arrow.clockwise")
-                        .crayonStyle()
-                    if isRestoring {
-                        Spacer()
-                        ProgressView()
-                    }
-                }
-            }
-            .disabled(isRestoring)
-
-            Link(destination: URL(string: "https://apps.apple.com/account/subscriptions")!) {
-                Label("Manage Subscription", systemImage: "arrow.up.right.square")
-                    .crayonStyle()
-            }
-        } header: {
-            Text("Subscription")
-                .crayonStyle()
-        }
-    }
-
-    private var dataSection: some View {
-        Section {
-            if isCloudSyncEnabled {
-                HStack {
-                    Label("Cloud Sync", systemImage: "arrow.triangle.2.circlepath.icloud.fill")
-                    Spacer()
-                    Text("Enabled")
-                        .font(Brand.caption2Font)
-                        .foregroundStyle(Brand.sage)
-                }
-
-                Button {
-                    showJoinShare = true
-                } label: {
-                    Label("Join Shared Profile", systemImage: "person.badge.plus")
-                        .crayonStyle()
-                }
-            } else {
-                Button {
-                    showCloudSyncSetup = true
-                } label: {
-                    HStack {
-                        Label("Enable Cloud Sync", systemImage: "icloud.and.arrow.up")
-                            .foregroundStyle(Brand.primary)
-                            .crayonStyle()
-                        Spacer()
-                        if isEnablingCloudSync {
-                            ProgressView()
-                        }
-                    }
-                }
-
-                Text("Cloud sync stays off until you explicitly enable it with Sign in with Apple.")
-                    .font(Brand.caption2Font)
-                    .foregroundStyle(Brand.warmGray)
-            }
-
-            HStack {
-                Label("Storage", systemImage: "externaldrive.fill")
-                Spacer()
-                Text(storageUsed)
-                    .foregroundStyle(.secondary)
-            }
-
-            ForEach(children) { child in
-                Button {
-                    if store.isPremium {
-                        exportPortfolio(for: child)
-                    } else {
-                        paywallReason = .artworks
-                    }
-                } label: {
-                    HStack {
-                        Label("Export \(child.name)'s Portfolio", systemImage: "doc.richtext")
-                            .foregroundStyle(store.isPremium ? Brand.primary : Brand.disabled)
-                            .crayonStyle()
-                        if isExporting {
-                            Spacer()
-                            ProgressView()
-                        }
-                    }
-                }
-                .disabled(isExporting)
-            }
-        } header: {
-            Text("Data")
-                .crayonStyle()
-        }
-    }
-
-    private var accountSection: some View {
-        Section {
-            Button(role: .destructive) {
-                showSignOutConfirmation = true
-            } label: {
-                Label("Sign Out", systemImage: "rectangle.portrait.and.arrow.right")
-                    .crayonStyle()
-            }
-
-            Button(role: .destructive) {
-                showDeleteAccountConfirmation = true
-            } label: {
-                Label("Delete Account", systemImage: "person.crop.circle.badge.xmark")
-                    .crayonStyle()
-            }
-        } header: {
-            Text("Account")
-                .crayonStyle()
-        }
-    }
-
-    @ViewBuilder
-    private var syncDiagnosticsSection: some View {
-        if syncService.isListening || !syncService.diagnosticLog.isEmpty {
-            Section {
-                let snapshot = syncService.diagnosticSnapshot()
-                ForEach(Array(snapshot.sorted(by: { $0.key < $1.key })), id: \.key) { key, value in
-                    HStack {
-                        Text(key)
-                            .font(Brand.captionFont)
-                        Spacer()
-                        Text(value)
-                            .font(Brand.captionFont)
-                            .foregroundStyle(value.contains("None") || value.contains("No") ? Brand.dustyRose : Brand.sage)
-                    }
-                }
-
-                if !syncService.diagnosticLog.isEmpty {
-                    DisclosureGroup("Event Log (\(syncService.diagnosticLog.count))") {
-                        ForEach(syncService.diagnosticLog.reversed(), id: \.self) { entry in
-                            Text(entry)
-                                .font(.system(size: 10, design: .monospaced))
-                                .foregroundStyle(Brand.warmGray)
-                        }
-                    }
-                }
-
-                Button {
-                    syncService.stop()
-                    syncService.start()
-                } label: {
-                    Label("Force Sync Now", systemImage: "arrow.triangle.2.circlepath")
-                        .foregroundStyle(Brand.primary)
-                        .crayonStyle()
-                }
-            } header: {
-                Text("Sync Diagnostics")
-                    .crayonStyle()
-            }
-        }
-    }
-
-    private var aboutSection: some View {
-        Section {
-            HStack {
-                Label("Version", systemImage: "info.circle")
-                Spacer()
-                Text(appVersion)
-                    .foregroundStyle(.secondary)
-            }
-
-            NavigationLink {
-                PrivacyPolicyView()
-            } label: {
-                Label("Privacy Policy", systemImage: "hand.raised.fill")
-            }
-
-            Button {
-                hasCompletedOnboarding = false
-                Task { await FirestoreRepository.shared.syncUserPreferencesToFirestore() }
-            } label: {
-                Label("Replay Onboarding", systemImage: "arrow.counterclockwise")
-                    .crayonStyle()
-            }
-        } header: {
-            Text("About")
-                .crayonStyle()
-        }
-    }
+    // MARK: - Cloud Sync Setup Sheet
 
     private var cloudSyncSetupView: some View {
         NavigationStack {
@@ -778,6 +1047,8 @@ struct SettingsView: View {
             }
         }
     }
+
+    // MARK: - Actions
 
     @MainActor
     private func enableCloudSync() async {
@@ -874,6 +1145,9 @@ struct SettingsView: View {
         if let allTags = try? modelContext.fetch(FetchDescriptor<Tag>()) {
             for tag in allTags { modelContext.delete(tag) }
         }
+        if let allAchievements = try? modelContext.fetch(FetchDescriptor<Achievement>()) {
+            for achievement in allAchievements { modelContext.delete(achievement) }
+        }
         try? modelContext.save()
     }
 
@@ -893,7 +1167,11 @@ struct SettingsView: View {
     }
 }
 
+// MARK: - Preview
+
 #Preview {
-    SettingsView()
-        .modelContainer(PreviewSampleData.container)
+    NavigationStack {
+        SettingsView()
+            .modelContainer(PreviewSampleData.container)
+    }
 }
