@@ -17,49 +17,80 @@ struct NoChildrenView: View {
     var onAddChild: () -> Void
 
     var body: some View {
-        VStack(spacing: 16) {
-            Spacer()
+        ZStack {
+            BrandAppBackground()
 
-            Image("LaunchFox")
-                .resizable()
-                .scaledToFit()
-                .frame(width: 120, height: 120)
+            VStack {
+                Spacer()
 
-            Text("Add your first little artist")
-                .font(Brand.title2Font.bold())
-                .foregroundStyle(Brand.charcoal)
+                // MARK: Paper stack
+                ZStack {
+                    // Bottom card — rotated clockwise
+                    RoundedRectangle(cornerRadius: Brand.radiusCard, style: .continuous)
+                        .fill(Brand.sage.opacity(0.25))
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 300)
+                        .rotationEffect(.degrees(4))
+                        .brandCardShadow()
 
-            Text("Tap the + button to add a child\nand start capturing their artwork.")
-                .font(Brand.title3Font)
-                .foregroundStyle(Brand.warmGray)
-                .multilineTextAlignment(.center)
-                .crayonStyle()
-                .padding(.bottom, 16)
+                    // Middle card — rotated counter-clockwise
+                    RoundedRectangle(cornerRadius: Brand.radiusCard, style: .continuous)
+                        .fill(Brand.primary.opacity(0.12))
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 300)
+                        .rotationEffect(.degrees(-2.5))
+                        .brandCardShadow()
 
-            Button {
-                onAddChild()
-            } label: {
-                Text("Add Child")
-                    .font(Brand.title3Font.bold())
-                    .foregroundStyle(.white)
-                    .padding(.horizontal, 32)
-                    .padding(.vertical, 16)
-                    .background(Brand.primary.gradient)
-                    .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 24, style: .continuous)
-                            .stroke(Brand.glassStrokeSoft, lineWidth: 3)
+                    // Top card — main content
+                    VStack(spacing: 16) {
+                        Image("LaunchFox")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 96, height: 96)
+
+                        Text("Add your first little artist")
+                            .font(Brand.title2Font)
+                            .foregroundStyle(Brand.charcoal)
+                            .multilineTextAlignment(.center)
+
+                        Text("Use Create to add a child\nand start capturing their artwork.")
+                            .font(Brand.bodyFont)
+                            .foregroundStyle(Brand.warmGray)
+                            .multilineTextAlignment(.center)
+                            .lineSpacing(3)
+
+                        Button {
+                            onAddChild()
+                        } label: {
+                            Text("Add Child")
+                                .font(Brand.headlineFont)
+                                .foregroundStyle(.white)
+                                .padding(.horizontal, Brand.buttonPadding)
+                                .padding(.vertical, 14)
+                                .background(Brand.primary.gradient)
+                                .clipShape(Capsule())
+                                .shadow(color: Brand.primary.opacity(0.35), radius: 8, x: 0, y: 4)
+                        }
+                        .padding(.top, 4)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.horizontal, Brand.screenPadding)
+                    .padding(.vertical, Brand.sectionSpacing)
+                    .background(
+                        RoundedRectangle(cornerRadius: Brand.radiusCard, style: .continuous)
+                            .fill(Brand.surface)
                     )
-                    .shadow(color: Brand.primary.opacity(0.4), radius: 8, x: 0, y: 4)
-                    .crayonStyle()
-            }
-            .padding(.top, 8)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: Brand.radiusCard, style: .continuous)
+                            .stroke(Brand.softTan, lineWidth: 1)
+                    )
+                    .brandCardShadow()
+                }
+                .padding(.horizontal, Brand.screenPadding)
 
-            Spacer()
+                Spacer()
+            }
         }
-        .padding(.horizontal, 32)
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(BrandAppBackground())
     }
 }
 
