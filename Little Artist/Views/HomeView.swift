@@ -24,7 +24,6 @@ struct HomeView: View {
     private var store: StoreKitManager { StoreKitManager.shared }
 
     @Binding var selectedChildID: PersistentIdentifier?
-    @State private var selectedArtwork: Artwork?
     @State private var showAddChild = false
     @State private var editingChild: Child?
     @State private var paywallReason: PaywallView.LimitReason?
@@ -268,10 +267,8 @@ struct HomeView: View {
 
     private var earlierThisMonthSection: some View {
         let padding = Brand.Adaptive.screenPadding(for: sizeClass)
-        let columns = [
-            GridItem(.flexible(), spacing: 12),
-            GridItem(.flexible(), spacing: 12)
-        ]
+        let columnCount = sizeClass == .regular ? 4 : 2
+        let columns = Array(repeating: GridItem(.flexible(), spacing: 12), count: columnCount)
 
         return VStack(alignment: .leading, spacing: 12) {
             Text("Earlier this Month")
@@ -294,22 +291,7 @@ struct HomeView: View {
         }
     }
 
-    // MARK: - Detail Placeholder
-
-    private var detailPlaceholder: some View {
-        VStack(spacing: 16) {
-            Image(systemName: "hand.tap")
-                .font(.system(size: 48, design: .rounded))
-                .foregroundStyle(Brand.primary.opacity(0.3))
-            Text("Select an artwork")
-                .font(Brand.title3Font)
-                .foregroundStyle(Brand.warmGray)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Brand.backgroundBase)
-    }
-
-    // MARK: - Compact (iPhone) Layout
+    // MARK: - Gallery Layout
 
     private var compactGalleryScreen: some View {
         Group {
@@ -353,75 +335,14 @@ struct HomeView: View {
         }
     }
 
-    // MARK: - Regular (iPad) Layout
+    // MARK: - Main Content
 
+    /// Uses the same bento gallery on both iPhone and iPad.
+    /// iPad gets more columns in the "Earlier" grid via Brand.Adaptive.
+    /// Artwork detail is always pushed via NavigationLink, never shown in a split pane.
     @ViewBuilder
     private var mainContent: some View {
-        if sizeClass == .regular {
-            HStack(spacing: 0) {
-                // Master pane
-                VStack(spacing: 0) {
-                    if children.isEmpty {
-                        NoChildrenView(onAddChild: { showAddChild = true })
-                    } else {
-                        ScrollView {
-                            VStack(spacing: Brand.Adaptive.sectionSpacing(for: sizeClass)) {
-                                // Child filter slider — always visible
-                                ChildSliderView(
-                                    children: children,
-                                    selectedChild: selectedChildBinding,
-                                    onAddChild: showAddChildFlow,
-                                    onEditChild: { child in
-                                        editingChild = child
-                                    }
-                                )
-
-                                if filteredArtworks.isEmpty {
-                                    NoArtworkView()
-                                        .padding(.top, Brand.sectionSpacing)
-                                } else {
-                                    // Today section
-                                    VStack(alignment: .leading, spacing: 16) {
-                                        todaySectionHeader
-                                            .padding(.horizontal, Brand.Adaptive.screenPadding(for: sizeClass))
-
-                                        bentoGrid
-                                    }
-
-                                    // Earlier this Month section
-                                    if !earlierArtworks.isEmpty {
-                                        earlierThisMonthSection
-                                    }
-                                }
-                            }
-                            .padding(.bottom, 100)
-                        }
-                        .scrollIndicators(.hidden)
-                    }
-                }
-                .frame(maxWidth: .infinity)
-
-                Divider()
-
-                // Detail pane
-                Group {
-                    if let selectedArtwork {
-                        ArtworkDetailView(
-                            artwork: selectedArtwork,
-                            onDelete: {
-                                self.selectedArtwork = nil
-                            }
-                        )
-                        .id(selectedArtwork.persistentModelID)
-                    } else {
-                        detailPlaceholder
-                    }
-                }
-                .frame(maxWidth: .infinity)
-            }
-        } else {
-            compactGalleryScreen
-        }
+        compactGalleryScreen
     }
 
     // MARK: - Body
@@ -496,10 +417,7 @@ struct HomeView: View {
                 PaywallView(reason: reason)
             }
             .onChange(of: selectedChildID) { _, _ in
-                // Clear stale selection when child filter changes
-                if let selectedArtwork, !filteredArtworks.contains(where: { $0.persistentModelID == selectedArtwork.persistentModelID }) {
-                    self.selectedArtwork = nil
-                }
+                // Child filter changed — UI updates via filteredArtworks
             }
             .onChange(of: store.isPremium) { _, isPremium in
                 guard isPremium else { return }
