@@ -45,9 +45,9 @@ struct ArtworkDetailView: View {
 
     // MARK: - Computed
 
-    private var displayTitle: String {
+    private var displayTitle: String? {
         let trimmed = artwork.title.trimmingCharacters(in: .whitespacesAndNewlines)
-        return trimmed.isEmpty ? "Untitled" : trimmed
+        return trimmed.isEmpty ? nil : trimmed
     }
 
     private var displayCaption: String? {
@@ -220,9 +220,11 @@ struct ArtworkDetailView: View {
             }
 
             // Title
-            Text(displayTitle)
-                .font(Brand.title1Font)
-                .foregroundStyle(Brand.charcoal)
+            if let displayTitle {
+                Text(displayTitle)
+                    .font(Brand.title1Font)
+                    .foregroundStyle(Brand.charcoal)
+            }
 
             // Child info
             if let child = artwork.child {
@@ -772,7 +774,8 @@ struct ArtworkDetailView: View {
             items.append(image)
         }
 
-        var lines: [String] = [displayTitle]
+        var lines: [String] = []
+        if let displayTitle { lines.append(displayTitle) }
         if let displayCaption {
             lines.append(displayCaption)
         }

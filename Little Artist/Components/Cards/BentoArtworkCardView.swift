@@ -82,8 +82,8 @@ struct BentoArtworkCardView: View {
             .clipShape(RoundedRectangle(cornerRadius: Brand.radiusImage, style: .continuous))
 
             // MARK: Title
-            if showTitle {
-                Text(artwork.title.isEmpty ? "Untitled" : artwork.title)
+            if showTitle, !artwork.title.trimmingCharacters(in: .whitespaces).isEmpty {
+                Text(artwork.title)
                     .font(Brand.captionFont)
                     .foregroundStyle(Brand.charcoal)
                     .lineLimit(1)

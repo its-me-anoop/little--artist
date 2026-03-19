@@ -29,6 +29,33 @@ struct ChildSliderView: View {
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 16) {
+                // "All" option
+                VStack(spacing: 6) {
+                    ZStack {
+                        Circle()
+                            .fill(selectedChild == nil ? Brand.primary.opacity(0.15) : Brand.softTan.opacity(0.3))
+                            .frame(width: Brand.avatarSize, height: Brand.avatarSize)
+                        Image(systemName: "person.3.fill")
+                            .font(.system(size: 20))
+                            .foregroundStyle(selectedChild == nil ? Brand.primary : Brand.warmGray)
+                    }
+                    .overlay {
+                        if selectedChild == nil {
+                            Circle()
+                                .strokeBorder(Brand.primary, lineWidth: Brand.avatarRingStroke)
+                                .frame(width: Brand.avatarRingSize, height: Brand.avatarRingSize)
+                        }
+                    }
+                    Text("All")
+                        .font(Brand.captionFont)
+                        .foregroundStyle(selectedChild == nil ? Brand.primary : Brand.warmGray)
+                }
+                .onTapGesture {
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        selectedChild = nil
+                    }
+                }
+
                 ForEach(children) { child in
                     ChildAvatarView(
                         child: child,

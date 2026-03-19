@@ -120,39 +120,39 @@ struct HomeView: View {
 
     // MARK: - Bento Layout Helpers
 
-    /// Artworks for the Today bento section (up to 4).
-    private var todayArtworks: [Artwork] {
+    /// Artworks for the Latest bento section (up to 4).
+    private var latestArtworks: [Artwork] {
         Array(filteredArtworks.prefix(4))
     }
 
     /// The featured (largest) artwork for the bento grid.
     private var featuredArtwork: Artwork? {
-        todayArtworks.first
+        latestArtworks.first
     }
 
     /// Smaller artworks for the bento grid (indices 1-3).
     private var secondaryArtworks: [Artwork] {
-        guard todayArtworks.count > 1 else { return [] }
-        return Array(todayArtworks.dropFirst())
+        guard latestArtworks.count > 1 else { return [] }
+        return Array(latestArtworks.dropFirst())
     }
 
-    /// Artworks after the Today section for the "Earlier this Month" grid.
+    /// Artworks after the Latest section for the "More" grid.
     private var earlierArtworks: [Artwork] {
         guard filteredArtworks.count > 4 else { return [] }
         return Array(filteredArtworks.dropFirst(4))
     }
 
-    // MARK: - Today Section Header
+    // MARK: - Latest Section Header
 
-    private var todaySectionHeader: some View {
+    private var latestSectionHeader: some View {
         HStack(alignment: .bottom) {
             VStack(alignment: .leading, spacing: 4) {
-                Text("TIMELINE")
+                Text("GALLERY")
                     .font(Brand.caption2Font)
                     .fontWeight(.bold)
                     .tracking(2)
                     .foregroundStyle(Brand.warmGray)
-                Text("Today")
+                Text("Latest")
                     .font(Brand.displayFont)
                     .foregroundStyle(Brand.charcoal)
             }
@@ -316,7 +316,7 @@ struct HomeView: View {
                         } else {
                             // Today section
                             VStack(alignment: .leading, spacing: 16) {
-                                todaySectionHeader
+                                latestSectionHeader
                                     .padding(.horizontal, Brand.Adaptive.screenPadding(for: sizeClass))
 
                                 bentoGrid
