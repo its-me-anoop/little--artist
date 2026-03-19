@@ -66,6 +66,7 @@ AppTab enum:
 @Model final class Comment {
     var text: String
     var authorName: String           // "Mom", "Dad", "Grandma"
+    @Attribute(.externalStorage)
     var authorAvatarData: Data?      // Optional profile image
     var createdAt: Date
     var artwork: Artwork?            // Belongs to artwork
@@ -125,7 +126,9 @@ Comments sync to Firestore at path: `users/{uid}/children/{childId}/artworks/{ar
 - `deleteComment(commentId: String, artworkId: String, childId: String)` — removes comment
 - `observeComments(artworkId: String, childId: String)` — snapshot listener for real-time comment updates
 
-`FirestoreSyncService` adds comment observation when syncing artworks, using the existing `isSyncEnabled` flow.
+`FirestoreSyncService` adds comment observation within its existing `start()`/`stop()` listener lifecycle, gated by `FirestoreRepository.isSyncActive`.
+
+**Comment listener lifecycle:** Comment listeners are stored in a new `commentListeners: [String: ListenerRegistration]` dictionary keyed by artwork Firestore ID. Listeners are added when an artwork's comments are first observed (e.g., when `ArtworkDetailView` appears for a synced artwork). All comment listeners are torn down in `stop()` alongside existing artwork listeners. When an artwork is deleted, its comment listener is also removed via `removeCommentListener(artworkId:)`.
 
 ### Schema Migration
 
@@ -336,7 +339,7 @@ Toolbar trailing edit button → `EditChildView` sheet.
 
 ### Data & Privacy
 - Grouped container:
-  - iCloud Sync: icon + toggle (maps to existing `@AppStorage("firebaseSyncEnabled")` key)
+  - iCloud Sync: icon + toggle. When toggled ON, presents the existing `cloudSyncSetupView` sheet (Sign in with Apple gating). The toggle reflects the combined state of `firebaseSyncEnabled && auth.isLinkedWithApple` (i.e., `FirestoreRepository.isSyncActive`). When toggled OFF, sets `firebaseSyncEnabled = false` directly.
   - PDF Portfolio Export: icon + download action → `PDFExportConfigView`
 
 ### Support
@@ -346,6 +349,8 @@ Toolbar trailing edit button → `EditChildView` sheet.
 
 ### Danger Zone
 - "Log Out of All Devices" in `Brand.dustyRose` (shown when Firebase auth active)
+
+Note: `purgeLocalData()` must be updated to also delete `Achievement` entities (in addition to existing `Artwork`, `Child`, `Tag` deletions). `Comment` entities are cascade-deleted when their parent `Artwork` is deleted, so no explicit Comment deletion is needed.
 
 ---
 
@@ -450,8 +455,8 @@ Each: tinted icon circle + title + description.
 - `Views/TimelineView.swift`
 - `Views/MilestonesView.swift`
 - `Views/Children/ChildProfileView.swift`
-- `Views/Artwork/PDFExportConfigView.swift`
-- `Views/Artwork/PDFPreviewView.swift`
+- `Views/PDF/PDFExportConfigView.swift`
+- `Views/PDF/PDFPreviewView.swift`
 - `Components/Cards/MilestoneCarouselView.swift`
 - `Components/Cards/MilestoneCardView.swift`
 - `Components/Cards/FamilyCommentView.swift`
