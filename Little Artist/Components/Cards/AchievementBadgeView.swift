@@ -8,7 +8,7 @@
 
 import SwiftUI
 
-struct Achievement: Identifiable {
+struct AchievementDisplay: Identifiable {
     let id = UUID()
     let name: String
     let icon: String
@@ -26,7 +26,7 @@ struct Achievement: Identifiable {
 }
 
 struct AchievementBadgeView: View {
-    let achievement: Achievement
+    let achievement: AchievementDisplay
 
     var body: some View {
         VStack(spacing: 10) {
@@ -128,17 +128,17 @@ struct AchievementBadgeView: View {
 
 #Preview {
     HStack(spacing: 12) {
-        AchievementBadgeView(achievement: Achievement(
+        AchievementBadgeView(achievement: AchievementDisplay(
             name: "First Steps", icon: "star.fill",
             current: 1, target: 1, description: "Save your first artwork",
             accentColor: Brand.primary
         ))
-        AchievementBadgeView(achievement: Achievement(
+        AchievementBadgeView(achievement: AchievementDisplay(
             name: "Prolific", icon: "paintbrush.fill",
             current: 7, target: 10, description: "Save 10 artworks",
             accentColor: Brand.sage
         ))
-        AchievementBadgeView(achievement: Achievement(
+        AchievementBadgeView(achievement: AchievementDisplay(
             name: "Time Capsule", icon: "clock.fill",
             current: 3, target: 12, description: "12 months of art",
             accentColor: Brand.lavender
