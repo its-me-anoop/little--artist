@@ -6,6 +6,7 @@
 //  art + story spreads and a share button.
 //
 
+import SwiftData
 import SwiftUI
 
 /// A magazine-style preview of a generated PDF portfolio.
