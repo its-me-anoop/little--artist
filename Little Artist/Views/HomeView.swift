@@ -315,12 +315,10 @@ struct HomeView: View {
         Group {
             if children.isEmpty {
                 NoChildrenView(onAddChild: { showAddChild = true })
-            } else if filteredArtworks.isEmpty {
-                NoArtworkView()
             } else {
                 ScrollView {
                     VStack(spacing: Brand.sectionSpacing) {
-                        // Child filter slider
+                        // Child filter slider — always visible so user can switch children
                         ChildSliderView(
                             children: children,
                             selectedChild: selectedChildBinding,
@@ -330,17 +328,22 @@ struct HomeView: View {
                             }
                         )
 
-                        // Today section
-                        VStack(alignment: .leading, spacing: 16) {
-                            todaySectionHeader
-                                .padding(.horizontal, Brand.Adaptive.screenPadding(for: sizeClass))
+                        if filteredArtworks.isEmpty {
+                            NoArtworkView()
+                                .padding(.top, Brand.sectionSpacing)
+                        } else {
+                            // Today section
+                            VStack(alignment: .leading, spacing: 16) {
+                                todaySectionHeader
+                                    .padding(.horizontal, Brand.Adaptive.screenPadding(for: sizeClass))
 
-                            bentoGrid
-                        }
+                                bentoGrid
+                            }
 
-                        // Earlier this Month section
-                        if !earlierArtworks.isEmpty {
-                            earlierThisMonthSection
+                            // Earlier this Month section
+                            if !earlierArtworks.isEmpty {
+                                earlierThisMonthSection
+                            }
                         }
                     }
                     .padding(.bottom, 100) // Space for FAB
@@ -360,12 +363,10 @@ struct HomeView: View {
                 VStack(spacing: 0) {
                     if children.isEmpty {
                         NoChildrenView(onAddChild: { showAddChild = true })
-                    } else if filteredArtworks.isEmpty {
-                        NoArtworkView()
                     } else {
                         ScrollView {
                             VStack(spacing: Brand.Adaptive.sectionSpacing(for: sizeClass)) {
-                                // Child filter slider
+                                // Child filter slider — always visible
                                 ChildSliderView(
                                     children: children,
                                     selectedChild: selectedChildBinding,
@@ -375,17 +376,22 @@ struct HomeView: View {
                                     }
                                 )
 
-                                // Today section
-                                VStack(alignment: .leading, spacing: 16) {
-                                    todaySectionHeader
-                                        .padding(.horizontal, Brand.Adaptive.screenPadding(for: sizeClass))
+                                if filteredArtworks.isEmpty {
+                                    NoArtworkView()
+                                        .padding(.top, Brand.sectionSpacing)
+                                } else {
+                                    // Today section
+                                    VStack(alignment: .leading, spacing: 16) {
+                                        todaySectionHeader
+                                            .padding(.horizontal, Brand.Adaptive.screenPadding(for: sizeClass))
 
-                                    bentoGrid
-                                }
+                                        bentoGrid
+                                    }
 
-                                // Earlier this Month section
-                                if !earlierArtworks.isEmpty {
-                                    earlierThisMonthSection
+                                    // Earlier this Month section
+                                    if !earlierArtworks.isEmpty {
+                                        earlierThisMonthSection
+                                    }
                                 }
                             }
                             .padding(.bottom, 100)
