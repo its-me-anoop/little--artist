@@ -402,19 +402,19 @@ struct SettingsView: View {
                 .foregroundStyle(Brand.charcoal)
 
             VStack(spacing: 0) {
-                // iCloud Sync row
+                // Cloud Sync row
                 HStack(spacing: 14) {
                     ZStack {
                         RoundedRectangle(cornerRadius: 10, style: .continuous)
                             .fill(Brand.sky.opacity(0.15))
                             .frame(width: 40, height: 40)
-                        Image(systemName: "icloud.fill")
+                        Image(systemName: "cloud.fill")
                             .font(.system(size: 18))
                             .foregroundStyle(Brand.sky)
                     }
 
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("iCloud Sync")
+                        Text("Cloud Sync")
                             .font(Brand.bodyFont.weight(.medium))
                             .foregroundStyle(Brand.charcoal)
                         Text(isCloudSyncEnabled ? "Your data syncs across devices" : "Keep your data backed up")
