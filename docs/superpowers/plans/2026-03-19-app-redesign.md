@@ -31,7 +31,10 @@
 | `Components/Cards/FamilyCommentView.swift` | Single comment row in artwork detail |
 | `Components/Cards/BentoArtworkCardView.swift` | Bento grid artwork card (paper-stack style) |
 | `Components/Cards/ProgressBarView.swift` | Animated gradient progress bar |
+| `Components/Cards/StatPillView.swift` | Rotated stat card (count + label) for profile heroes |
 | `Components/Avatars/ArtistSelectorView.swift` | Horizontal artist picker with selection ring |
+
+> **Note:** The spec lists `BentoGridView` as a shared component. The plan inlines the bento grid layout directly in `HomeView` using `HStack`/`VStack` since it's only used once. No separate `BentoGridView` file is needed.
 
 ### Modified Files
 | File | Changes |
@@ -195,9 +198,22 @@ enum SchemaV8: VersionedSchema {
 }
 ```
 
-- [ ] **Step 2: Update Little_ArtistApp.swift model container**
+- [ ] **Step 2: Add SchemaMigrationPlan for V7 → V8**
 
-In `Little_ArtistApp.swift`, find the `ModelConfiguration` setup (around line 39-43) and replace `SchemaV7` with `SchemaV8`:
+Append to the same file:
+
+```swift
+enum AppSchemaMigrationPlan: SchemaMigrationPlan {
+    static var schemas: [any VersionedSchema.Type] = [SchemaV7.self, SchemaV8.self]
+    static var stages: [MigrationStage] = [
+        .lightweight(fromVersion: SchemaV7.self, toVersion: SchemaV8.self)
+    ]
+}
+```
+
+- [ ] **Step 3: Update Little_ArtistApp.swift model container**
+
+In `Little_ArtistApp.swift`, find the `ModelConfiguration` setup (around line 39-43) and replace `SchemaV7` with `SchemaV8`, adding the migration plan:
 
 Change:
 ```swift
@@ -208,10 +224,19 @@ To:
 let schema = Schema(versionedSchema: SchemaV8.self)
 ```
 
-- [ ] **Step 3: Build and run on simulator**
+And in the `ModelContainer` initializer, add the migration plan:
+```swift
+let container = try ModelContainer(
+    for: schema,
+    migrationPlan: AppSchemaMigrationPlan.self,
+    configurations: [config]
+)
+```
+
+- [ ] **Step 4: Build and run on simulator**
 
 Run: Build + run on iPhone simulator
-Expected: App launches without migration crash. Check console for any SwiftData errors.
+Expected: App launches without migration crash. Lightweight migration adds Comment and Achievement tables. Check console for any SwiftData errors.
 
 - [ ] **Step 4: Commit**
 
@@ -288,7 +313,7 @@ enum AchievementService {
             guard let earliest = dates.min(), let latest = dates.max() else { return false }
             return Calendar.current.dateComponents([.day], from: earliest, to: latest).day ?? 0 >= 365
         }()
-        let seasons: Set<Int> = Set(dates.map { Calendar.current.component(.month, from: $0) / 3 })
+        let seasons: Set<Int> = Set(dates.map { (Calendar.current.component(.month, from: $0) - 1) / 3 })
         let hasFourSeasons = seasons.count >= 4
 
         for achievement in achievements where !achievement.isEarned {
@@ -737,6 +762,7 @@ struct MilestoneCardView: View {
         case "voice": Brand.sky
         case "seasonal": Brand.sage
         case "medium": Brand.lavender
+        case "engagement": Brand.sky
         default: Brand.warmGray
         }
     }
@@ -816,15 +842,48 @@ struct MilestoneCarouselView: View {
 }
 ```
 
-- [ ] **Step 4: Build to verify**
+- [ ] **Step 4: Create StatPillView**
 
-- [ ] **Step 5: Commit**
+```swift
+import SwiftUI
+
+/// Rotated stat card showing a value and label, used in profile heroes.
+struct StatPillView: View {
+    let value: String
+    let label: String
+    var rotation: Double = 0
+
+    var body: some View {
+        VStack(spacing: 4) {
+            Text(value)
+                .font(Brand.title2Font)
+                .foregroundStyle(Brand.primary)
+            Text(label)
+                .font(Brand.caption2Font)
+                .foregroundStyle(Brand.warmGray)
+                .textCase(.uppercase)
+                .tracking(1)
+        }
+        .frame(maxWidth: .infinity)
+        .padding()
+        .background(Brand.surface)
+        .clipShape(RoundedRectangle(cornerRadius: Brand.radiusCard))
+        .brandCardShadow()
+        .rotationEffect(.degrees(rotation))
+    }
+}
+```
+
+- [ ] **Step 5: Build to verify**
+
+- [ ] **Step 6: Commit**
 
 ```
 git add "Little Artist/Components/Cards/ProgressBarView.swift" \
        "Little Artist/Components/Cards/MilestoneCardView.swift" \
-       "Little Artist/Components/Cards/MilestoneCarouselView.swift"
-git commit -m "feat: add ProgressBarView, MilestoneCardView, MilestoneCarouselView components"
+       "Little Artist/Components/Cards/MilestoneCarouselView.swift" \
+       "Little Artist/Components/Cards/StatPillView.swift"
+git commit -m "feat: add ProgressBarView, MilestoneCardView, MilestoneCarouselView, StatPillView"
 ```
 
 ---
@@ -1322,6 +1381,20 @@ To:
 ```
 And update `showCreateSheet` from `Child?` to `Bool`, updating `presentCreateFlow()` accordingly.
 
+**Important:** Preserve the existing `onDismiss:` closure that tracks `artworkCountBeforeSheet` and shows `PremiumUpsellView` after the first artwork. The sheet should be:
+```swift
+.sheet(isPresented: $showCreateSheet, onDismiss: {
+    // Preserve existing premium upsell logic:
+    if artworkCountBeforeSheet == 0 && allArtworks.count > artworkCountBeforeSheet
+        && !store.isPremium && !hasSeenFirstArtworkUpsell {
+        hasSeenFirstArtworkUpsell = true
+        showPremiumUpsell = true
+    }
+}) {
+    AddArtworkView()
+}
+```
+
 - [ ] **Step 5: Build and run**
 
 Expected: Add artwork sheet shows new form with artist selector, pill fields, medium picker, magic caption button. Save creates artwork with medium tag.
@@ -1439,8 +1512,8 @@ private func profileHero(child: Child) -> some View {
 
         // Stat cards
         HStack(spacing: 12) {
-            StatPill(value: "\(artworkCount)", label: "Masterpieces", rotation: -1)
-            StatPill(value: "Level \(artworkCount / 10 + 1)", label: "Art Explorer", rotation: 1)
+            StatPillView(value: "\(artworkCount)", label: "Masterpieces", rotation: -1)
+            StatPillView(value: "Level \(artworkCount / 10 + 1)", label: "Art Explorer", rotation: 1)
         }
     }
 }
@@ -1990,11 +2063,10 @@ private var generateButton: some View {
             isGenerating = true
             guard let child = selectedChild else { return }
             let artworks = filteredArtworks(for: child)
-            generatedPDFData = await Task.detached {
+            let childRef = child
+            generatedPDFData = await Task.detached(priority: .userInitiated) {
                 PDFExportService.generatePortfolio(
-                    childName: child.name,
-                    avatarImageData: child.avatarImageData,
-                    avatarColorHex: child.avatarColor,
+                    child: childRef,
                     artworks: artworks
                 )
             }.value
