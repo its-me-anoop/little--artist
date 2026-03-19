@@ -43,7 +43,7 @@ struct Little_ArtistApp: App {
         }
         #endif
 
-        let schema = Schema(versionedSchema: SchemaV7.self)
+        let schema = Schema(versionedSchema: SchemaV8.self)
 
         // SwiftData uses local-only storage. Firebase handles cloud sync
         // through FirestoreSyncService.
@@ -61,6 +61,7 @@ struct Little_ArtistApp: App {
         do {
             let container = try ModelContainer(
                 for: schema,
+                migrationPlan: AppSchemaMigrationPlan.self,
                 configurations: [modelConfiguration]
             )
 
