@@ -313,9 +313,9 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Little Artist/Info.plist";
-				INFOPLIST_KEY_NSCameraUsageDescription = "Little Artist uses the camera to photograph your child's artwork for their art collection.";
-				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Little Artist uses the microphone to record voice memos that your child can attach to their artwork.";
-				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Little Artist accesses your photo library so you can select artwork photos to add to your child's collection.";
+				INFOPLIST_KEY_NSCameraUsageDescription = "Artling uses the camera to photograph your child's artwork for their art collection.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Artling uses the microphone to record voice memos that your child can attach to their artwork.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Artling accesses your photo library so you can select artwork photos to add to your child's collection.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = "Launch Screen";
@@ -352,9 +352,9 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Little Artist/Info.plist";
-				INFOPLIST_KEY_NSCameraUsageDescription = "Little Artist uses the camera to photograph your child's artwork for their art collection.";
-				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Little Artist uses the microphone to record voice memos that your child can attach to their artwork.";
-				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Little Artist accesses your photo library so you can select artwork photos to add to your child's collection.";
+				INFOPLIST_KEY_NSCameraUsageDescription = "Artling uses the camera to photograph your child's artwork for their art collection.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Artling uses the microphone to record voice memos that your child can attach to their artwork.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Artling accesses your photo library so you can select artwork photos to add to your child's collection.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = "Launch Screen";
@@ -431,7 +431,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
@@ -489,7 +489,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
@@ -507,7 +507,7 @@
 				CURRENT_PROJECT_VERSION = 18;
 				DEVELOPMENT_TEAM = K6623R3GP5;
 				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "uk.co.flutterly.Little-ArtistTests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -529,7 +529,7 @@
 				CURRENT_PROJECT_VERSION = 18;
 				DEVELOPMENT_TEAM = K6623R3GP5;
 				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "uk.co.flutterly.Little-ArtistTests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
