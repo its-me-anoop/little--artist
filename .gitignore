@@ -1,0 +1,17 @@
+# Firebase configuration file — contains API keys and project credentials.
+# Never commit this file. Each developer/CI environment should obtain their own
+# copy from the Firebase console (Project Settings → Your apps → Download config).
+Little Artist/GoogleService-Info.plist
+
+# Xcode build artifacts
+.DS_Store
+build/
+*.xcuserstate
+*.xcscheme
+xcuserdata/
+DerivedData/
+.swiftpm/
+
+# CocoaPods (if ever added)
+Pods/
+Podfile.lock

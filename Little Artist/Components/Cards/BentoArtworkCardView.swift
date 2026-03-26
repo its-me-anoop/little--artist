@@ -99,6 +99,14 @@ struct BentoArtworkCardView: View {
         .clipShape(RoundedRectangle(cornerRadius: Brand.radiusCard, style: .continuous))
         .brandCardShadow()
         .rotationEffect(.degrees(rotation))
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel({
+            let title = artwork.title.trimmingCharacters(in: .whitespaces).isEmpty ? "Untitled" : artwork.title
+            let childPart = artwork.child.map { "by \($0.name)" } ?? ""
+            let datePart = artwork.createdAt.formatted(.dateTime.month(.abbreviated).day().year())
+            return [title, childPart, datePart].filter { !$0.isEmpty }.joined(separator: ", ")
+        }())
+        .accessibilityHint("Double tap to view details")
     }
 }
 

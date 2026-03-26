@@ -534,6 +534,13 @@ private struct GalleryScrollOffsetKey: PreferenceKey {
 private struct GalleryTile: View {
     let artwork: Artwork
 
+    private var accessibilityDescription: String {
+        let title = artwork.title.isEmpty ? "Untitled" : artwork.title
+        let childName = artwork.child?.name.map { "by \($0)" } ?? ""
+        let date = artwork.createdAt.formatted(.dateTime.month(.abbreviated).day().year())
+        return [title, childName, date].filter { !$0.isEmpty }.joined(separator: ", ")
+    }
+
     var body: some View {
         GeometryReader { geo in
             ZStack(alignment: .bottomTrailing) {
@@ -591,7 +598,7 @@ private struct GalleryTile: View {
                     .padding(4)
             }
         }
-        .accessibilityLabel("\(artwork.title.isEmpty ? "Untitled" : artwork.title) by \(artwork.child?.name ?? "unknown")")
+        .accessibilityLabel(accessibilityDescription)
         .accessibilityHint("Double tap to view details")
     }
 }

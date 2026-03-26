@@ -55,6 +55,9 @@ struct ChildSliderView: View {
                         selectedChild = nil
                     }
                 }
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel(selectedChild == nil ? "All children, selected" : "All children")
+                .accessibilityHint("Double tap to show artwork from all children")
 
                 ForEach(children) { child in
                     ChildAvatarView(

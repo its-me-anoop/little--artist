@@ -624,6 +624,26 @@ struct SettingsView: View {
                 Divider()
                     .padding(.leading, 70)
 
+                // Terms of Use
+                NavigationLink {
+                    TermsOfUseView()
+                } label: {
+                    settingsRow(
+                        icon: "doc.text.fill",
+                        iconColor: Brand.sky,
+                        title: "Terms of Use",
+                        trailing: {
+                            Image(systemName: "arrow.up.right.square")
+                                .font(.system(size: 14))
+                                .foregroundStyle(Brand.warmGray.opacity(0.5))
+                        }
+                    )
+                }
+                .buttonStyle(.plain)
+
+                Divider()
+                    .padding(.leading, 70)
+
                 // About
                 settingsRow(
                     icon: "info.circle.fill",

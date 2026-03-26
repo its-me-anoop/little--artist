@@ -9,6 +9,7 @@
 //
 
 import FirebaseCore
+import os
 import SwiftData
 import SwiftUI
 
@@ -94,7 +95,15 @@ struct Little_ArtistApp: App {
             do {
                 return try ModelContainer(for: schema, configurations: [modelConfiguration])
             } catch {
-                fatalError("Could not create ModelContainer: \(error)")
+                let logger = Logger(subsystem: "uk.co.flutterly.Little-Artist", category: "Migration")
+                logger.error("Could not create ModelContainer after store reset, using in-memory fallback: \(error)")
+                // An in-memory store keeps the app functional; data won't persist this session.
+                let inMemoryConfig = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
+                if let fallback = try? ModelContainer(for: schema, configurations: [inMemoryConfig]) {
+                    return fallback
+                }
+                logger.critical("Failed to create even an in-memory ModelContainer.")
+                preconditionFailure("Could not create any ModelContainer: \(error)")
             }
         }
     }()

@@ -50,6 +50,9 @@ struct ChildAvatarView: View {
                 .lineLimit(1)
                 .frame(width: 64)
         }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(isSelected ? "\(child.name), selected" : child.name)
+        .accessibilityHint(isSelected ? "Double tap to edit profile" : "Double tap to filter by this child")
     }
 }
 
