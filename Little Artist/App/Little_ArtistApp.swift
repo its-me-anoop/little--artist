@@ -70,8 +70,11 @@ struct Little_ArtistApp: App {
             FirestoreSyncService.shared.modelContainer = container
             FirestoreRepository.shared.modelContainer = container
 
-            // Seed default achievements on first launch
-            AchievementService.seedAchievements(context: ModelContext(container))
+            // Seed default achievements on first launch, then evaluate existing
+            // artworks so any already-qualifying achievements unlock immediately.
+            let startupContext = ModelContext(container)
+            AchievementService.seedAchievements(context: startupContext)
+            AchievementService.checkMilestones(context: startupContext)
 
             // Always-on Firebase sync (starts once auth user is available).
             // Upload first to assign firestoreIds + populate localWriteIds,
