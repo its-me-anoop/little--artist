@@ -11,7 +11,6 @@
 		6BBED5352F4A699700176D19 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 6BBED5342F4A699700176D19 /* FirebaseFirestore */; };
 		6BBED5372F4A699700176D19 /* FirebaseStorage in Frameworks */ = {isa = PBXBuildFile; productRef = 6BBED5362F4A699700176D19 /* FirebaseStorage */; };
 		6BBED5392F4A699700176D19 /* FirebaseAI in Frameworks */ = {isa = PBXBuildFile; productRef = 6BBED5382F4A699700176D19 /* FirebaseAI */; };
-		6BBED53B2F4A699700176D19 /* FirebaseAppCheck in Frameworks */ = {isa = PBXBuildFile; productRef = 6BBED53A2F4A699700176D19 /* FirebaseAppCheck */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -20,50 +19,50 @@
 			containerPortal = 6B5FADF92F3FD7E1006B1D0D /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = 6B5FAE002F3FD7E1006B1D0D;
-			remoteInfo = "Little Artist";
+			remoteInfo = "Artling";
 		};
 		6B5FAE1D2F3FD7E3006B1D0D /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 6B5FADF92F3FD7E1006B1D0D /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = 6B5FAE002F3FD7E1006B1D0D;
-			remoteInfo = "Little Artist";
+			remoteInfo = "Artling";
 		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		6B5FAE012F3FD7E1006B1D0D /* Little Artist.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Little Artist.app"; sourceTree = BUILT_PRODUCTS_DIR; };
-		6B5FAE122F3FD7E3006B1D0D /* Little ArtistTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Little ArtistTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
-		6B5FAE1C2F3FD7E3006B1D0D /* Little ArtistUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Little ArtistUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		6B5FAE012F3FD7E1006B1D0D /* Artling.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Artling.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		6B5FAE122F3FD7E3006B1D0D /* ArtlingTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "ArtlingTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		6B5FAE1C2F3FD7E3006B1D0D /* ArtlingUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "ArtlingUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		6B5FAE242F3FD7E3006B1D0D /* Exceptions for "Little Artist" folder in "Little Artist" target */ = {
+		6B5FAE242F3FD7E3006B1D0D /* Exceptions for "Artling" folder in "Artling" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
 			);
-			target = 6B5FAE002F3FD7E1006B1D0D /* Little Artist */;
+			target = 6B5FAE002F3FD7E1006B1D0D /* Artling */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		6B5FAE032F3FD7E1006B1D0D /* Little Artist */ = {
+		6B5FAE032F3FD7E1006B1D0D /* Artling */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
-				6B5FAE242F3FD7E3006B1D0D /* Exceptions for "Little Artist" folder in "Little Artist" target */,
+				6B5FAE242F3FD7E3006B1D0D /* Exceptions for "Artling" folder in "Artling" target */,
 			);
-			path = "Little Artist";
+			path = "Artling";
 			sourceTree = "<group>";
 		};
-		6B5FAE152F3FD7E3006B1D0D /* Little ArtistTests */ = {
+		6B5FAE152F3FD7E3006B1D0D /* ArtlingTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = "Little ArtistTests";
+			path = "ArtlingTests";
 			sourceTree = "<group>";
 		};
-		6B5FAE1F2F3FD7E3006B1D0D /* Little ArtistUITests */ = {
+		6B5FAE1F2F3FD7E3006B1D0D /* ArtlingUITests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = "Little ArtistUITests";
+			path = "ArtlingUITests";
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -77,7 +76,6 @@
 				6BBED5352F4A699700176D19 /* FirebaseFirestore in Frameworks */,
 				6BBED5372F4A699700176D19 /* FirebaseStorage in Frameworks */,
 				6BBED5392F4A699700176D19 /* FirebaseAI in Frameworks */,
-				6BBED53B2F4A699700176D19 /* FirebaseAppCheck in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -101,9 +99,9 @@
 		6B5FADF82F3FD7E1006B1D0D = {
 			isa = PBXGroup;
 			children = (
-				6B5FAE032F3FD7E1006B1D0D /* Little Artist */,
-				6B5FAE152F3FD7E3006B1D0D /* Little ArtistTests */,
-				6B5FAE1F2F3FD7E3006B1D0D /* Little ArtistUITests */,
+				6B5FAE032F3FD7E1006B1D0D /* Artling */,
+				6B5FAE152F3FD7E3006B1D0D /* ArtlingTests */,
+				6B5FAE1F2F3FD7E3006B1D0D /* ArtlingUITests */,
 				6B5FAE022F3FD7E1006B1D0D /* Products */,
 			);
 			sourceTree = "<group>";
@@ -111,9 +109,9 @@
 		6B5FAE022F3FD7E1006B1D0D /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				6B5FAE012F3FD7E1006B1D0D /* Little Artist.app */,
-				6B5FAE122F3FD7E3006B1D0D /* Little ArtistTests.xctest */,
-				6B5FAE1C2F3FD7E3006B1D0D /* Little ArtistUITests.xctest */,
+				6B5FAE012F3FD7E1006B1D0D /* Artling.app */,
+				6B5FAE122F3FD7E3006B1D0D /* ArtlingTests.xctest */,
+				6B5FAE1C2F3FD7E3006B1D0D /* ArtlingUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -121,9 +119,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		6B5FAE002F3FD7E1006B1D0D /* Little Artist */ = {
+		6B5FAE002F3FD7E1006B1D0D /* Artling */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 6B5FAE252F3FD7E3006B1D0D /* Build configuration list for PBXNativeTarget "Little Artist" */;
+			buildConfigurationList = 6B5FAE252F3FD7E3006B1D0D /* Build configuration list for PBXNativeTarget "Artling" */;
 			buildPhases = (
 				6B5FADFD2F3FD7E1006B1D0D /* Sources */,
 				6B5FADFE2F3FD7E1006B1D0D /* Frameworks */,
@@ -134,23 +132,22 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				6B5FAE032F3FD7E1006B1D0D /* Little Artist */,
+				6B5FAE032F3FD7E1006B1D0D /* Artling */,
 			);
-			name = "Little Artist";
+			name = "Artling";
 			packageProductDependencies = (
 				6BBED5322F4A699700176D19 /* FirebaseAuth */,
 				6BBED5342F4A699700176D19 /* FirebaseFirestore */,
 				6BBED5362F4A699700176D19 /* FirebaseStorage */,
 				6BBED5382F4A699700176D19 /* FirebaseAI */,
-				6BBED53A2F4A699700176D19 /* FirebaseAppCheck */,
 			);
-			productName = "Little Artist";
-			productReference = 6B5FAE012F3FD7E1006B1D0D /* Little Artist.app */;
+			productName = "Artling";
+			productReference = 6B5FAE012F3FD7E1006B1D0D /* Artling.app */;
 			productType = "com.apple.product-type.application";
 		};
-		6B5FAE112F3FD7E3006B1D0D /* Little ArtistTests */ = {
+		6B5FAE112F3FD7E3006B1D0D /* ArtlingTests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 6B5FAE2A2F3FD7E3006B1D0D /* Build configuration list for PBXNativeTarget "Little ArtistTests" */;
+			buildConfigurationList = 6B5FAE2A2F3FD7E3006B1D0D /* Build configuration list for PBXNativeTarget "ArtlingTests" */;
 			buildPhases = (
 				6B5FAE0E2F3FD7E3006B1D0D /* Sources */,
 				6B5FAE0F2F3FD7E3006B1D0D /* Frameworks */,
@@ -162,18 +159,18 @@
 				6B5FAE142F3FD7E3006B1D0D /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
-				6B5FAE152F3FD7E3006B1D0D /* Little ArtistTests */,
+				6B5FAE152F3FD7E3006B1D0D /* ArtlingTests */,
 			);
-			name = "Little ArtistTests";
+			name = "ArtlingTests";
 			packageProductDependencies = (
 			);
-			productName = "Little ArtistTests";
-			productReference = 6B5FAE122F3FD7E3006B1D0D /* Little ArtistTests.xctest */;
+			productName = "ArtlingTests";
+			productReference = 6B5FAE122F3FD7E3006B1D0D /* ArtlingTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
-		6B5FAE1B2F3FD7E3006B1D0D /* Little ArtistUITests */ = {
+		6B5FAE1B2F3FD7E3006B1D0D /* ArtlingUITests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 6B5FAE2D2F3FD7E3006B1D0D /* Build configuration list for PBXNativeTarget "Little ArtistUITests" */;
+			buildConfigurationList = 6B5FAE2D2F3FD7E3006B1D0D /* Build configuration list for PBXNativeTarget "ArtlingUITests" */;
 			buildPhases = (
 				6B5FAE182F3FD7E3006B1D0D /* Sources */,
 				6B5FAE192F3FD7E3006B1D0D /* Frameworks */,
@@ -185,13 +182,13 @@
 				6B5FAE1E2F3FD7E3006B1D0D /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
-				6B5FAE1F2F3FD7E3006B1D0D /* Little ArtistUITests */,
+				6B5FAE1F2F3FD7E3006B1D0D /* ArtlingUITests */,
 			);
-			name = "Little ArtistUITests";
+			name = "ArtlingUITests";
 			packageProductDependencies = (
 			);
-			productName = "Little ArtistUITests";
-			productReference = 6B5FAE1C2F3FD7E3006B1D0D /* Little ArtistUITests.xctest */;
+			productName = "ArtlingUITests";
+			productReference = 6B5FAE1C2F3FD7E3006B1D0D /* ArtlingUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
 /* End PBXNativeTarget section */
@@ -217,7 +214,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 6B5FADFC2F3FD7E1006B1D0D /* Build configuration list for PBXProject "Little Artist" */;
+			buildConfigurationList = 6B5FADFC2F3FD7E1006B1D0D /* Build configuration list for PBXProject "Artling" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -234,9 +231,9 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				6B5FAE002F3FD7E1006B1D0D /* Little Artist */,
-				6B5FAE112F3FD7E3006B1D0D /* Little ArtistTests */,
-				6B5FAE1B2F3FD7E3006B1D0D /* Little ArtistUITests */,
+				6B5FAE002F3FD7E1006B1D0D /* Artling */,
+				6B5FAE112F3FD7E3006B1D0D /* ArtlingTests */,
+				6B5FAE1B2F3FD7E3006B1D0D /* ArtlingUITests */,
 			);
 		};
 /* End PBXProject section */
@@ -292,12 +289,12 @@
 /* Begin PBXTargetDependency section */
 		6B5FAE142F3FD7E3006B1D0D /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 6B5FAE002F3FD7E1006B1D0D /* Little Artist */;
+			target = 6B5FAE002F3FD7E1006B1D0D /* Artling */;
 			targetProxy = 6B5FAE132F3FD7E3006B1D0D /* PBXContainerItemProxy */;
 		};
 		6B5FAE1E2F3FD7E3006B1D0D /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 6B5FAE002F3FD7E1006B1D0D /* Little Artist */;
+			target = 6B5FAE002F3FD7E1006B1D0D /* Artling */;
 			targetProxy = 6B5FAE1D2F3FD7E3006B1D0D /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
@@ -309,13 +306,13 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
-				CODE_SIGN_ENTITLEMENTS = "Little Artist/Little_Artist.entitlements";
+				CODE_SIGN_ENTITLEMENTS = "Artling/Artling.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 18;
 				DEVELOPMENT_TEAM = K6623R3GP5;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = "Little Artist/Info.plist";
+				INFOPLIST_FILE = "Artling/Info.plist";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Artling uses the camera to photograph your child's artwork for their art collection.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Artling uses the microphone to record voice memos that your child can attach to their artwork.";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Artling accesses your photo library so you can select artwork photos to add to your child's collection.";
@@ -330,7 +327,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "uk.co.flutterly.Little-Artist";
+				PRODUCT_BUNDLE_IDENTIFIER = "uk.co.flutterly.Artling";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -348,13 +345,13 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
-				CODE_SIGN_ENTITLEMENTS = "Little Artist/Little_Artist.entitlements";
+				CODE_SIGN_ENTITLEMENTS = "Artling/Artling.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 18;
 				DEVELOPMENT_TEAM = K6623R3GP5;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = "Little Artist/Info.plist";
+				INFOPLIST_FILE = "Artling/Info.plist";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Artling uses the camera to photograph your child's artwork for their art collection.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Artling uses the microphone to record voice memos that your child can attach to their artwork.";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Artling accesses your photo library so you can select artwork photos to add to your child's collection.";
@@ -369,7 +366,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "uk.co.flutterly.Little-Artist";
+				PRODUCT_BUNDLE_IDENTIFIER = "uk.co.flutterly.Artling";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -434,7 +431,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
@@ -492,7 +489,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
@@ -510,9 +507,9 @@
 				CURRENT_PROJECT_VERSION = 18;
 				DEVELOPMENT_TEAM = K6623R3GP5;
 				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "uk.co.flutterly.Little-ArtistTests";
+				PRODUCT_BUNDLE_IDENTIFIER = "uk.co.flutterly.ArtlingTests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -520,7 +517,7 @@
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Little Artist.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Little Artist";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Artling.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Artling";
 			};
 			name = Debug;
 		};
@@ -532,9 +529,9 @@
 				CURRENT_PROJECT_VERSION = 18;
 				DEVELOPMENT_TEAM = K6623R3GP5;
 				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "uk.co.flutterly.Little-ArtistTests";
+				PRODUCT_BUNDLE_IDENTIFIER = "uk.co.flutterly.ArtlingTests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -542,7 +539,7 @@
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Little Artist.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Little Artist";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Artling.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Artling";
 			};
 			name = Release;
 		};
@@ -554,7 +551,7 @@
 				DEVELOPMENT_TEAM = K6623R3GP5;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "uk.co.flutterly.Little-ArtistUITests";
+				PRODUCT_BUNDLE_IDENTIFIER = "uk.co.flutterly.ArtlingUITests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -562,7 +559,7 @@
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_TARGET_NAME = "Little Artist";
+				TEST_TARGET_NAME = "Artling";
 			};
 			name = Debug;
 		};
@@ -574,7 +571,7 @@
 				DEVELOPMENT_TEAM = K6623R3GP5;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "uk.co.flutterly.Little-ArtistUITests";
+				PRODUCT_BUNDLE_IDENTIFIER = "uk.co.flutterly.ArtlingUITests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -582,14 +579,14 @@
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_TARGET_NAME = "Little Artist";
+				TEST_TARGET_NAME = "Artling";
 			};
 			name = Release;
 		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		6B5FADFC2F3FD7E1006B1D0D /* Build configuration list for PBXProject "Little Artist" */ = {
+		6B5FADFC2F3FD7E1006B1D0D /* Build configuration list for PBXProject "Artling" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				6B5FAE282F3FD7E3006B1D0D /* Debug */,
@@ -598,7 +595,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		6B5FAE252F3FD7E3006B1D0D /* Build configuration list for PBXNativeTarget "Little Artist" */ = {
+		6B5FAE252F3FD7E3006B1D0D /* Build configuration list for PBXNativeTarget "Artling" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				6B5FAE262F3FD7E3006B1D0D /* Debug */,
@@ -607,7 +604,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		6B5FAE2A2F3FD7E3006B1D0D /* Build configuration list for PBXNativeTarget "Little ArtistTests" */ = {
+		6B5FAE2A2F3FD7E3006B1D0D /* Build configuration list for PBXNativeTarget "ArtlingTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				6B5FAE2B2F3FD7E3006B1D0D /* Debug */,
@@ -616,7 +613,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		6B5FAE2D2F3FD7E3006B1D0D /* Build configuration list for PBXNativeTarget "Little ArtistUITests" */ = {
+		6B5FAE2D2F3FD7E3006B1D0D /* Build configuration list for PBXNativeTarget "ArtlingUITests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				6B5FAE2E2F3FD7E3006B1D0D /* Debug */,
@@ -658,11 +655,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 6BBED5312F4A699700176D19 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
 			productName = FirebaseAI;
-		};
-		6BBED53A2F4A699700176D19 /* FirebaseAppCheck */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 6BBED5312F4A699700176D19 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
-			productName = FirebaseAppCheck;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

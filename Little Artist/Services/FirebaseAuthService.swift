@@ -47,6 +47,12 @@ final class FirebaseAuthService: NSObject {
     /// Convenience accessor for the Firebase UID.
     var userId: String? { currentUser?.uid }
 
+    /// `true` when the current user has upgraded beyond anonymous auth.
+    var hasPersistentAccount: Bool {
+        guard let currentUser else { return false }
+        return !currentUser.isAnonymous
+    }
+
     // MARK: - Private
 
     private let logger = Logger(subsystem: "uk.co.flutterly.Little-Artist", category: "Auth")
@@ -137,7 +143,47 @@ final class FirebaseAuthService: NSObject {
         currentNonce = nonce
 
         let authorization = try await requestAppleAuthorization(nonce: nonce)
+        return try await signInWithAppleAuthorization(authorization, nonce: nonce)
+    }
 
+    /// Configures a Sign in with Apple request for use with `SignInWithAppleButton`.
+    func configureSignInWithAppleRequest(_ request: ASAuthorizationAppleIDRequest) {
+        let nonce = randomNonceString()
+        currentNonce = nonce
+        request.requestedScopes = [.fullName, .email]
+        request.nonce = sha256(nonce)
+    }
+
+    /// Handles the result from `SignInWithAppleButton` and signs the user into Firebase.
+    @discardableResult
+    func handleSignInWithAppleResult(_ result: Result<ASAuthorization, Error>) async throws -> Bool {
+        await anonymousSignInTask?.value
+
+        let authorization = try result.get()
+        guard let nonce = currentNonce else {
+            throw AuthError.missingNonce
+        }
+
+        return try await signInWithAppleAuthorization(authorization, nonce: nonce)
+    }
+
+    /// Re-prompts the user for Apple authorization, then revokes the Apple token.
+    func revokeAppleTokenForCurrentUser() async throws {
+        let nonce = randomNonceString()
+        currentNonce = nonce
+
+        let authorization = try await requestAppleAuthorization(nonce: nonce)
+        guard let appleCredential = authorization.credential as? ASAuthorizationAppleIDCredential,
+              let authorizationCode = appleCredential.authorizationCode,
+              let codeString = String(data: authorizationCode, encoding: .utf8) else {
+            throw AuthError.missingAuthorizationCode
+        }
+
+        try await Auth.auth().revokeToken(withAuthorizationCode: codeString)
+    }
+
+    @discardableResult
+    private func signInWithAppleAuthorization(_ authorization: ASAuthorization, nonce: String) async throws -> Bool {
         guard let appleCredential = authorization.credential as? ASAuthorizationAppleIDCredential,
               let identityToken = appleCredential.identityToken,
               let tokenString = String(data: identityToken, encoding: .utf8) else {
@@ -240,11 +286,15 @@ final class FirebaseAuthService: NSObject {
 
     enum AuthError: LocalizedError {
         case missingToken
+        case missingNonce
+        case missingAuthorizationCode
         case noCurrentUser
 
         var errorDescription: String? {
             switch self {
             case .missingToken: "Apple sign-in did not return an identity token."
+            case .missingNonce: "The Apple sign-in request is missing its security nonce."
+            case .missingAuthorizationCode: "Apple sign-in did not return an authorization code."
             case .noCurrentUser: "No authenticated user."
             }
         }

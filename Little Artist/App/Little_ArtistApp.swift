@@ -8,6 +8,7 @@
 //  Created by Anoop Jose on 13/02/2026.
 //
 
+import FirebaseAppCheck
 import FirebaseCore
 import os
 import SwiftData
@@ -54,6 +55,14 @@ struct Little_ArtistApp: App {
             url: storeURL,
             cloudKitDatabase: .none
         )
+
+        // Enable App Check to protect Firebase backends from abuse.
+        // Requires enabling App Attest in the Firebase Console.
+        #if DEBUG
+        AppCheck.setAppCheckProviderFactory(AppCheckDebugProviderFactory())
+        #else
+        AppCheck.setAppCheckProviderFactory(AppAttestProviderFactory())
+        #endif
 
         // Configure Firebase before creating the container
         FirebaseApp.configure()

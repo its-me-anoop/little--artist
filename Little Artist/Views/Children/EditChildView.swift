@@ -20,8 +20,6 @@ import ImagePlayground
 struct EditChildView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
-    @Environment(\.supportsImagePlayground) private var supportsImagePlayground
-
     let child: Child
     var onDelete: (() -> Void)? = nil
 
@@ -224,7 +222,7 @@ struct EditChildView: View {
                 }
                 .ignoresSafeArea()
             }
-            .imagePlaygroundSheet(isPresented: $showImagePlayground) { url in
+            .imagePlaygroundSheetCompat(isPresented: $showImagePlayground) { url in
                 if let data = try? Data(contentsOf: url) {
                     avatarImageData = data
                 }
@@ -346,15 +344,15 @@ struct EditChildView: View {
             }
             .buttonStyle(.plain)
 
-            // Image Playground
-            Button {
-                showImagePlayground = true
-            } label: {
-                photoSourceLabel(icon: "apple.image.playground", title: "Create")
+            // Image Playground (iOS 18.1+)
+            if isImagePlaygroundAvailable {
+                Button {
+                    showImagePlayground = true
+                } label: {
+                    photoSourceLabel(icon: "apple.image.playground", title: "Create")
+                }
+                .buttonStyle(.plain)
             }
-            .buttonStyle(.plain)
-            .disabled(!supportsImagePlayground)
-            .opacity(supportsImagePlayground ? 1 : 0.4)
         }
     }
 

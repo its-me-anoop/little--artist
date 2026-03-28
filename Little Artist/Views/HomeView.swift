@@ -356,7 +356,7 @@ struct HomeView: View {
                 ArtworkDetailView(artwork: artwork)
             }
             .toolbar {
-                if let navigationSubtitleText {
+                if #available(iOS 26.0, *), let navigationSubtitleText {
                     ToolbarItem(placement: .subtitle) {
                         Text(navigationSubtitleText)
                             .lineLimit(1)

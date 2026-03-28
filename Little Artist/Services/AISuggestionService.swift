@@ -100,6 +100,11 @@ enum AISuggestionService {
         }
     }
 
+    /// Compatibility wrapper for older call sites that only want on-device validation.
+    static func validateArtworkOnDevice(imageData: Data) -> ArtworkValidationResult {
+        validateOnDevice(imageData: imageData)
+    }
+
     /// Validates an image using Gemini multimodal analysis.
     private static func validateWithGemini(imageData: Data) async throws -> ArtworkValidationResult {
         guard let image = UIImage(data: imageData) else {

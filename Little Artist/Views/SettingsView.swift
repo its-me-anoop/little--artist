@@ -624,26 +624,6 @@ struct SettingsView: View {
                 Divider()
                     .padding(.leading, 70)
 
-                // Terms of Use
-                NavigationLink {
-                    TermsOfUseView()
-                } label: {
-                    settingsRow(
-                        icon: "doc.text.fill",
-                        iconColor: Brand.sky,
-                        title: "Terms of Use",
-                        trailing: {
-                            Image(systemName: "arrow.up.right.square")
-                                .font(.system(size: 14))
-                                .foregroundStyle(Brand.warmGray.opacity(0.5))
-                        }
-                    )
-                }
-                .buttonStyle(.plain)
-
-                Divider()
-                    .padding(.leading, 70)
-
                 // About
                 settingsRow(
                     icon: "info.circle.fill",
@@ -1176,7 +1156,7 @@ struct SettingsView: View {
         let name = child.name
 
         Task {
-            let pdfData = PDFExportService.generatePortfolio(child: child, artworks: childArtworks)
+            let pdfData = PDFExportService.generatePortfolio(childName: name, artworks: childArtworks)
             let tempURL = FileManager.default.temporaryDirectory
                 .appendingPathComponent("\(name)_Portfolio.pdf")
             try? pdfData.write(to: tempURL)

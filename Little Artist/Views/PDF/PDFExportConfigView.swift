@@ -388,9 +388,9 @@ struct PDFExportConfigView: View {
                 return
             }
             let artworks = filteredArtworks(for: child)
-            let childRef = child
+            let childName = child.name
             generatedPDFData = await Task.detached(priority: .userInitiated) {
-                PDFExportService.generatePortfolio(child: childRef, artworks: artworks)
+                await PDFExportService.generatePortfolio(childName: childName, artworks: artworks)
             }.value
             isGenerating = false
             showPreview = true
