@@ -87,6 +87,24 @@ final class FirestoreRepository {
         await syncUserPreferencesToFirestore()
     }
 
+    /// One-shot Firestore query to check whether the authenticated user
+    /// has any child profiles in the cloud. Used after sign-in to decide
+    /// whether to show the Add Child screen or skip straight to the home screen.
+    func hasCloudChildren() async -> Bool {
+        guard let userId = auth.userId else { return false }
+
+        do {
+            let snapshot = try await db.collection("users").document(userId)
+                .collection("children")
+                .limit(to: 1)
+                .getDocuments()
+            return !snapshot.documents.isEmpty
+        } catch {
+            logger.error("hasCloudChildren check failed: \(error.localizedDescription, privacy: .public)")
+            return false
+        }
+    }
+
     // MARK: - Preferences
 
     /// Pushes local app preferences to Firestore so they stay in sync across devices.
