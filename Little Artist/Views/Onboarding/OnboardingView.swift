@@ -31,6 +31,7 @@ struct OnboardingView: View {
     @State private var showSignInScreen = false
     @State private var isSigningIn = false
     @State private var signInError: String?
+    @State private var isCheckingCloud = false
 
     private let selectionFeedback = UISelectionFeedbackGenerator()
     private let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
@@ -215,6 +216,9 @@ struct OnboardingView: View {
         .fullScreenCover(isPresented: signInFlowPresented) {
             onboardingSignInScreen
         }
+        .fullScreenCover(isPresented: $isCheckingCloud) {
+            cloudCheckLoadingScreen
+        }
         .alert("Sign In Failed", isPresented: Binding(
             get: { signInError != nil },
             set: { if !$0 { signInError = nil } }
@@ -364,6 +368,29 @@ struct OnboardingView: View {
         }
     }
 
+    private var cloudCheckLoadingScreen: some View {
+        ZStack {
+            SplashVideoView(isFinished: .constant(false))
+                .ignoresSafeArea()
+
+            VStack {
+                Spacer()
+
+                VStack(spacing: 16) {
+                    ProgressView()
+                        .tint(Brand.primary)
+                        .scaleEffect(1.2)
+
+                    Text("Checking for your artwork...")
+                        .font(Brand.headlineFont)
+                        .foregroundStyle(Brand.charcoal)
+                }
+                .padding(.bottom, 80)
+            }
+        }
+        .interactiveDismissDisabled()
+    }
+
     private var onboardingSignInScreen: some View {
         NavigationStack {
             VStack(spacing: 24) {
@@ -460,7 +487,35 @@ struct OnboardingView: View {
         do {
             try await FirebaseAuthService.shared.handleSignInWithAppleResult(result)
             firebaseSyncEnabled = true
-            completeOnboarding()
+            // Don't call completeOnboarding() yet — show loading and check cloud first.
+            showSignInScreen = false
+            isCheckingCloud = true
+
+            // Race the Firestore check against a timeout.
+            let hasChildren = await withTaskGroup(of: Bool.self) { group in
+                group.addTask {
+                    await FirestoreRepository.shared.hasCloudChildren()
+                }
+                group.addTask {
+                    try? await Task.sleep(for: .seconds(8))
+                    return false
+                }
+                // First result wins.
+                let first = await group.next() ?? false
+                group.cancelAll()
+                return first
+            }
+
+            isCheckingCloud = false
+
+            if hasChildren {
+                // Children exist in the cloud — activate sync and go straight to home.
+                hasCompletedOnboarding = true
+                Task { await FirestoreRepository.shared.activateCloudSyncIfNeeded() }
+            } else {
+                // No cloud children — show the Add Child screen.
+                showAddChild = true
+            }
         } catch let error as ASAuthorizationError where error.code == .canceled {
             // User canceled the Apple sheet; stay on this screen.
         } catch {
