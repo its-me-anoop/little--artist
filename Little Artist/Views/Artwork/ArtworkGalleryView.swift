@@ -22,7 +22,16 @@ struct ArtworkGalleryView: View {
     var onSelect: ((Artwork) -> Void)? = nil
     /// The currently selected artwork's ID, used to highlight the tile in master-detail mode.
     var selectedArtworkID: PersistentIdentifier? = nil
+    /// Optional content rendered above everything else (e.g. a large "Artling" brand header).
+    var headerContent: AnyView? = nil
+    /// Optional content rendered between the header and the grid (e.g. the "On This Day" carousel).
     var topContent: AnyView? = nil
+    /// When `true`, the gallery controls bar is pinned to the top from the outset.
+    var pinsControlsToTop: Bool = false
+    /// When `true`, the gallery controls render as a single compact toolbar-style row
+    /// regardless of scroll position. Callers that manage the toolbar themselves (e.g.
+    /// the iPhone Home tab) set this so the pinned state matches the surrounding chrome.
+    var usesToolbarControls: Bool = false
 
     @Environment(\.horizontalSizeClass) private var sizeClass
 
@@ -30,6 +39,7 @@ struct ArtworkGalleryView: View {
     @State private var sortNewestFirst = true
     @State private var showFavoritesOnly = false
     @State private var controlsArePinned = false
+    @State private var cachedGroupedSections: [YearGroup] = []
 
     private let spacing: CGFloat = 3
     private let tileRadius: CGFloat = 4
@@ -54,8 +64,30 @@ struct ArtworkGalleryView: View {
         return result.sorted { sortNewestFirst ? $0.createdAt > $1.createdAt : $0.createdAt < $1.createdAt }
     }
 
-    /// Artworks grouped by year → month → date.
-    private var groupedSections: [YearGroup] {
+    /// Input key that determines when the cached `groupedSections` needs to be
+    /// rebuilt. Covers add/remove (count), favourite edits, createdAt edits,
+    /// and toggles of the sort/favourites filters. Computing this hash is O(n)
+    /// but avoids the much more expensive O(n log n) grouping + sort when the
+    /// body re-runs for unrelated reasons.
+    private var groupingInputKey: GroupingInputKey {
+        var fingerprint: Int = 0
+        for artwork in artworks {
+            fingerprint = fingerprint &+ artwork.persistentModelID.hashValue
+            fingerprint = fingerprint &+ artwork.createdAt.hashValue
+            fingerprint = fingerprint &+ (artwork.isFavorited ? 1 : 0)
+        }
+        return GroupingInputKey(
+            artworkCount: artworks.count,
+            showFavoritesOnly: showFavoritesOnly,
+            sortNewestFirst: sortNewestFirst,
+            fingerprint: fingerprint
+        )
+    }
+
+    /// Builds the year → month → day grouping from `displayedArtworks`.
+    /// Called from `.task(id:)` so the O(n log n) work only runs when the
+    /// input key changes, not on every body re-evaluation.
+    private func buildGroupedSections() -> [YearGroup] {
         let calendar = Calendar.current
         let dayBuckets = Dictionary(grouping: displayedArtworks) { artwork in
             ArtworkDate.dayKey(for: artwork.createdAt, calendar: calendar)
@@ -350,7 +382,7 @@ struct ArtworkGalleryView: View {
 
     private func galleryContent(width: CGFloat, bottomInset: CGFloat) -> some View {
         LazyVStack(alignment: .leading, spacing: 22) {
-            ForEach(groupedSections) { yearGroup in
+            ForEach(cachedGroupedSections) { yearGroup in
                 VStack(alignment: .leading, spacing: 16) {
                     Text(String(yearGroup.year))
                         .font(Brand.title1Font)
@@ -442,6 +474,10 @@ struct ArtworkGalleryView: View {
         ScrollView {
             scrollTopTracker
 
+            if let headerContent {
+                headerContent
+            }
+
             if let topContent {
                 topContent
                     .padding(.top, 8)
@@ -459,7 +495,15 @@ struct ArtworkGalleryView: View {
             galleryControls(width: width)
         }
         .onPreferenceChange(GalleryScrollOffsetKey.self) { offset in
-            let shouldPin = offset < -12
+            // When the caller manages chrome themselves or explicitly pins the
+            // controls, we keep the pinned treatment locked on regardless of
+            // scroll position.
+            let shouldPin: Bool
+            if pinsControlsToTop || usesToolbarControls {
+                shouldPin = true
+            } else {
+                shouldPin = offset < -12
+            }
             guard shouldPin != controlsArePinned else { return }
             withAnimation(.easeInOut(duration: 0.18)) {
                 controlsArePinned = shouldPin
@@ -488,7 +532,29 @@ struct ArtworkGalleryView: View {
                         }
                 )
         }
+        .onAppear {
+            if pinsControlsToTop || usesToolbarControls {
+                controlsArePinned = true
+            }
+            if cachedGroupedSections.isEmpty {
+                cachedGroupedSections = buildGroupedSections()
+            }
+        }
+        .task(id: groupingInputKey) {
+            cachedGroupedSections = buildGroupedSections()
+        }
     }
+}
+
+// MARK: - Grouping Cache Key
+
+/// Input key that invalidates the cached `groupedSections` whenever the
+/// relevant gallery inputs change.
+private struct GroupingInputKey: Hashable {
+    let artworkCount: Int
+    let showFavoritesOnly: Bool
+    let sortNewestFirst: Bool
+    let fingerprint: Int
 }
 
 // MARK: - Grouping Models

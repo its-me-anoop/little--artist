@@ -14,6 +14,11 @@ import SwiftUI
 struct SettingsView: View {
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \Child.createdAt) private var children: [Child]
+    // The `@Query` here only tracks COUNT for the storage calculation — we
+    // never loop over the array directly since accessing `imageData` would
+    // fault the externally-stored blob for every artwork on every body eval.
+    // The actual byte count is computed lazily off the main thread and cached
+    // in `storageUsedString` below.
     @Query private var artworks: [Artwork]
 
     private var store: StoreKitManager { StoreKitManager.shared }
@@ -48,11 +53,42 @@ struct SettingsView: View {
     @State private var showDeleteAccountConfirmation = false
     @State private var accountError: String?
 
-    private var storageUsed: String {
-        let bytes = artworks.compactMap(\.imageData).reduce(0) { $0 + $1.count }
-        let formatter = ByteCountFormatter()
-        formatter.countStyle = .file
-        return formatter.string(fromByteCount: Int64(bytes))
+    @State private var storageUsedString: String = "Calculating…"
+    @State private var storageCalcTask: Task<Void, Never>?
+
+    /// Recomputes the total bytes used by artwork image + voice note blobs in
+    /// the background. Each `imageData` access faults the externally-stored
+    /// blob, so this must never run on the main thread from a body eval.
+    @MainActor
+    private func recomputeStorageUsed() {
+        storageCalcTask?.cancel()
+
+        // Snapshot the current artwork IDs on the main actor, then hand off
+        // to a background task that opens its own ModelContext to read the
+        // blob sizes without racing with the main-actor model context.
+        let modelIDs = artworks.map(\.persistentModelID)
+        let container = modelContext.container
+
+        storageCalcTask = Task.detached(priority: .utility) {
+            let context = ModelContext(container)
+            var totalBytes: Int = 0
+
+            for id in modelIDs {
+                if Task.isCancelled { return }
+                guard let artwork = context.model(for: id) as? Artwork else { continue }
+                if let data = artwork.imageData { totalBytes += data.count }
+                if let data = artwork.thumbnailData { totalBytes += data.count }
+                if let data = artwork.voiceNoteData { totalBytes += data.count }
+            }
+
+            let formatter = ByteCountFormatter()
+            formatter.countStyle = .file
+            let formatted = formatter.string(fromByteCount: Int64(totalBytes))
+
+            await MainActor.run {
+                storageUsedString = formatted
+            }
+        }
     }
 
     private var appVersion: String {
@@ -161,6 +197,13 @@ struct SettingsView: View {
                 if isCloudSyncEnabled {
                     Task { await FirestoreRepository.shared.activateCloudSyncIfNeeded() }
                 }
+                recomputeStorageUsed()
+            }
+            .onDisappear {
+                storageCalcTask?.cancel()
+            }
+            .onChange(of: artworks.count) { _, _ in
+                recomputeStorageUsed()
             }
             .sheet(isPresented: $showAddChild) {
                 AddChildView()
@@ -575,7 +618,7 @@ struct SettingsView: View {
             HStack {
                 Label("Storage", systemImage: "externaldrive.fill")
                 Spacer()
-                Text(storageUsed)
+                Text(storageUsedString)
                     .foregroundStyle(.secondary)
             }
 

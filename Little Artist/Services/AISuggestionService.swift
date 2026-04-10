@@ -100,6 +100,14 @@ enum AISuggestionService {
         }
     }
 
+    /// Validates an image purely on-device using Vision heuristics.
+    ///
+    /// Used during artwork capture so newly taken photos are never sent to a
+    /// cloud model just to check whether they look like artwork.
+    static func validateArtworkOnDevice(imageData: Data) -> ArtworkValidationResult {
+        validateOnDevice(imageData: imageData)
+    }
+
     /// Validates an image using Gemini multimodal analysis.
     private static func validateWithGemini(imageData: Data) async throws -> ArtworkValidationResult {
         guard let image = UIImage(data: imageData) else {

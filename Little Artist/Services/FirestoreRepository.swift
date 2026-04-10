@@ -259,6 +259,7 @@ final class FirestoreRepository {
         imageData: Data? = nil,
         voiceNoteData: Data? = nil,
         isFavorited: Bool? = nil,
+        createdAt: Date? = nil,
         tags: [Tag]? = nil,
         in modelContext: ModelContext
     ) {
@@ -270,6 +271,7 @@ final class FirestoreRepository {
         if let imageData { artwork.imageData = imageData }
         if let effectiveVoiceNoteData { artwork.voiceNoteData = effectiveVoiceNoteData }
         if let isFavorited { artwork.isFavorited = isFavorited }
+        if let createdAt { artwork.createdAt = createdAt }
         if let tags { artwork.tags = tags }
         try? modelContext.save()
 
@@ -321,6 +323,31 @@ final class FirestoreRepository {
                 }
             }
         }
+    }
+
+    // MARK: - Cloud Sync Activation
+
+    /// Starts the Firestore listener and performs an initial upload+preferences
+    /// sync if the user is authenticated. Safe to call repeatedly — it no-ops
+    /// if there is no authenticated user or if the sync listener is already
+    /// running.
+    ///
+    /// Called at app launch (after auth resolves), on sign-in completion, and
+    /// whenever the user toggles "Enable Cloud Sync" in Settings.
+    func activateCloudSyncIfNeeded() async {
+        guard auth.userId != nil else { return }
+
+        let syncService = FirestoreSyncService.shared
+        if !syncService.isListening {
+            syncService.start()
+        }
+
+        if let container = modelContainer {
+            let uploadContext = ModelContext(container)
+            await uploadAllLocalData(from: uploadContext)
+        }
+
+        await syncUserPreferencesToFirestore()
     }
 
     // MARK: - Initial Upload (Premium Upgrade)
@@ -820,6 +847,7 @@ final class FirestoreRepository {
             "title": artwork.title,
             "caption": artwork.caption,
             "isFavorited": artwork.isFavorited,
+            "createdAt": Timestamp(date: artwork.createdAt),
             "updatedAt": FieldValue.serverTimestamp(),
             "tags": tagNames
         ]
