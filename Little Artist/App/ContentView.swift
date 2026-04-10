@@ -129,6 +129,9 @@ struct ContentView: View {
                 showPremiumUpsell = true
             }
         }) {
+            // Honor the current child filter — attribute the new artwork to
+            // the selected child when one is active, otherwise fall back to
+            // the first child in creation order.
             if let child = selectedChild ?? children.first {
                 AddArtworkView(child: child)
                     .adaptiveSheetSizing(sizeClass: sizeClass)

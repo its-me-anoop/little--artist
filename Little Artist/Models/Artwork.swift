@@ -51,10 +51,6 @@ final class Artwork {
     @Relationship(deleteRule: .cascade, inverse: \Comment.artwork)
     var comments: [Comment]?
 
-    /// Legacy sync identifier (deprecated — use `firestoreId` instead).
-    /// - Note: Deprecated in V7; replaced by ``firestoreId``. Kept for migration.
-    var syncIdentifier: String?
-
     /// Firestore document path (e.g. `"users/{uid}/children/{cid}/artworks/{id}"`).
     /// `nil` for artworks that have not yet been synced to Firebase.
     var firestoreId: String?
@@ -77,7 +73,6 @@ final class Artwork {
         createdAt: Date = .now,
         child: Child? = nil,
         tags: [Tag]? = nil,
-        syncIdentifier: String? = nil,
         firestoreId: String? = nil,
         imageURL: String? = nil,
         voiceNoteURL: String? = nil
@@ -91,30 +86,8 @@ final class Artwork {
         self.createdAt = createdAt
         self.child = child
         self.tags = tags
-        self.syncIdentifier = syncIdentifier
         self.firestoreId = firestoreId
         self.imageURL = imageURL
         self.voiceNoteURL = voiceNoteURL
-    }
-}
-
-enum ArtworkDate {
-    /// Anchor day-only artwork dates to midday so timezone changes don't shift them across days.
-    static func dayAnchored(
-        _ date: Date,
-        calendar: Calendar = .current,
-        offsetSeconds: TimeInterval = 0
-    ) -> Date {
-        var components = calendar.dateComponents([.year, .month, .day], from: date)
-        components.hour = 12
-        components.minute = 0
-        components.second = 0
-
-        let baseDate = calendar.date(from: components) ?? date
-        return baseDate.addingTimeInterval(offsetSeconds)
-    }
-
-    static func dayKey(for date: Date, calendar: Calendar = .current) -> Date {
-        calendar.startOfDay(for: dayAnchored(date, calendar: calendar))
     }
 }

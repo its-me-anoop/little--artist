@@ -100,7 +100,10 @@ enum AISuggestionService {
         }
     }
 
-    /// Compatibility wrapper for older call sites that only want on-device validation.
+    /// Validates an image purely on-device using Vision heuristics.
+    ///
+    /// Used during artwork capture so newly taken photos are never sent to a
+    /// cloud model just to check whether they look like artwork.
     static func validateArtworkOnDevice(imageData: Data) -> ArtworkValidationResult {
         validateOnDevice(imageData: imageData)
     }
