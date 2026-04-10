@@ -17,7 +17,10 @@ import SwiftData
 /// capturing new artwork.
 struct HomeView: View {
     @Query(sort: \Child.createdAt) private var children: [Child]
-    @Query private var allArtworks: [Artwork]
+    // Push sort ordering into SwiftData so we don't re-sort on every body
+    // evaluation. Filtering by `selectedChildID` is still applied in memory
+    // since predicate captures can't reference dynamic binding values.
+    @Query(sort: \Artwork.createdAt, order: .reverse) private var allArtworks: [Artwork]
 
     @Environment(\.horizontalSizeClass) private var sizeClass
 
@@ -27,41 +30,53 @@ struct HomeView: View {
     @Binding var selectedChildID: PersistentIdentifier?
     @State private var selectedArtwork: Artwork?
     @State private var showAddChild = false
-    @State private var editingChild: Child?
     @State private var paywallReason: PaywallView.LimitReason?
+
+    /// Cached "On This Day" memories. Rebuilt via `.task(id:)` whenever the
+    /// underlying artwork set changes, rather than on every body eval.
+    @State private var memoriesArtworks: [MemoryEntry] = []
 
     private var selectedChild: Child? {
         guard let selectedChildID else { return nil }
         return children.first { $0.persistentModelID == selectedChildID }
     }
 
-    /// Artworks created on this day in previous years.
-    private var memoriesArtworks: [(artwork: Artwork, yearsAgo: Int)] {
+    /// Invalidation key for the memories cache. A cheap O(n) fingerprint that
+    /// only requires re-computing memories when artworks are added/removed or
+    /// when their creation dates are edited.
+    private var memoriesInputKey: Int {
+        var fingerprint = allArtworks.count
+        for artwork in allArtworks {
+            fingerprint = fingerprint &+ artwork.createdAt.hashValue
+        }
+        return fingerprint
+    }
+
+    /// Scans `allArtworks` for "On This Day" matches. O(n) in the number of
+    /// artworks; called from `.task(id:)` not on every body eval.
+    private func rebuildMemoriesArtworks() -> [MemoryEntry] {
         let calendar = Calendar.current
         let today = calendar.dateComponents([.month, .day], from: Date.now)
         guard let todayMonth = today.month, let todayDay = today.day else { return [] }
+        let currentYear = calendar.component(.year, from: Date.now)
 
-        var results: [(artwork: Artwork, yearsAgo: Int)] = []
+        var results: [MemoryEntry] = []
         for artwork in allArtworks {
             let components = calendar.dateComponents([.year, .month, .day], from: artwork.createdAt)
-            if components.month == todayMonth && components.day == todayDay {
-                let yearsAgo = (calendar.component(.year, from: Date.now)) - (components.year ?? 0)
-                if yearsAgo >= 1 {
-                    results.append((artwork: artwork, yearsAgo: yearsAgo))
-                }
+            guard components.month == todayMonth, components.day == todayDay else { continue }
+            let yearsAgo = currentYear - (components.year ?? currentYear)
+            if yearsAgo >= 1 {
+                results.append(MemoryEntry(artwork: artwork, yearsAgo: yearsAgo))
             }
         }
         return results.sorted { $0.yearsAgo < $1.yearsAgo }
     }
 
+    /// Artworks filtered by the currently selected child. Sorting is already
+    /// handled by the `@Query` above, so we only do the O(n) filter here.
     private var filteredArtworks: [Artwork] {
-        if let selectedChildID {
-            return allArtworks
-                .filter { $0.child?.persistentModelID == selectedChildID }
-                .sorted { $0.createdAt > $1.createdAt }
-        }
-
-        return allArtworks.sorted { $0.createdAt > $1.createdAt }
+        guard let selectedChildID else { return allArtworks }
+        return allArtworks.filter { $0.child?.persistentModelID == selectedChildID }
     }
 
     private var paywallPresented: Binding<PaywallView.LimitReason?> {
@@ -399,13 +414,6 @@ struct HomeView: View {
             .sheet(isPresented: $showAddChild) {
                 AddChildView()
             }
-            .sheet(item: $editingChild) { child in
-                EditChildView(child: child) {
-                    if selectedChildID == child.persistentModelID {
-                        selectedChildID = nil
-                    }
-                }
-            }
             .sheet(item: paywallPresented) { reason in
                 PaywallView(reason: reason)
             }
@@ -424,7 +432,20 @@ struct HomeView: View {
                     NotificationService.scheduleAll(artworks: allArtworks)
                 }
             }
+            .task(id: memoriesInputKey) {
+                memoriesArtworks = rebuildMemoriesArtworks()
+            }
     }
+}
+
+// MARK: - Memory Entry
+
+/// A single "On This Day" memory entry — one artwork plus how many years ago
+/// it was created.
+struct MemoryEntry: Identifiable {
+    let artwork: Artwork
+    let yearsAgo: Int
+    var id: PersistentIdentifier { artwork.persistentModelID }
 }
 
 // MARK: - Previews

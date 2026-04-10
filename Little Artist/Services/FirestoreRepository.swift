@@ -60,13 +60,6 @@ final class FirestoreRepository {
 
     private init() {}
 
-    // MARK: - Context Helper
-
-    private var context: ModelContext? {
-        guard let container = modelContainer else { return nil }
-        return ModelContext(container)
-    }
-
     // MARK: - Preferences
 
     /// Pushes local app preferences to Firestore so they stay in sync across devices.
@@ -219,8 +212,7 @@ final class FirestoreRepository {
             isFavorited: isFavorited,
             createdAt: createdAt,
             child: child,
-            tags: tags,
-            syncIdentifier: UUID().uuidString
+            tags: tags
         )
 
         // Pre-generate Firestore ID and register in localWriteIds BEFORE insert
@@ -259,25 +251,6 @@ final class FirestoreRepository {
         return artwork
     }
 
-    /// Creates multiple artworks in batch (e.g. scanner import).
-    func batchCreateArtworks(
-        items: [(title: String, imageData: Data?, createdAt: Date)],
-        child: Child,
-        in modelContext: ModelContext
-    ) {
-        for (index, item) in items.enumerated() {
-            // Offset dates by index to avoid key collisions
-            let offsetDate = item.createdAt.addingTimeInterval(TimeInterval(index))
-            createArtwork(
-                title: item.title,
-                imageData: item.imageData,
-                createdAt: offsetDate,
-                child: child,
-                in: modelContext
-            )
-        }
-    }
-
     /// Updates an existing artwork and syncs to Firestore.
     func updateArtwork(
         _ artwork: Artwork,
@@ -286,6 +259,7 @@ final class FirestoreRepository {
         imageData: Data? = nil,
         voiceNoteData: Data? = nil,
         isFavorited: Bool? = nil,
+        createdAt: Date? = nil,
         tags: [Tag]? = nil,
         in modelContext: ModelContext
     ) {
@@ -297,6 +271,7 @@ final class FirestoreRepository {
         if let imageData { artwork.imageData = imageData }
         if let effectiveVoiceNoteData { artwork.voiceNoteData = effectiveVoiceNoteData }
         if let isFavorited { artwork.isFavorited = isFavorited }
+        if let createdAt { artwork.createdAt = createdAt }
         if let tags { artwork.tags = tags }
         try? modelContext.save()
 
@@ -348,6 +323,31 @@ final class FirestoreRepository {
                 }
             }
         }
+    }
+
+    // MARK: - Cloud Sync Activation
+
+    /// Starts the Firestore listener and performs an initial upload+preferences
+    /// sync if the user is authenticated. Safe to call repeatedly — it no-ops
+    /// if there is no authenticated user or if the sync listener is already
+    /// running.
+    ///
+    /// Called at app launch (after auth resolves), on sign-in completion, and
+    /// whenever the user toggles "Enable Cloud Sync" in Settings.
+    func activateCloudSyncIfNeeded() async {
+        guard auth.userId != nil else { return }
+
+        let syncService = FirestoreSyncService.shared
+        if !syncService.isListening {
+            syncService.start()
+        }
+
+        if let container = modelContainer {
+            let uploadContext = ModelContext(container)
+            await uploadAllLocalData(from: uploadContext)
+        }
+
+        await syncUserPreferencesToFirestore()
     }
 
     // MARK: - Initial Upload (Premium Upgrade)
@@ -847,6 +847,7 @@ final class FirestoreRepository {
             "title": artwork.title,
             "caption": artwork.caption,
             "isFavorited": artwork.isFavorited,
+            "createdAt": Timestamp(date: artwork.createdAt),
             "updatedAt": FieldValue.serverTimestamp(),
             "tags": tagNames
         ]

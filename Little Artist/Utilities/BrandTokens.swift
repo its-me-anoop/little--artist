@@ -148,8 +148,6 @@ enum Brand {
 
     // MARK: - Corner Radii
 
-    static let radiusOnboarding: CGFloat = 40
-    static let radiusSheet: CGFloat = 20
     static let radiusCard: CGFloat = 18
     static let radiusButton: CGFloat = 16
     static let radiusField: CGFloat = 14
@@ -158,24 +156,9 @@ enum Brand {
     // MARK: - Spacing
 
     static let screenPadding: CGFloat = 20
-    static let formPadding: CGFloat = 32
     static let sectionSpacing: CGFloat = 28
-    static let gallerySpacing: CGFloat = 24
     static let buttonPadding: CGFloat = 18
     static let fieldPadding: CGFloat = 14
-
-    // MARK: - Component Sizes
-
-    static let avatarSize: CGFloat = 60
-    static let avatarRingSize: CGFloat = 68
-    static let avatarRingStroke: CGFloat = 3
-    static let avatarPreviewSize: CGFloat = 110
-    static let sourceButtonSize: CGFloat = 56
-    static let thumbnailWidth: CGFloat = 164
-    static let thumbnailHeight: CGFloat = 180
-    static let fabSize: CGFloat = 60
-    static let onboardingCardHeight: CGFloat = 340
-    static let colorCircleSize: CGFloat = 40
 
     // MARK: - Adaptive Layout
 
@@ -185,16 +168,9 @@ enum Brand {
             sizeClass == .regular ? 40 : Brand.screenPadding
         }
 
-        static func gallerySpacing(for sizeClass: UserInterfaceSizeClass?) -> CGFloat {
-            sizeClass == .regular ? 32 : Brand.gallerySpacing
-        }
-
         static func sectionSpacing(for sizeClass: UserInterfaceSizeClass?) -> CGFloat {
             sizeClass == .regular ? 36 : Brand.sectionSpacing
         }
-
-        /// Maximum content width to prevent ultra-wide stretching on iPad landscape.
-        static let maxContentWidth: CGFloat = 700
 
         /// Returns gallery column count based on available width.
         static func galleryColumns(for width: CGFloat) -> Int {
@@ -213,16 +189,6 @@ enum Brand {
             case ..<800: return 3
             default: return 4
             }
-        }
-
-        /// Returns stat grid column count — 2 on compact, 4 on regular.
-        static func statGridColumns(for sizeClass: UserInterfaceSizeClass?) -> Int {
-            sizeClass == .regular ? 4 : 2
-        }
-
-        /// Scale factor for onboarding card animations — larger on iPad.
-        static func onboardingCardScale(for sizeClass: UserInterfaceSizeClass?) -> CGFloat {
-            sizeClass == .regular ? 1.6 : 1.0
         }
     }
 }

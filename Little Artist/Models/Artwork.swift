@@ -47,10 +47,6 @@ final class Artwork {
     /// Tags applied to this artwork for categorization.
     var tags: [Tag]?
 
-    /// Legacy sync identifier (deprecated — use `firestoreId` instead).
-    /// - Note: Deprecated in V7; replaced by ``firestoreId``. Kept for migration.
-    var syncIdentifier: String?
-
     /// Firestore document path (e.g. `"users/{uid}/children/{cid}/artworks/{id}"`).
     /// `nil` for artworks that have not yet been synced to Firebase.
     var firestoreId: String?
@@ -73,7 +69,6 @@ final class Artwork {
         createdAt: Date = .now,
         child: Child? = nil,
         tags: [Tag]? = nil,
-        syncIdentifier: String? = nil,
         firestoreId: String? = nil,
         imageURL: String? = nil,
         voiceNoteURL: String? = nil
@@ -87,7 +82,6 @@ final class Artwork {
         self.createdAt = createdAt
         self.child = child
         self.tags = tags
-        self.syncIdentifier = syncIdentifier
         self.firestoreId = firestoreId
         self.imageURL = imageURL
         self.voiceNoteURL = voiceNoteURL
