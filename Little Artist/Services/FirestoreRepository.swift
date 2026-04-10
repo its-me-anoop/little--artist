@@ -60,13 +60,6 @@ final class FirestoreRepository {
 
     private init() {}
 
-    // MARK: - Context Helper
-
-    private var context: ModelContext? {
-        guard let container = modelContainer else { return nil }
-        return ModelContext(container)
-    }
-
     // MARK: - Preferences
 
     /// Pushes local app preferences to Firestore so they stay in sync across devices.
@@ -219,8 +212,7 @@ final class FirestoreRepository {
             isFavorited: isFavorited,
             createdAt: createdAt,
             child: child,
-            tags: tags,
-            syncIdentifier: UUID().uuidString
+            tags: tags
         )
 
         // Pre-generate Firestore ID and register in localWriteIds BEFORE insert
@@ -257,25 +249,6 @@ final class FirestoreRepository {
         }
 
         return artwork
-    }
-
-    /// Creates multiple artworks in batch (e.g. scanner import).
-    func batchCreateArtworks(
-        items: [(title: String, imageData: Data?, createdAt: Date)],
-        child: Child,
-        in modelContext: ModelContext
-    ) {
-        for (index, item) in items.enumerated() {
-            // Offset dates by index to avoid key collisions
-            let offsetDate = item.createdAt.addingTimeInterval(TimeInterval(index))
-            createArtwork(
-                title: item.title,
-                imageData: item.imageData,
-                createdAt: offsetDate,
-                child: child,
-                in: modelContext
-            )
-        }
     }
 
     /// Updates an existing artwork and syncs to Firestore.

@@ -42,7 +42,6 @@ struct SettingsView: View {
     @State private var syncError: String?
     @State private var showJoinShare = false
     @State private var shareCodeInput = ""
-    @State private var isJoiningShare = false
     @State private var joinShareError: String?
     @State private var joinShareSuccess = false
     @State private var showSignOutConfirmation = false
@@ -813,7 +812,6 @@ struct SettingsView: View {
     private func joinSharedProfile() async {
         let code = shareCodeInput.trimmingCharacters(in: .whitespaces)
         guard !code.isEmpty else { return }
-        isJoiningShare = true
         do {
             try await FirestoreRepository.shared.acceptShare(shareId: code)
             // Restart sync to pick up the shared data
@@ -824,7 +822,6 @@ struct SettingsView: View {
         } catch {
             joinShareError = "Could not join: \(error.localizedDescription)"
         }
-        isJoiningShare = false
     }
 
     @MainActor

@@ -27,7 +27,6 @@ struct HomeView: View {
     @Binding var selectedChildID: PersistentIdentifier?
     @State private var selectedArtwork: Artwork?
     @State private var showAddChild = false
-    @State private var editingChild: Child?
     @State private var paywallReason: PaywallView.LimitReason?
 
     private var selectedChild: Child? {
@@ -398,13 +397,6 @@ struct HomeView: View {
             }
             .sheet(isPresented: $showAddChild) {
                 AddChildView()
-            }
-            .sheet(item: $editingChild) { child in
-                EditChildView(child: child) {
-                    if selectedChildID == child.persistentModelID {
-                        selectedChildID = nil
-                    }
-                }
             }
             .sheet(item: paywallPresented) { reason in
                 PaywallView(reason: reason)

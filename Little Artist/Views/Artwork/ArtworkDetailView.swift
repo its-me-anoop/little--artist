@@ -646,11 +646,6 @@ struct ArtworkDetailView: View {
         }
     }
 
-    /// Whether AI suggestions can be used (requires premium subscription).
-    private var aiSuggestionsEnabled: Bool {
-        canRequestAISuggestions && aiCaptionsEnabled
-    }
-
     private var canRequestAISuggestions: Bool {
         PremiumManager.isPremium && AISuggestionService.isAvailable
     }

@@ -100,26 +100,6 @@ final class GeminiUsageTracker {
         logger.info("Gemini usage: \(self.dailyCount)/\(Self.dailyLimit) daily, \(self.weeklyCount)/\(Self.weeklyLimit) weekly, \(self.monthlyCount)/\(Self.monthlyLimit) monthly")
     }
 
-    /// Remaining requests for the most restrictive active period.
-    var remainingRequests: Int {
-        rolloverIfNeeded()
-        return min(
-            Self.dailyLimit - dailyCount,
-            Self.weeklyLimit - weeklyCount,
-            Self.monthlyLimit - monthlyCount
-        )
-    }
-
-    /// Summary of current usage across all periods.
-    var usageSummary: UsageSummary {
-        rolloverIfNeeded()
-        return UsageSummary(
-            daily: PeriodUsage(used: dailyCount, limit: Self.dailyLimit, resetDate: nextDailyReset),
-            weekly: PeriodUsage(used: weeklyCount, limit: Self.weeklyLimit, resetDate: nextWeeklyReset),
-            monthly: PeriodUsage(used: monthlyCount, limit: Self.monthlyLimit, resetDate: nextMonthlyReset)
-        )
-    }
-
     // MARK: - Period Rollover
 
     /// Checks whether any tracking period has elapsed and resets the corresponding counter.
@@ -222,22 +202,4 @@ enum ExceededLimit {
             return "Monthly AI limit reached. Resets \(formatter.localizedString(for: resetDate, relativeTo: Date()))."
         }
     }
-}
-
-/// Usage data for a single tracking period.
-struct PeriodUsage {
-    let used: Int
-    let limit: Int
-    let resetDate: Date
-
-    var remaining: Int { max(0, limit - used) }
-    var fraction: Double { Double(used) / Double(limit) }
-    var isExceeded: Bool { used >= limit }
-}
-
-/// Snapshot of usage across all three periods.
-struct UsageSummary {
-    let daily: PeriodUsage
-    let weekly: PeriodUsage
-    let monthly: PeriodUsage
 }

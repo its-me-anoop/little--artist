@@ -40,9 +40,4 @@ enum PremiumManager {
     static func canAddArtwork(currentCount: Int) -> Bool {
         isPremium || currentCount < freeArtworkLimit
     }
-
-    /// Whether the user can share child profiles via Firebase.
-    static func canShare() -> Bool {
-        isPremium
-    }
 }
