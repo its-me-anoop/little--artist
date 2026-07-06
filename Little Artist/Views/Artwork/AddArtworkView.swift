@@ -642,6 +642,10 @@ struct AddArtworkView: View {
                 in: modelContext
             )
         }
+        let newlyEarned = AchievementService.checkMilestones(context: modelContext)
+        if !newlyEarned.isEmpty {
+            CelebrationCenter.shared.celebrate(newlyEarned)
+        }
         HapticService.success()
     }
 
@@ -680,7 +684,10 @@ struct AddArtworkView: View {
             in: modelContext
         )
 
-        AchievementService.checkMilestones(context: modelContext)
+        let newlyEarned = AchievementService.checkMilestones(context: modelContext)
+        if !newlyEarned.isEmpty {
+            CelebrationCenter.shared.celebrate(newlyEarned)
+        }
         HapticService.success()
         dismiss()
     }

@@ -25,10 +25,18 @@ struct ContentView: View {
     @State private var showCreateSheet = false
     @State private var showAddChild = false
     @State private var showPremiumUpsell = false
+    @State private var showSlideshow = false
     @State private var paywallReason: PaywallView.LimitReason?
     @State private var artworkCountBeforeSheet = 0
 
     private var store: StoreKitManager { StoreKitManager.shared }
+    private var celebration: CelebrationCenter { CelebrationCenter.shared }
+
+    /// Artworks in chronological order for exhibition mode, so the
+    /// slideshow tells the growth story from first to latest.
+    private var slideshowArtworks: [Artwork] {
+        allArtworks.sorted { $0.createdAt < $1.createdAt }
+    }
 
     private var selectedChild: Child? {
         guard let selectedChildID else { return nil }
@@ -64,6 +72,17 @@ struct ContentView: View {
         NavigationStack {
             HomeView(selectedChildID: $selectedChildID)
                 .toolbar {
+                    if !allArtworks.isEmpty {
+                        ToolbarItem(placement: .topBarTrailing) {
+                            Button {
+                                showSlideshow = true
+                            } label: {
+                                Image(systemName: "play.rectangle")
+                            }
+                            .accessibilityLabel("Play slideshow")
+                        }
+                    }
+
                     ToolbarItem(placement: .topBarTrailing) {
                         NavigationLink {
                             SearchView()
@@ -143,6 +162,18 @@ struct ContentView: View {
         .sheet(item: paywallPresented) { reason in
             PaywallView(reason: reason)
         }
+        .fullScreenCover(isPresented: $showSlideshow) {
+            ArtworkSlideshowView(artworks: slideshowArtworks)
+        }
+        .overlay {
+            if let achievement = celebration.current {
+                AchievementCelebrationView(achievement: achievement) {
+                    celebration.dismissCurrent()
+                }
+                .transition(.opacity)
+            }
+        }
+        .animation(.easeOut(duration: 0.3), value: celebration.current?.identifier)
         .onChange(of: store.isPremium) { _, isPremium in
             guard isPremium else { return }
             paywallReason = nil

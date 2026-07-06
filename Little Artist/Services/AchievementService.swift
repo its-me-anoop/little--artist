@@ -46,7 +46,10 @@ enum AchievementService {
     }
 
     /// Checks all milestone conditions and marks newly earned achievements.
-    static func checkMilestones(context: ModelContext) {
+    /// Returns the achievements earned by this check so callers can
+    /// celebrate them (see `CelebrationCenter`).
+    @discardableResult
+    static func checkMilestones(context: ModelContext) -> [Achievement] {
         let allArtworks = (try? context.fetch(FetchDescriptor<Artwork>())) ?? []
         let achievements = (try? context.fetch(FetchDescriptor<Achievement>())) ?? []
 
@@ -63,6 +66,7 @@ enum AchievementService {
         let seasons: Set<Int> = Set(dates.map { (Calendar.current.component(.month, from: $0) - 1) / 3 })
         let hasFourSeasons = seasons.count >= 4
 
+        var newlyEarned: [Achievement] = []
         for achievement in achievements where !achievement.isEarned {
             let shouldEarn: Bool = switch achievement.identifier {
             case "first_masterpiece": artworkCount >= 1
@@ -78,9 +82,11 @@ enum AchievementService {
             if shouldEarn {
                 achievement.isEarned = true
                 achievement.earnedAt = .now
+                newlyEarned.append(achievement)
             }
         }
         try? context.save()
+        return newlyEarned
     }
 
     /// Marks the "Memory Lane" achievement as earned when user taps an "On This Day" card.
