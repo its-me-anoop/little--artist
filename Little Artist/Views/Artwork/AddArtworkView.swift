@@ -629,9 +629,13 @@ struct AddArtworkView: View {
     private func batchImport(items: [PhotosPickerItem]) async {
         guard let child = selectedChild else { return }
         let repo = ArtworkRepository.shared
+        var artworkCount = (try? modelContext.fetchCount(FetchDescriptor<Artwork>())) ?? 0
         for (index, item) in items.enumerated() {
+            // Enforce the free-tier limit — a large batch must not sail past it.
+            guard PremiumManager.canAddArtwork(currentCount: artworkCount) else { break }
             guard let rawData = try? await item.loadTransferable(type: Data.self),
                   let processed = ImageProcessingService.processForStorage(data: rawData) else { continue }
+            artworkCount += 1
             let anchoredDate = ArtworkDate.dayAnchored(artworkDate, offsetSeconds: Double(index))
             repo.createArtwork(
                 title: "",

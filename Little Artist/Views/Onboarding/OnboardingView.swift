@@ -183,7 +183,11 @@ struct OnboardingView: View {
             selectionFeedback.selectionChanged()
         }
         .sheet(isPresented: $showAddChild, onDismiss: {
-            hasCompletedOnboarding = true
+            // Only leave onboarding once a child actually exists — dismissing
+            // the sheet without adding one returns to the carousel.
+            if !children.isEmpty {
+                hasCompletedOnboarding = true
+            }
         }) {
             AddChildView()
         }

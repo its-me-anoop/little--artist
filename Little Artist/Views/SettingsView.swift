@@ -219,7 +219,7 @@ struct SettingsView: View {
                     .font(Brand.title2Font)
                     .foregroundStyle(Brand.charcoal)
 
-                Text("Unlock unlimited children, AI captions, voice memos, cloud sync, and PDF export.")
+                Text("Unlock unlimited children, unlimited artworks, AI captions, voice memos, and PDF export.")
                     .font(Brand.captionFont)
                     .foregroundStyle(Brand.warmGray)
                     .lineSpacing(2)
