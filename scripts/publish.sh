@@ -15,9 +15,12 @@ set -euo pipefail
 ISSUER="${ASC_ISSUER_ID:?Set ASC_ISSUER_ID (App Store Connect → Users and Access → Integrations)}"
 KEY_ID="V9VT258MM6"
 KEY_PATH="$HOME/.appstoreconnect/private_keys/AuthKey_${KEY_ID}.p8"
-# Stable Xcode only — the App Store rejects beta-SDK builds. The iOS 27
-# Apple Intelligence code is compiler-gated and drops out cleanly here.
-XCODE="/Applications/Xcode.app"
+# Xcode 27 (iOS 27 SDK) — App Store validation rejected the stable
+# Xcode 26.6 / iOS 26.5 SDK build with ITMS-90111 ("submissions must use
+# the latest Xcode and SDK Release Candidates"), so the newest toolchain
+# is required. This also ships the Apple Intelligence features enabled
+# (FoundationModels stays weak-linked for iOS 26.x devices).
+XCODE="/Applications/Xcode-beta.app"
 ARCHIVE="$HOME/Desktop/Artling-v1.0.xcarchive"
 EXPORT_DIR="$HOME/Desktop/Artling-export"
 
