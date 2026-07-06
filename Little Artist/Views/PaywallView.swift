@@ -54,8 +54,15 @@ struct PaywallView: View {
         }
     }
 
-    /// Whether the yearly tier is selected.
-    @State private var yearlySelected = true
+    /// The purchase plans offered on the paywall.
+    enum Plan {
+        case monthly
+        case yearly
+        case lifetime
+    }
+
+    /// The currently selected plan.
+    @State private var selectedPlan: Plan = .yearly
 
     // MARK: - Body
 
@@ -193,9 +200,10 @@ struct PaywallView: View {
 
     private var subscriptionTiers: some View {
         VStack(spacing: 12) {
-            // Yearly tier — highlighted
+            // Yearly tier — highlighted with savings badge
             Button {
-                yearlySelected = true
+                selectedPlan = .yearly
+                HapticService.selection()
             } label: {
                 VStack(spacing: 0) {
                     // Best Value badge
@@ -213,7 +221,7 @@ struct PaywallView: View {
                             .font(Brand.headlineFont)
                             .foregroundStyle(Brand.charcoal)
 
-                        Text(store.yearlyProduct?.displayPrice ?? "$39.99")
+                        Text(store.yearlyProduct?.displayPrice ?? "$34.99")
                             .font(Brand.title2Font)
                             .foregroundStyle(Brand.primary)
 
@@ -229,71 +237,109 @@ struct PaywallView: View {
                 .overlay(
                     RoundedRectangle(cornerRadius: Brand.radiusCard, style: .continuous)
                         .strokeBorder(
-                            yearlySelected ? Brand.lavender : Brand.softTan,
-                            lineWidth: yearlySelected ? 2.5 : 1
+                            selectedPlan == .yearly ? Brand.lavender : Brand.softTan,
+                            lineWidth: selectedPlan == .yearly ? 2.5 : 1
                         )
                 )
                 .brandCardShadow()
             }
             .buttonStyle(.plain)
 
-            // Monthly tier — subtle
-            Button {
-                yearlySelected = false
-            } label: {
-                VStack(spacing: 4) {
-                    Text("Monthly")
-                        .font(Brand.headlineFont)
-                        .foregroundStyle(Brand.charcoal)
-
-                    Text(store.monthlyProduct?.displayPrice ?? "$5.99")
-                        .font(Brand.title2Font)
-                        .foregroundStyle(Brand.charcoal)
-
-                    Text("per month")
-                        .font(Brand.caption2Font)
-                        .foregroundStyle(Brand.warmGray)
-                }
-                .padding(.vertical, Brand.buttonPadding)
-                .frame(maxWidth: .infinity)
-                .background(Brand.surface)
-                .clipShape(RoundedRectangle(cornerRadius: Brand.radiusCard, style: .continuous))
-                .overlay(
-                    RoundedRectangle(cornerRadius: Brand.radiusCard, style: .continuous)
-                        .strokeBorder(
-                            yearlySelected ? Brand.softTan : Brand.primary,
-                            lineWidth: yearlySelected ? 1 : 2.5
-                        )
+            // Monthly and Lifetime — side by side
+            HStack(spacing: 12) {
+                compactTierCard(
+                    plan: .monthly,
+                    name: "Monthly",
+                    price: store.monthlyProduct?.displayPrice ?? "$4.99",
+                    detail: "per month"
                 )
-                .brandCardShadow()
+
+                compactTierCard(
+                    plan: .lifetime,
+                    name: "Lifetime",
+                    price: store.lifetimeProduct?.displayPrice ?? "$79.99",
+                    detail: "pay once, forever"
+                )
             }
-            .buttonStyle(.plain)
         }
         .padding(.horizontal, Brand.screenPadding)
     }
 
+    /// A compact selectable tier card for the monthly and lifetime plans.
+    private func compactTierCard(
+        plan: Plan,
+        name: String,
+        price: String,
+        detail: String
+    ) -> some View {
+        Button {
+            selectedPlan = plan
+            HapticService.selection()
+        } label: {
+            VStack(spacing: 4) {
+                Text(name)
+                    .font(Brand.headlineFont)
+                    .foregroundStyle(Brand.charcoal)
+
+                Text(price)
+                    .font(Brand.title2Font)
+                    .foregroundStyle(selectedPlan == plan ? Brand.primary : Brand.charcoal)
+
+                Text(detail)
+                    .font(Brand.caption2Font)
+                    .foregroundStyle(Brand.warmGray)
+            }
+            .padding(.vertical, Brand.buttonPadding)
+            .frame(maxWidth: .infinity)
+            .background(Brand.surface)
+            .clipShape(RoundedRectangle(cornerRadius: Brand.radiusCard, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: Brand.radiusCard, style: .continuous)
+                    .strokeBorder(
+                        selectedPlan == plan ? Brand.primary : Brand.softTan,
+                        lineWidth: selectedPlan == plan ? 2.5 : 1
+                    )
+            )
+            .brandCardShadow()
+        }
+        .buttonStyle(.plain)
+    }
+
     // MARK: - CTA Button
 
-    private var ctaButton: some View {
-        Button {
-            Task {
-                if yearlySelected, let yearly = store.yearlyProduct {
-                    await store.purchase(yearly)
-                } else if let monthly = store.monthlyProduct {
-                    await store.purchase(monthly)
-                }
-            }
-        } label: {
-            Text("Subscribe Now")
-                .font(Brand.headlineFont)
-                .foregroundStyle(.white)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, Brand.buttonPadding)
-                .background(Brand.primary)
-                .clipShape(Capsule())
-                .brandFABShadow()
+    /// The product matching the currently selected plan, if loaded.
+    private var selectedProduct: Product? {
+        switch selectedPlan {
+        case .monthly: return store.monthlyProduct
+        case .yearly: return store.yearlyProduct
+        case .lifetime: return store.lifetimeProduct
         }
-        .disabled(store.isPurchasing || store.products.isEmpty)
+    }
+
+    private var ctaButton: some View {
+        VStack(spacing: 10) {
+            Button {
+                Task {
+                    if let product = selectedProduct {
+                        await store.purchase(product)
+                    }
+                }
+            } label: {
+                Text(selectedPlan == .lifetime ? "Unlock Forever" : "Subscribe Now")
+                    .font(Brand.headlineFont)
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, Brand.buttonPadding)
+                    .background(Brand.primary)
+                    .clipShape(Capsule())
+                    .brandFABShadow()
+            }
+            .disabled(store.isPurchasing || store.products.isEmpty)
+
+            Text("Cancel anytime · No hidden fees")
+                .font(Brand.caption2Font)
+                .foregroundStyle(Brand.warmGray)
+        }
         .padding(.horizontal, Brand.screenPadding)
     }
 
@@ -326,7 +372,7 @@ struct PaywallView: View {
 
     private var legalSection: some View {
         VStack(spacing: 6) {
-            Text("Subscription automatically renews unless cancelled at least 24 hours before the end of the current period. Manage subscriptions in your Apple Account subscriptions settings.")
+            Text("Subscriptions automatically renew unless cancelled at least 24 hours before the end of the current period. Manage subscriptions in your Apple Account subscriptions settings. Lifetime is a one-time purchase and never renews.")
                 .font(Brand.caption2Font)
                 .foregroundStyle(Brand.warmGray)
                 .multilineTextAlignment(.center)

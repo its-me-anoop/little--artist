@@ -22,8 +22,9 @@ final class StoreKitManager {
     enum ProductID {
         static let monthlyPremium = "uk.co.flutterly.littleartist.premium.monthly"
         static let yearlyPremium = "uk.co.flutterly.littleartist.premium.yearly"
+        static let lifetimePremium = "uk.co.flutterly.littleartist.premium.lifetime"
 
-        static let all: [String] = [monthlyPremium, yearlyPremium]
+        static let all: [String] = [monthlyPremium, yearlyPremium, lifetimePremium]
     }
 
     /// Available subscription products fetched from the App Store.
@@ -71,6 +72,11 @@ final class StoreKitManager {
     /// Returns the yearly product, if loaded.
     var yearlyProduct: Product? {
         products.first { $0.id == ProductID.yearlyPremium }
+    }
+
+    /// Returns the lifetime (one-time purchase) product, if loaded.
+    var lifetimeProduct: Product? {
+        products.first { $0.id == ProductID.lifetimePremium }
     }
 
     // MARK: - Purchase

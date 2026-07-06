@@ -10,12 +10,16 @@
 import SwiftUI
 
 /// Centralized free tier limits and premium status.
+///
+/// Free tier is volume-capped, never time-limited: one child profile and
+/// enough artworks to cover a school term, so families can prove the app's
+/// value before paying. Unlimited children is the premium anchor.
 enum PremiumManager {
     /// Maximum number of children on the free tier.
-    static let freeChildLimit = 2
+    static let freeChildLimit = 1
 
     /// Maximum number of artworks on the free tier.
-    static let freeArtworkLimit = 50
+    static let freeArtworkLimit = 40
 
     /// Override for testing. Set to non-nil to bypass UserDefaults.
     #if DEBUG

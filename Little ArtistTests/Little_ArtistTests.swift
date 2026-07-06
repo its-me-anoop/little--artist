@@ -143,34 +143,33 @@ struct PremiumManagerTests {
     @Test("canAddChild returns true when under limit")
     func canAddChildUnderLimit() {
         #expect(PremiumManager.canAddChild(currentCount: 0) == true)
-        #expect(PremiumManager.canAddChild(currentCount: 1) == true)
     }
 
     @Test("canAddChild returns false when at limit")
     func canAddChildAtLimit() {
         // Ensure we're testing free tier (isPremium defaults to false)
         UserDefaults.standard.removeObject(forKey: "isPremium")
-        #expect(PremiumManager.canAddChild(currentCount: 2) == false)
+        #expect(PremiumManager.canAddChild(currentCount: 1) == false)
         #expect(PremiumManager.canAddChild(currentCount: 5) == false)
     }
 
     @Test("canAddArtwork returns true when under limit")
     func canAddArtworkUnderLimit() {
         #expect(PremiumManager.canAddArtwork(currentCount: 0) == true)
-        #expect(PremiumManager.canAddArtwork(currentCount: 49) == true)
+        #expect(PremiumManager.canAddArtwork(currentCount: 39) == true)
     }
 
     @Test("canAddArtwork returns false when at limit")
     func canAddArtworkAtLimit() {
         UserDefaults.standard.removeObject(forKey: "isPremium")
-        #expect(PremiumManager.canAddArtwork(currentCount: 50) == false)
+        #expect(PremiumManager.canAddArtwork(currentCount: 40) == false)
         #expect(PremiumManager.canAddArtwork(currentCount: 100) == false)
     }
 
     @Test("Free tier limits are correct")
     func freeTierLimitsAreCorrect() {
-        #expect(PremiumManager.freeChildLimit == 2)
-        #expect(PremiumManager.freeArtworkLimit == 50)
+        #expect(PremiumManager.freeChildLimit == 1)
+        #expect(PremiumManager.freeArtworkLimit == 40)
     }
 
     @Test("Premium user bypasses limits")
@@ -184,5 +183,26 @@ struct PremiumManagerTests {
 
         #expect(canAddChild == true)
         #expect(canAddArtwork == true)
+    }
+}
+
+// MARK: - StoreKitManager Tests
+
+@MainActor
+struct StoreKitProductTests {
+
+    @Test("All three premium products are configured")
+    func allProductsConfigured() {
+        #expect(StoreKitManager.ProductID.all.count == 3)
+        #expect(StoreKitManager.ProductID.all.contains(StoreKitManager.ProductID.monthlyPremium))
+        #expect(StoreKitManager.ProductID.all.contains(StoreKitManager.ProductID.yearlyPremium))
+        #expect(StoreKitManager.ProductID.all.contains(StoreKitManager.ProductID.lifetimePremium))
+    }
+
+    @Test("Product identifiers use the app's bundle prefix")
+    func productIdentifiersUseBundlePrefix() {
+        for id in StoreKitManager.ProductID.all {
+            #expect(id.hasPrefix("uk.co.flutterly.littleartist.premium."))
+        }
     }
 }

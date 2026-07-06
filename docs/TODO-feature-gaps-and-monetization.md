@@ -39,11 +39,27 @@ The app is feature-complete relative to design specs. All 13 planned screens are
 
 ## Phase 2 — Monetization (Week 2-3 Post-Launch)
 
-### Subscription: "Little Artist Premium" ($2.99/month or $19.99/year)
+### Subscription: "Little Artist Premium" — FINAL PRICING (July 2026, competitor-researched)
 
-**Free Tier (generous enough to hook users):**
-- Up to 2 children
-- Up to 50 artworks total
+Decided after competitive research (Artkive, Keepy, Canvsly, KidArt, ArtKeep, Keepbox,
+FamilyAlbum, Tinybeans, Qeepsake — see session research, July 2026):
+
+| Plan | USD | GBP (set manually in ASC, not auto-converted) | Product ID |
+|------|-----|-----|------------|
+| Monthly | $4.99 | £4.49 | `uk.co.flutterly.littleartist.premium.monthly` |
+| Yearly (anchor, ~42% off) | $34.99 | £29.99 | `uk.co.flutterly.littleartist.premium.yearly` |
+| Lifetime (one-time, non-consumable) | $79.99 | £69.99 | `uk.co.flutterly.littleartist.premium.lifetime` |
+
+Rationale:
+- Lands under FamilyAlbum Premium ($59/yr) and Tinybeans ($74.99/yr) — priced as the affordable specialist.
+- Lifetime converts subscription-fatigued parents; no major competitor offers it (only tiny ArtKeep at $79.99).
+- Enable Family Sharing on all three products in App Store Connect (FamilyAlbum's family-wide unlock is its best-loved trait).
+- Free tier is volume-capped, never time-bombed — explicit anti-Artkive trust positioning ("no surprise charges").
+- Local StoreKit testing: `LittleArtist.storekit` at repo root (select in scheme → Run → Options → StoreKit Configuration).
+
+**Free Tier (volume-capped, no time limits):**
+- 1 child profile
+- Up to 40 artworks total (a school term's worth)
 - Camera + photo library capture
 - Basic gallery, timeline, search
 - Local storage only
@@ -130,8 +146,13 @@ The app is feature-complete relative to design specs. All 13 planned screens are
 - PhotosPicker (out-of-process) already used correctly
 - If accounts added later: must offer in-app account deletion
 
-### Comparable App Pricing
+### Comparable App Pricing (verified July 2026)
 
-- Artkive: $4.99-9.99/month
-- Keepy: $4.99/month
-- Our target: $2.99/month or $19.99/year (competitive entry point)
+- Artkive: ~$2.75–9.99/month (restructured repeatedly; reputational damage from Box-service surprise invoicing)
+- Keepy: $7.99/month or $29.99–99.99/year (abandoned — last update Oct 2020)
+- FamilyAlbum: $5.99/month or $59/year (Premium), $10.99/month or $109/year (Pro) — family-wide unlock
+- Tinybeans: $74.99/year (backlash after ~87% price hike)
+- Qeepsake: $47.88/year (Essential), $95.88/year (Premium) — annual-only billing
+- ArtKeep: $3.99/month, $24.99/year, $79.99 lifetime (new 2026 entrant)
+- KidArt: $2.99 one-time (tiny solo-dev app)
+- Our pricing: $4.99/month, $34.99/year, $79.99 lifetime (see Phase 2 table)
