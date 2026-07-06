@@ -99,47 +99,43 @@ damaging documented complaints against incumbents.
       accept beta-SDK builds; the iOS 27 FoundationModels code is
       compiler-gated and drops out cleanly)
 
-### App Store Connect (requires account owner)
-- [ ] Create the three IAPs and set **manual GBP prices** (don't accept
-      the auto-converted tier — it overcharges UK users):
+### App Store Connect — DONE via API (6 Jul 2026 session)
+All configured programmatically with the ASC API key (Issuer ID read from
+the owner's logged-in App Store Connect session):
+- [x] Three IAPs live and READY_TO_SUBMIT with **manual GBP prices**:
       | Product ID | Type | USD | GBP |
       |---|---|---|---|
       | `com.flutterly.littleartist.premium.monthly` | Auto-renew sub | $4.99 | £4.49 |
       | `com.flutterly.littleartist.premium.yearly` | Auto-renew sub | $34.99 | £29.99 |
       | `com.flutterly.littleartist.premium.lifetime` | Non-consumable | $79.99 | £69.99 |
-- [ ] Put both subscriptions in one subscription group ("Premium")
-- [ ] Enable **Family Sharing** on all three IAPs (research: FamilyAlbum's
-      family-wide unlock is its best-loved trait)
-- [ ] Privacy nutrition label: **Data Not Collected**
-- [ ] Age rating questionnaire (expect 4+)
-- [ ] Upload screenshots — lead with: AI title suggestion → milestones
-      celebration → "On This Day" → exhibition mode → paywall trust line
-- [ ] App Privacy policy URL: https://www.flutterly.co.uk/projects/artling/privacy-policy
+      (NOTE: ASC already had subscriptions under the com.flutterly.* prefix —
+      code was aligned to match; Family Sharing already enabled)
+- [x] Subscription group "Little Artist Premium" + en-GB localizations
+- [x] Review screenshots uploaded for all three IAPs (paywall capture)
+- [x] Listing updated: description/keywords/promo text (accurate to the
+      Apple-stack app), support URL, copyright, Lifestyle primary category
+- [x] Screenshots: iPhone 6.7" set (onboarding/milestones/paywall) and
+      iPad 12.9" set (onboarding/home) — replace with richer artwork-filled
+      shots post-launch
+- [x] Build uploaded via scripts/publish.sh (cloud signing, zero local
+      certs); export compliance declared (exempt encryption only)
+- [x] Version 1.0 submitted for App Review (manual release)
+- [ ] Age rating questionnaire — already 4+ in ASC ✓
+- [ ] Privacy nutrition label — verify "Data Not Collected" in ASC web UI
 
-### CloudKit (requires developer account, one-time)
+### CloudKit (REQUIRED BEFORE PRESSING "RELEASE")
+Release type is set to MANUAL for exactly this reason:
 - [ ] Run the app once on a device/simulator signed into iCloud so the
       schema is created in the **Development** environment
-- [ ] In CloudKit Console, **deploy schema to Production** before release
+- [ ] In CloudKit Console, **deploy schema to Production**
       (releasing without this makes sync fail for App Store users)
+- [ ] Then press "Release" in App Store Connect after approval
 
-### Final steps — ONE credential needed
-An App Store Connect API key is already installed on this Mac
-(`~/.appstoreconnect/private_keys/AuthKey_V9VT258MM6.p8`, added 2 Jul 2026).
-The only missing piece is its **Issuer ID** — a UUID shown at
-App Store Connect → Users and Access → Integrations → App Store Connect API
-(it is not stored anywhere on this Mac and cannot be derived from the key).
-
-- [ ] Copy the Issuer ID from App Store Connect, then run:
-      `ASC_ISSUER_ID=<uuid> ./scripts/publish.sh`
-      This archives with **cloud-managed signing** (no Xcode sign-in or
-      local certificates needed — none exist on this Mac) using stable
-      Xcode 26, exports, and uploads the build to App Store Connect.
-- Alternative manual route: sign into Xcode (Settings → Accounts, team
-  K6623R3GP5), then Product → Archive → Distribute.
-- [ ] TestFlight internal pass: onboarding → add child → scan artwork →
-      AI caption (on an AI-capable device) → milestone confetti →
-      slideshow → paywall purchase in sandbox → restore purchases
-- [ ] Submit for review
+### Submission history
+- Build 26 (Xcode 26.6 / iOS 26.5 SDK): REJECTED — ITMS-90111, Apple now
+  requires the latest SDK line. publish.sh switched to Xcode 27.
+- Build 27+ (Xcode 27 / iOS 27 SDK): resubmitted with Apple Intelligence
+  features fully enabled.
 
 ### Deferred (post-launch, documented)
 - Cross-family profile sharing via CKShare (removed with Firebase;
@@ -147,3 +143,5 @@ App Store Connect → Users and Access → Integrations → App Store Connect AP
 - Home Screen widget ("On This Day") — needs a widget extension target
 - Physical print partner integration (books/merch) — use a print API,
   never in-house fulfilment (Artkive's failure mode)
+- Richer store screenshots with sample artwork (app-store-screenshots
+  skill or manual capture with real data)
