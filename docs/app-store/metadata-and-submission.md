@@ -123,7 +123,16 @@ damaging documented complaints against incumbents.
       (releasing without this makes sync fail for App Store users)
 
 ### Final steps
-- [ ] Archive with stable Xcode 26 (`Product → Archive`, team K6623R3GP5)
+- [ ] **Sign into Xcode first** — as of 2026-07-06 this Mac has zero code
+      signing identities (`security find-identity -v -p codesigning` →
+      "0 valid identities") and stable Xcode has no Apple ID account.
+      Open Xcode → Settings → Accounts, sign in with the team
+      (K6623R3GP5) Apple ID, and let Xcode manage certificates. The new
+      iCloud/CloudKit + push entitlements also need the App ID
+      capabilities refreshed (automatic signing handles this).
+- [ ] Archive with stable Xcode 26 (`Product → Archive`, team K6623R3GP5) —
+      an unsigned Release build already compiles clean, so the archive
+      itself should be routine once signing is set up
 - [ ] TestFlight internal pass: onboarding → add child → scan artwork →
       AI caption (on an AI-capable device) → milestone confetti →
       slideshow → paywall purchase in sandbox → restore purchases
