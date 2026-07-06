@@ -31,16 +31,6 @@ final class Child {
     @Attribute(.externalStorage)
     var avatarImageData: Data?
 
-    /// Firestore document path (e.g. `"users/{uid}/children/{id}"`).
-    /// `nil` for children that have not yet been synced to Firebase.
-    var firestoreId: String?
-
-    /// Whether this child profile was received via sharing (not owned by the current user).
-    var isShared: Bool = false
-
-    /// Firebase UID of the profile owner. `nil` for locally owned children.
-    var ownerUserId: String?
-
     /// The artworks belonging to this child. Deletion cascades.
     @Relationship(deleteRule: .cascade, inverse: \Artwork.child)
     var artworks: [Artwork]?
@@ -49,17 +39,11 @@ final class Child {
         name: String,
         avatarColor: String,
         avatarImageData: Data? = nil,
-        createdAt: Date = .now,
-        firestoreId: String? = nil,
-        isShared: Bool = false,
-        ownerUserId: String? = nil
+        createdAt: Date = .now
     ) {
         self.name = name
         self.avatarColor = avatarColor
         self.avatarImageData = avatarImageData
         self.createdAt = createdAt
-        self.firestoreId = firestoreId
-        self.isShared = isShared
-        self.ownerUserId = ownerUserId
     }
 }

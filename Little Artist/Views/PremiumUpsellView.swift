@@ -42,9 +42,9 @@ struct PremiumUpsellView: View {
 
             // Premium feature highlights
             VStack(alignment: .leading, spacing: 14) {
-                featureRow(icon: "arrow.triangle.2.circlepath", text: "Cloud Backup & Sync")
+                featureRow(icon: "person.3", text: "Unlimited Child Profiles")
                 featureRow(icon: "infinity", text: "Unlimited Artwork Storage")
-                featureRow(icon: "sparkles", text: "AI-Powered Captions")
+                featureRow(icon: "sparkles", text: "On-Device AI Captions")
             }
             .padding(24)
             .background(

@@ -9,14 +9,18 @@ import Foundation
 import SwiftData
 
 /// A milestone badge that tracks the family's creative journey.
+///
+/// Stored in a local-only configuration (not synced to CloudKit) —
+/// achievements are derived state, re-earned per device from artwork,
+/// and syncing them would duplicate seeded rows across devices.
 @Model final class Achievement {
-    var identifier: String
-    var title: String
-    var subtitle: String
-    var iconName: String
-    var isEarned: Bool
+    var identifier: String = ""
+    var title: String = ""
+    var subtitle: String = ""
+    var iconName: String = ""
+    var isEarned: Bool = false
     var earnedAt: Date?
-    var category: String
+    var category: String = ""
 
     init(
         identifier: String,

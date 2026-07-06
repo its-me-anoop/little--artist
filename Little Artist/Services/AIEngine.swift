@@ -14,11 +14,10 @@ import Foundation
 /// The engine that produced an AI-generated result.
 ///
 /// Ladder order: on-device (private, free, offline) → Apple Private Cloud
-/// Compute (private, quota-gated) → Gemini (cloud) → static fallback.
+/// Compute (private, quota-gated) → static fallback. All Apple, always.
 enum AIEngine: String, Equatable {
     case onDevice
     case privateCloudCompute
-    case gemini
     case fallback
 
     /// A short user-facing privacy note, or nil when nothing should be shown.
@@ -29,7 +28,7 @@ enum AIEngine: String, Equatable {
             return "Generated on-device — never leaves your iPhone"
         case .privateCloudCompute:
             return "Generated with Apple Private Cloud Compute"
-        case .gemini, .fallback:
+        case .fallback:
             return nil
         }
     }

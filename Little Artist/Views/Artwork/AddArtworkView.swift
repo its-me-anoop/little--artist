@@ -628,7 +628,7 @@ struct AddArtworkView: View {
 
     private func batchImport(items: [PhotosPickerItem]) async {
         guard let child = selectedChild else { return }
-        let repo = FirestoreRepository.shared
+        let repo = ArtworkRepository.shared
         for (index, item) in items.enumerated() {
             guard let rawData = try? await item.loadTransferable(type: Data.self),
                   let processed = ImageProcessingService.processForStorage(data: rawData) else { continue }
@@ -672,7 +672,7 @@ struct AddArtworkView: View {
             }
         }
 
-        FirestoreRepository.shared.createArtwork(
+        ArtworkRepository.shared.createArtwork(
             title: title.trimmingCharacters(in: .whitespaces),
             caption: caption.trimmingCharacters(in: .whitespacesAndNewlines),
             imageData: capturedImageData,
@@ -721,7 +721,6 @@ struct AddArtworkView: View {
     private func enableAICaptionsAndContinue() {
         aiCaptionsEnabled = true
         showAIPermissionCard = false
-        Task { await FirestoreRepository.shared.syncUserPreferencesToFirestore() }
         generateAISuggestions()
     }
 

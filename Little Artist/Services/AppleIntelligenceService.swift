@@ -3,9 +3,9 @@
 //  Little Artist
 //
 //  On-device and Private Cloud Compute artwork AI using Apple's
-//  FoundationModels framework on iOS 27+. Sits above Gemini in the
-//  engine ladder so suggestions stay private, free, and offline-capable
-//  whenever the device supports Apple Intelligence.
+//  FoundationModels framework on iOS 27+. Leads the engine ladder so
+//  suggestions stay private, free, and offline-capable whenever the
+//  device supports Apple Intelligence.
 //
 
 // Compiled only with the iOS 27 SDK (Xcode 27 / Swift 6.4+) so the project
@@ -101,7 +101,7 @@ enum AppleIntelligenceService {
 
     /// Generates (or improves) a title and caption using the best available
     /// Apple engine. Returns nil when no Apple engine could serve the
-    /// request so the caller can fall through to Gemini.
+    /// request so the caller can fall through to static fallback text.
     static func generateSuggestion(
         imageData: Data,
         childName: String,
@@ -137,7 +137,7 @@ enum AppleIntelligenceService {
                         instructions: suggestionInstructions,
                         prompt: prompt
                     )
-                case .gemini, .fallback:
+                case .fallback:
                     continue
                 }
 
@@ -199,7 +199,7 @@ enum AppleIntelligenceService {
                         instructions: screeningInstructions,
                         prompt: prompt
                     )
-                case .gemini, .fallback:
+                case .fallback:
                     continue
                 }
 

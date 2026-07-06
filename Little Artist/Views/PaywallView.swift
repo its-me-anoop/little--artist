@@ -43,9 +43,9 @@ struct PaywallView: View {
         var message: String {
             switch self {
             case .children:
-                return "Add unlimited child profiles, cloud sync, AI captions, and more with Artling Premium."
+                return "Add unlimited child profiles, AI captions, voice memos, and more with Artling Premium."
             case .artworks:
-                return "Save unlimited artworks, sync across devices, and unlock AI-powered captions with Artling Premium."
+                return "Save unlimited artworks and unlock on-device AI captions, voice memos, and PDF export with Artling Premium."
             }
         }
 
@@ -173,14 +173,8 @@ struct PaywallView: View {
                 description: "Never run out of space for masterpieces"
             )
             benefitCard(
-                icon: "cloud.fill",
-                tint: Brand.lavender,
-                title: "Cloud Backup & Sync",
-                description: "Keep artwork safe across all your devices"
-            )
-            benefitCard(
                 icon: "doc.text",
-                tint: Brand.warmGray,
+                tint: Brand.lavender,
                 title: "PDF Portfolio Export",
                 description: "Create beautiful keepsake portfolios"
             )

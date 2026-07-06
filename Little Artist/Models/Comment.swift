@@ -9,28 +9,27 @@ import Foundation
 import SwiftData
 
 /// A family member's comment on an artwork.
+///
+/// Attributes carry defaults as required for CloudKit-backed SwiftData.
 @Model final class Comment {
-    var text: String
-    var authorName: String
+    var text: String = ""
+    var authorName: String = ""
     @Attribute(.externalStorage)
     var authorAvatarData: Data?
-    var createdAt: Date
+    var createdAt: Date = Date.now
     var artwork: Artwork?
-    var firestoreId: String?
 
     init(
         text: String,
         authorName: String,
         authorAvatarData: Data? = nil,
         createdAt: Date = .now,
-        artwork: Artwork? = nil,
-        firestoreId: String? = nil
+        artwork: Artwork? = nil
     ) {
         self.text = text
         self.authorName = authorName
         self.authorAvatarData = authorAvatarData
         self.createdAt = createdAt
         self.artwork = artwork
-        self.firestoreId = firestoreId
     }
 }

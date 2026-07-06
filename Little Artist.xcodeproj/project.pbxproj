@@ -7,11 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		6BBED5332F4A699700176D19 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 6BBED5322F4A699700176D19 /* FirebaseAuth */; };
-		6BBED5352F4A699700176D19 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 6BBED5342F4A699700176D19 /* FirebaseFirestore */; };
-		6BBED5372F4A699700176D19 /* FirebaseStorage in Frameworks */ = {isa = PBXBuildFile; productRef = 6BBED5362F4A699700176D19 /* FirebaseStorage */; };
-		6BBED5392F4A699700176D19 /* FirebaseAI in Frameworks */ = {isa = PBXBuildFile; productRef = 6BBED5382F4A699700176D19 /* FirebaseAI */; };
-		6BBED53B2F4A699700176D19 /* FirebaseAppCheck in Frameworks */ = {isa = PBXBuildFile; productRef = 6BBED53A2F4A699700176D19 /* FirebaseAppCheck */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -73,11 +68,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				6BBED5332F4A699700176D19 /* FirebaseAuth in Frameworks */,
-				6BBED5352F4A699700176D19 /* FirebaseFirestore in Frameworks */,
-				6BBED5372F4A699700176D19 /* FirebaseStorage in Frameworks */,
-				6BBED5392F4A699700176D19 /* FirebaseAI in Frameworks */,
-				6BBED53B2F4A699700176D19 /* FirebaseAppCheck in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -138,11 +128,6 @@
 			);
 			name = "Little Artist";
 			packageProductDependencies = (
-				6BBED5322F4A699700176D19 /* FirebaseAuth */,
-				6BBED5342F4A699700176D19 /* FirebaseFirestore */,
-				6BBED5362F4A699700176D19 /* FirebaseStorage */,
-				6BBED5382F4A699700176D19 /* FirebaseAI */,
-				6BBED53A2F4A699700176D19 /* FirebaseAppCheck */,
 			);
 			productName = "Little Artist";
 			productReference = 6B5FAE012F3FD7E1006B1D0D /* Little Artist.app */;
@@ -227,7 +212,6 @@
 			mainGroup = 6B5FADF82F3FD7E1006B1D0D;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				6BBED5312F4A699700176D19 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 6B5FAE022F3FD7E1006B1D0D /* Products */;
@@ -316,6 +300,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Little Artist/Info.plist";
+				INFOPLIST_KEY_UIBackgroundModes = "remote-notification";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Artling uses the camera to photograph your child's artwork for their art collection.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Artling uses the microphone to record voice memos that your child can attach to their artwork.";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Artling accesses your photo library so you can select artwork photos to add to your child's collection.";
@@ -360,6 +345,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Little Artist/Info.plist";
+				INFOPLIST_KEY_UIBackgroundModes = "remote-notification";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Artling uses the camera to photograph your child's artwork for their art collection.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Artling uses the microphone to record voice memos that your child can attach to their artwork.";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Artling accesses your photo library so you can select artwork photos to add to your child's collection.";
@@ -638,42 +624,9 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		6BBED5312F4A699700176D19 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/firebase/firebase-ios-sdk.git";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 12.9.0;
-			};
-		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		6BBED5322F4A699700176D19 /* FirebaseAuth */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 6BBED5312F4A699700176D19 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
-			productName = FirebaseAuth;
-		};
-		6BBED5342F4A699700176D19 /* FirebaseFirestore */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 6BBED5312F4A699700176D19 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
-			productName = FirebaseFirestore;
-		};
-		6BBED5362F4A699700176D19 /* FirebaseStorage */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 6BBED5312F4A699700176D19 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
-			productName = FirebaseStorage;
-		};
-		6BBED5382F4A699700176D19 /* FirebaseAI */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 6BBED5312F4A699700176D19 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
-			productName = FirebaseAI;
-		};
-		6BBED53A2F4A699700176D19 /* FirebaseAppCheck */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 6BBED5312F4A699700176D19 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
-			productName = FirebaseAppCheck;
-		};
 /* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 6B5FADF92F3FD7E1006B1D0D /* Project object */;

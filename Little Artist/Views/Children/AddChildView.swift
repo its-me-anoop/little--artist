@@ -273,7 +273,7 @@ struct AddChildView: View {
     private func saveChild() {
         let trimmedName = name.trimmingCharacters(in: .whitespaces)
         guard !trimmedName.isEmpty else { return }
-        FirestoreRepository.shared.createChild(
+        ArtworkRepository.shared.createChild(
             name: trimmedName,
             avatarColor: selectedColor,
             avatarImageData: avatarImageData,

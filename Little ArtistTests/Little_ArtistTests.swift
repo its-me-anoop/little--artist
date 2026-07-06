@@ -226,8 +226,8 @@ struct AIEngineLadderTests {
         #expect(availability.capableAppleEngines.isEmpty)
     }
 
-    @Test("Empty ladder when no Apple engine is available")
-    func emptyLadderFallsToGemini() {
+    @Test("Empty ladder falls to static fallback when nothing available")
+    func emptyLadderFallsToStaticFallback() {
         let availability = AIEngineAvailability()
         #expect(availability.capableAppleEngines.isEmpty)
     }
@@ -236,7 +236,6 @@ struct AIEngineLadderTests {
     func privacyBadges() {
         #expect(AIEngine.onDevice.privacyBadge != nil)
         #expect(AIEngine.privateCloudCompute.privacyBadge != nil)
-        #expect(AIEngine.gemini.privacyBadge == nil)
         #expect(AIEngine.fallback.privacyBadge == nil)
     }
 }

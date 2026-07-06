@@ -763,7 +763,7 @@ struct ArtworkDetailView: View {
 
     private func saveEdits() {
         let anchoredDate = ArtworkDate.dayAnchored(editDate)
-        FirestoreRepository.shared.updateArtwork(
+        ArtworkRepository.shared.updateArtwork(
             artwork,
             title: editTitle.trimmingCharacters(in: .whitespacesAndNewlines),
             caption: editCaption.trimmingCharacters(in: .whitespacesAndNewlines),
@@ -795,7 +795,7 @@ struct ArtworkDetailView: View {
 
     private func deleteArtwork() {
         HapticService.warning()
-        FirestoreRepository.shared.deleteArtwork(artwork, in: modelContext)
+        ArtworkRepository.shared.deleteArtwork(artwork, in: modelContext)
         if let onDelete {
             onDelete()
         } else {
@@ -833,7 +833,6 @@ struct ArtworkDetailView: View {
     private func enableAICaptionsAndContinue() {
         aiCaptionsEnabled = true
         showAIPermissionCard = false
-        Task { await FirestoreRepository.shared.syncUserPreferencesToFirestore() }
         generateAISuggestionsForEdits()
     }
 

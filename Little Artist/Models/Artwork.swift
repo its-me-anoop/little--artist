@@ -51,18 +51,6 @@ final class Artwork {
     @Relationship(deleteRule: .cascade, inverse: \Comment.artwork)
     var comments: [Comment]?
 
-    /// Firestore document path (e.g. `"users/{uid}/children/{cid}/artworks/{id}"`).
-    /// `nil` for artworks that have not yet been synced to Firebase.
-    var firestoreId: String?
-
-    /// Firebase Storage download URL for the artwork image.
-    /// Used by shared-device recipients to download the image from Firebase.
-    var imageURL: String?
-
-    /// Firebase Storage download URL for the voice note.
-    /// Used by shared-device recipients to download the voice note from Firebase.
-    var voiceNoteURL: String?
-
     init(
         title: String,
         caption: String = "",
@@ -72,10 +60,7 @@ final class Artwork {
         isFavorited: Bool = false,
         createdAt: Date = .now,
         child: Child? = nil,
-        tags: [Tag]? = nil,
-        firestoreId: String? = nil,
-        imageURL: String? = nil,
-        voiceNoteURL: String? = nil
+        tags: [Tag]? = nil
     ) {
         self.title = title
         self.caption = caption
@@ -86,8 +71,5 @@ final class Artwork {
         self.createdAt = createdAt
         self.child = child
         self.tags = tags
-        self.firestoreId = firestoreId
-        self.imageURL = imageURL
-        self.voiceNoteURL = voiceNoteURL
     }
 }
