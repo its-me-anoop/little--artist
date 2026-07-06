@@ -2,8 +2,8 @@
 //  ContentView.swift
 //  Little Artist
 //
-//  Root view displayed after onboarding. Provides the main tab navigation
-//  shell: Gallery and Search.
+//  Root view displayed after onboarding. Provides the main 4-tab navigation
+//  shell (Gallery, Timeline, Milestones, Settings) with a floating action button.
 //
 //  Created by Anoop Jose on 13/02/2026.
 //
@@ -22,53 +22,25 @@ struct ContentView: View {
 
     @State private var selectedTab: AppTab = .gallery
     @State private var selectedChildID: PersistentIdentifier?
-    @State private var searchText = ""
     @State private var showCreateSheet = false
     @State private var showAddChild = false
     @State private var showPremiumUpsell = false
+    @State private var showSlideshow = false
     @State private var paywallReason: PaywallView.LimitReason?
     @State private var artworkCountBeforeSheet = 0
-    @State private var showSettings = false
 
     private var store: StoreKitManager { StoreKitManager.shared }
+    private var celebration: CelebrationCenter { CelebrationCenter.shared }
+
+    /// Artworks in chronological order for exhibition mode, so the
+    /// slideshow tells the growth story from first to latest.
+    private var slideshowArtworks: [Artwork] {
+        allArtworks.sorted { $0.createdAt < $1.createdAt }
+    }
 
     private var selectedChild: Child? {
         guard let selectedChildID else { return nil }
         return children.first { $0.persistentModelID == selectedChildID }
-    }
-
-    @ViewBuilder
-    private var galleryTabIcon: some View {
-        if let selectedChild {
-            HStack(spacing: 8) {
-                ZStack {
-                    if let imageData = selectedChild.avatarImageData,
-                       let uiImage = UIImage(data: imageData) {
-                        Image(uiImage: uiImage)
-                            .resizable()
-                            .scaledToFill()
-                    } else {
-                        Circle()
-                            .fill(Color(hex: selectedChild.avatarColor))
-
-                        Text(String(selectedChild.name.prefix(1)).uppercased())
-                            .font(.system(size: 12, weight: .bold, design: .rounded))
-                            .foregroundStyle(.white)
-                    }
-                }
-                .frame(width: 24, height: 24)
-                .clipShape(Circle())
-
-                Text(selectedChild.name)
-                    .font(.system(size: 15, weight: .semibold, design: .rounded))
-                    .foregroundStyle(.primary)
-                    .lineLimit(1)
-            }
-        } else {
-            Image(systemName: "person.3.fill")
-                .font(.system(size: 18, weight: .semibold))
-                .foregroundStyle(.primary)
-        }
     }
 
     private var premiumUpsellPresented: Binding<Bool> {
@@ -96,94 +68,74 @@ struct ContentView: View {
         }
     }
 
-    var body: some View {
+    private var galleryRoot: some View {
         NavigationStack {
-            Group {
-                if selectedTab == .gallery {
-                    HomeView(selectedChildID: $selectedChildID)
-                } else {
-                    SearchView(searchText: $searchText)
-                }
-            }
-            .navigationDestination(isPresented: $showSettings) {
-                SettingsView()
-            }
-            .toolbar {
-                ToolbarItem(placement: .bottomBar) {
-                    Menu {
-                        Button {
-                            selectedTab = .gallery
-                            searchText = ""
-                            selectedChildID = nil
-                        } label: {
-                            Label(
-                                "All Children",
-                                systemImage: selectedChild == nil ? "checkmark" : "person.3.sequence.fill"
-                            )
-                        }
-
-                        if !children.isEmpty {
-                            Divider()
-                        }
-
-                        ForEach(children) { child in
+            HomeView(selectedChildID: $selectedChildID)
+                .toolbar {
+                    if !allArtworks.isEmpty {
+                        ToolbarItem(placement: .topBarTrailing) {
                             Button {
-                                selectedTab = .gallery
-                                searchText = ""
-                                selectedChildID = child.persistentModelID
+                                showSlideshow = true
                             } label: {
-                                Label(
-                                    child.name,
-                                    systemImage: selectedChildID == child.persistentModelID ? "checkmark" : "figure.child"
-                                )
+                                Image(systemName: "play.rectangle")
                             }
+                            .accessibilityLabel("Play slideshow")
                         }
+                    }
 
-                        Divider()
-
-                        Button {
-                            if PremiumManager.canAddChild(currentCount: children.count) {
-                                showAddChild = true
-                            } else {
-                                paywallReason = .children
-                            }
+                    ToolbarItem(placement: .topBarTrailing) {
+                        NavigationLink {
+                            SearchView()
                         } label: {
-                            Label("Add Child", systemImage: "plus")
+                            Image(systemName: "magnifyingglass")
                         }
+                    }
+                }
+        }
+    }
 
-                        Button {
-                            showSettings = true
-                        } label: {
-                            Label("Settings", systemImage: "gearshape")
-                        }
-                    } label: {
-                        galleryTabIcon
-                            .opacity(selectedTab == .gallery ? 1 : 0.75)
+    var body: some View {
+        ZStack(alignment: .bottomTrailing) {
+            TabView(selection: $selectedTab) {
+                Tab("Gallery", systemImage: "photo.on.rectangle.angled", value: .gallery) {
+                    galleryRoot
+                }
+
+                Tab("Timeline", systemImage: "book.pages", value: .timeline) {
+                    NavigationStack {
+                        TimelineView()
                     }
                 }
 
-                ToolbarSpacer(.flexible, placement: .bottomBar)
-                DefaultToolbarItem(kind: .search, placement: .bottomBar)
-                ToolbarSpacer(.flexible, placement: .bottomBar)
+                Tab("Milestones", systemImage: "medal", value: .milestones) {
+                    NavigationStack {
+                        MilestonesView()
+                    }
+                }
 
-                ToolbarItem(placement: .bottomBar) {
-                    Button {
-                        presentCreateFlow()
-                    } label: {
-                        Image(systemName: "square.and.pencil")
-                            .font(.system(size: 18, weight: .semibold))
+                Tab("Settings", systemImage: "slider.horizontal.3", value: .settings) {
+                    NavigationStack {
+                        SettingsView()
                     }
                 }
             }
-            .searchable(
-                text: $searchText,
-                placement: .toolbar,
-                prompt: "Search"
-            )
-            .searchToolbarBehavior(.automatic)
+
+            // Floating Action Button
+            Button {
+                presentCreateFlow()
+            } label: {
+                Image(systemName: "plus")
+                    .font(.title2.bold())
+                    .foregroundStyle(.white)
+                    .frame(width: Brand.fabSize, height: Brand.fabSize)
+                    .background(Brand.primary)
+                    .clipShape(Circle())
+                    .brandFABShadow()
+            }
+            .accessibilityLabel("Add artwork")
+            .padding(.trailing, Brand.screenPadding)
+            .padding(.bottom, 80)
         }
-        .toolbarBackground(Brand.backgroundBase, for: .bottomBar)
-        .toolbarBackground(.visible, for: .bottomBar)
         .sheet(isPresented: $showAddChild) {
             AddChildView()
         }
@@ -211,17 +163,40 @@ struct ContentView: View {
         .sheet(item: paywallPresented) { reason in
             PaywallView(reason: reason)
         }
+        .fullScreenCover(isPresented: $showSlideshow) {
+            ArtworkSlideshowView(artworks: slideshowArtworks)
+        }
+        .overlay {
+            if let achievement = celebration.current {
+                AchievementCelebrationView(achievement: achievement) {
+                    celebration.dismissCurrent()
+                }
+                .transition(.opacity)
+            }
+        }
+        .animation(.easeOut(duration: 0.3), value: celebration.current?.identifier)
         .onChange(of: store.isPremium) { _, isPremium in
             guard isPremium else { return }
             paywallReason = nil
             showPremiumUpsell = false
         }
-        .onChange(of: searchText) { _, newValue in
-            if !newValue.isEmpty {
-                selectedTab = .search
-            } else {
-                selectedTab = .gallery
-            }
+        .onChange(of: QuickActionRouter.shared.pendingAction, initial: true) { _, action in
+            guard let action else { return }
+            handleQuickAction(action)
+        }
+    }
+
+    /// Consumes a pending Siri / shortcut action and navigates to it.
+    private func handleQuickAction(_ action: QuickActionRouter.Action) {
+        QuickActionRouter.shared.pendingAction = nil
+        switch action {
+        case .captureArtwork:
+            selectedTab = .gallery
+            presentCreateFlow()
+        case .showMilestones:
+            selectedTab = .milestones
+        case .showTimeline:
+            selectedTab = .timeline
         }
     }
 }
@@ -230,7 +205,9 @@ struct ContentView: View {
 
 enum AppTab: Hashable {
     case gallery
-    case search
+    case timeline
+    case milestones
+    case settings
 }
 
 #Preview {

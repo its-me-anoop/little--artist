@@ -3,10 +3,14 @@
 <plist version="1.0">
 <dict>
 	<key>aps-environment</key>
-	<string>production</string>
-	<key>com.apple.developer.applesignin</key>
+	<string>development</string>
+	<key>com.apple.developer.icloud-container-identifiers</key>
 	<array>
-		<string>Default</string>
+		<string>iCloud.uk.co.flutterly.Little-Artist</string>
+	</array>
+	<key>com.apple.developer.icloud-services</key>
+	<array>
+		<string>CloudKit</string>
 	</array>
 </dict>
 </plist>

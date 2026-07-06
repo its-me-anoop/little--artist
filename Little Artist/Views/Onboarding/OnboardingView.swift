@@ -10,7 +10,6 @@
 //  Created by Anoop Jose on 13/02/2026.
 //
 
-import AuthenticationServices
 import SwiftUI
 import SwiftData
 
@@ -20,27 +19,16 @@ import SwiftData
 /// voice notes, sharing) with a unique card entrance animation. The user can
 /// swipe between pages, skip onboarding, or tap "Get Started" on the last page.
 /// On iPad, renders a side-by-side layout with enlarged card animations.
+/// No sign-in required — data syncs to the user's private iCloud automatically.
 struct OnboardingView: View {
     @Binding var hasCompletedOnboarding: Bool
     @Environment(\.horizontalSizeClass) private var sizeClass
     @Query private var children: [Child]
-    @AppStorage("firebaseSyncEnabled") private var firebaseSyncEnabled = false
-    private var auth: FirebaseAuthService { FirebaseAuthService.shared }
     @State private var currentPage = 0
     @State private var showAddChild = false
-    @State private var showSignInScreen = false
-    @State private var isSigningIn = false
-    @State private var signInError: String?
 
     private let selectionFeedback = UISelectionFeedbackGenerator()
     private let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
-
-    private var signInFlowPresented: Binding<Bool> {
-        Binding(
-            get: { showSignInScreen && !auth.hasPersistentAccount },
-            set: { showSignInScreen = $0 }
-        )
-    }
 
     private let pages: [OnboardingPage] = [
         OnboardingPage(
@@ -152,11 +140,7 @@ struct OnboardingView: View {
                 if currentPage < pages.count - 1 {
                     currentPage += 1
                 } else {
-                    if auth.hasPersistentAccount {
-                        completeOnboarding()
-                    } else {
-                        showSignInScreen = true
-                    }
+                    completeOnboarding()
                 }
             }
         } label: {
@@ -198,32 +182,14 @@ struct OnboardingView: View {
         .onChange(of: currentPage) { _, _ in
             selectionFeedback.selectionChanged()
         }
-        .onChange(of: auth.hasPersistentAccount) { _, hasPersistentAccount in
-            guard hasPersistentAccount else { return }
-            if showSignInScreen {
-                completeOnboarding()
-            }
-        }
         .sheet(isPresented: $showAddChild, onDismiss: {
-            hasCompletedOnboarding = true
-            if firebaseSyncEnabled {
-                Task { await FirestoreRepository.shared.activateCloudSyncIfNeeded() }
+            // Only leave onboarding once a child actually exists — dismissing
+            // the sheet without adding one returns to the carousel.
+            if !children.isEmpty {
+                hasCompletedOnboarding = true
             }
         }) {
             AddChildView()
-        }
-        .fullScreenCover(isPresented: signInFlowPresented) {
-            onboardingSignInScreen
-        }
-        .alert("Sign In Failed", isPresented: Binding(
-            get: { signInError != nil },
-            set: { if !$0 { signInError = nil } }
-        )) {
-            Button("OK", role: .cancel) {
-                signInError = nil
-            }
-        } message: {
-            Text(signInError ?? "")
         }
     }
 
@@ -364,107 +330,12 @@ struct OnboardingView: View {
         }
     }
 
-    private var onboardingSignInScreen: some View {
-        NavigationStack {
-            VStack(spacing: 24) {
-                Spacer()
-
-                Image("LaunchFox")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 132, height: 132)
-
-                Text("Enable Cloud Sync")
-                    .font(Brand.displayFont)
-                    .foregroundStyle(Brand.charcoal)
-                    .multilineTextAlignment(.center)
-                    .crayonStyle()
-
-                Text("Enable Cloud Sync with Sign in with Apple to upload artwork, child profiles, and voice memos for syncing and sharing. You can also continue with local-only storage.")
-                    .font(Brand.title3Font)
-                    .foregroundStyle(Brand.warmGray)
-                    .multilineTextAlignment(.center)
-                    .lineSpacing(4)
-                    .padding(.horizontal, 16)
-                    .crayonStyle()
-
-                Spacer()
-
-                SignInWithAppleButton(.continue) { request in
-                    FirebaseAuthService.shared.configureSignInWithAppleRequest(request)
-                } onCompletion: { result in
-                    Task { await signInAndFinishOnboarding(result) }
-                }
-                .signInWithAppleButtonStyle(.black)
-                .frame(maxWidth: .infinity)
-                .frame(height: 56)
-                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-                .disabled(isSigningIn)
-
-                Button {
-                    completeOnboarding()
-                } label: {
-                    Text("Continue with Local Only")
-                        .font(Brand.title3Font.bold())
-                        .foregroundStyle(Brand.primary)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 16)
-                        .background(Brand.glassStrong)
-                        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 20, style: .continuous)
-                                .stroke(Brand.primary.opacity(0.35), lineWidth: 2)
-                        )
-                        .crayonStyle()
-                }
-                .disabled(isSigningIn)
-
-                if isSigningIn {
-                    ProgressView()
-                        .padding(.top, 4)
-                }
-            }
-            .padding(.horizontal, 32)
-            .padding(.bottom, 32)
-            .background(animatedBackground)
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("Close") {
-                        showSignInScreen = false
-                    }
-                    .disabled(isSigningIn)
-                }
-            }
-        }
-    }
-
     @MainActor
     private func completeOnboarding() {
-        showSignInScreen = false
         if children.isEmpty {
             showAddChild = true
         } else {
             hasCompletedOnboarding = true
-            if firebaseSyncEnabled {
-                Task { await FirestoreRepository.shared.activateCloudSyncIfNeeded() }
-            }
-        }
-    }
-
-    @MainActor
-    private func signInAndFinishOnboarding(_ result: Result<ASAuthorization, Error>) async {
-        guard !isSigningIn else { return }
-        isSigningIn = true
-        defer { isSigningIn = false }
-
-        do {
-            try await FirebaseAuthService.shared.handleSignInWithAppleResult(result)
-            firebaseSyncEnabled = true
-            completeOnboarding()
-        } catch let error as ASAuthorizationError where error.code == .canceled {
-            // User canceled the Apple sheet; stay on this screen.
-        } catch {
-            signInError = error.localizedDescription
         }
     }
 }

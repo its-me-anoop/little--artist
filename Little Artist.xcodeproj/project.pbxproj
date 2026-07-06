@@ -7,10 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		6BBED5332F4A699700176D19 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 6BBED5322F4A699700176D19 /* FirebaseAuth */; };
-		6BBED5352F4A699700176D19 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 6BBED5342F4A699700176D19 /* FirebaseFirestore */; };
-		6BBED5372F4A699700176D19 /* FirebaseStorage in Frameworks */ = {isa = PBXBuildFile; productRef = 6BBED5362F4A699700176D19 /* FirebaseStorage */; };
-		6BBED5392F4A699700176D19 /* FirebaseAI in Frameworks */ = {isa = PBXBuildFile; productRef = 6BBED5382F4A699700176D19 /* FirebaseAI */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -72,10 +68,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				6BBED5332F4A699700176D19 /* FirebaseAuth in Frameworks */,
-				6BBED5352F4A699700176D19 /* FirebaseFirestore in Frameworks */,
-				6BBED5372F4A699700176D19 /* FirebaseStorage in Frameworks */,
-				6BBED5392F4A699700176D19 /* FirebaseAI in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -136,10 +128,6 @@
 			);
 			name = "Little Artist";
 			packageProductDependencies = (
-				6BBED5322F4A699700176D19 /* FirebaseAuth */,
-				6BBED5342F4A699700176D19 /* FirebaseFirestore */,
-				6BBED5362F4A699700176D19 /* FirebaseStorage */,
-				6BBED5382F4A699700176D19 /* FirebaseAI */,
 			);
 			productName = "Little Artist";
 			productReference = 6B5FAE012F3FD7E1006B1D0D /* Little Artist.app */;
@@ -224,7 +212,6 @@
 			mainGroup = 6B5FADF82F3FD7E1006B1D0D;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				6BBED5312F4A699700176D19 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 6B5FAE022F3FD7E1006B1D0D /* Products */;
@@ -308,14 +295,15 @@
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
 				CODE_SIGN_ENTITLEMENTS = "Little Artist/Little_Artist.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 18;
+				CURRENT_PROJECT_VERSION = 19;
 				DEVELOPMENT_TEAM = K6623R3GP5;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Little Artist/Info.plist";
-				INFOPLIST_KEY_NSCameraUsageDescription = "Little Artist uses the camera to photograph your child's artwork for their art collection.";
-				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Little Artist uses the microphone to record voice memos that your child can attach to their artwork.";
-				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Little Artist accesses your photo library so you can select artwork photos to add to your child's collection.";
+				INFOPLIST_KEY_UIBackgroundModes = "remote-notification";
+				INFOPLIST_KEY_NSCameraUsageDescription = "Artling uses the camera to photograph your child's artwork for their art collection.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Artling uses the microphone to record voice memos that your child can attach to their artwork.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Artling accesses your photo library so you can select artwork photos to add to your child's collection.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = "Launch Screen";
@@ -327,6 +315,11 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-weak_framework",
+					FoundationModels,
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = "uk.co.flutterly.Little-Artist";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -347,14 +340,15 @@
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
 				CODE_SIGN_ENTITLEMENTS = "Little Artist/Little_Artist.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 18;
+				CURRENT_PROJECT_VERSION = 19;
 				DEVELOPMENT_TEAM = K6623R3GP5;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Little Artist/Info.plist";
-				INFOPLIST_KEY_NSCameraUsageDescription = "Little Artist uses the camera to photograph your child's artwork for their art collection.";
-				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Little Artist uses the microphone to record voice memos that your child can attach to their artwork.";
-				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Little Artist accesses your photo library so you can select artwork photos to add to your child's collection.";
+				INFOPLIST_KEY_UIBackgroundModes = "remote-notification";
+				INFOPLIST_KEY_NSCameraUsageDescription = "Artling uses the camera to photograph your child's artwork for their art collection.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Artling uses the microphone to record voice memos that your child can attach to their artwork.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Artling accesses your photo library so you can select artwork photos to add to your child's collection.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = "Launch Screen";
@@ -366,6 +360,11 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-weak_framework",
+					FoundationModels,
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = "uk.co.flutterly.Little-Artist";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -431,7 +430,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
@@ -489,7 +488,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
@@ -504,10 +503,10 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 18;
+				CURRENT_PROJECT_VERSION = 19;
 				DEVELOPMENT_TEAM = K6623R3GP5;
 				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "uk.co.flutterly.Little-ArtistTests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -526,10 +525,10 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 18;
+				CURRENT_PROJECT_VERSION = 19;
 				DEVELOPMENT_TEAM = K6623R3GP5;
 				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "uk.co.flutterly.Little-ArtistTests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -547,7 +546,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 18;
+				CURRENT_PROJECT_VERSION = 19;
 				DEVELOPMENT_TEAM = K6623R3GP5;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
@@ -567,7 +566,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 18;
+				CURRENT_PROJECT_VERSION = 19;
 				DEVELOPMENT_TEAM = K6623R3GP5;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
@@ -625,37 +624,9 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		6BBED5312F4A699700176D19 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/firebase/firebase-ios-sdk.git";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 12.9.0;
-			};
-		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		6BBED5322F4A699700176D19 /* FirebaseAuth */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 6BBED5312F4A699700176D19 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
-			productName = FirebaseAuth;
-		};
-		6BBED5342F4A699700176D19 /* FirebaseFirestore */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 6BBED5312F4A699700176D19 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
-			productName = FirebaseFirestore;
-		};
-		6BBED5362F4A699700176D19 /* FirebaseStorage */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 6BBED5312F4A699700176D19 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
-			productName = FirebaseStorage;
-		};
-		6BBED5382F4A699700176D19 /* FirebaseAI */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 6BBED5312F4A699700176D19 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
-			productName = FirebaseAI;
-		};
 /* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 6B5FADF92F3FD7E1006B1D0D /* Project object */;

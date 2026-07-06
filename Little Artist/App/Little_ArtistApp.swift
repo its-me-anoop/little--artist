@@ -2,24 +2,27 @@
 //  Little_ArtistApp.swift
 //  Little Artist
 //
-//  Application entry point. Configures the SwiftData model container
-//  and routes between the onboarding flow and the main interface.
+//  Application entry point. Configures the CloudKit-backed SwiftData
+//  model container and routes between the onboarding flow and the
+//  main interface.
 //
 //  Created by Anoop Jose on 13/02/2026.
 //
 
-import FirebaseCore
+import os
 import SwiftData
 import SwiftUI
 
 /// The main application entry point for Artling.
 ///
-/// Sets up the shared `ModelContainer` for `Child` and `Artwork` persistence
-/// and conditionally presents either the ``OnboardingView`` or the
-/// ``ContentView`` based on whether the user has completed onboarding.
+/// Sets up the shared `ModelContainer` — user content (children,
+/// artworks, tags, comments) syncs to the user's private iCloud database
+/// via CloudKit; achievements stay local-only (derived state that each
+/// device re-earns from artwork). Conditionally presents either the
+/// ``OnboardingView`` or the ``ContentView`` based on whether the user
+/// has completed onboarding.
 @main
 struct Little_ArtistApp: App {
-    @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
     @AppStorage("appAppearance") private var appAppearance = AppAppearance.system.rawValue
@@ -27,6 +30,9 @@ struct Little_ArtistApp: App {
 
     /// Reference to StoreKit manager so transaction listener starts early.
     private let storeKit = StoreKitManager.shared
+
+    /// The CloudKit container that mirrors the user's private data.
+    private static let cloudKitContainerID = "iCloud.uk.co.flutterly.Little-Artist"
 
     var sharedModelContainer: ModelContainer = {
         // Ensure the Application Support directory exists before SwiftData tries to write.
@@ -36,61 +42,97 @@ struct Little_ArtistApp: App {
         }
 
         #if DEBUG
-        // Enable premium + sync for testing via launch argument: -debugPremium
+        // Enable premium for testing via launch argument: -debugPremium
         if ProcessInfo.processInfo.arguments.contains("-debugPremium") {
             UserDefaults.standard.set(true, forKey: "isPremium")
-            UserDefaults.standard.set(true, forKey: "firebaseSyncEnabled")
         }
         #endif
 
-        let schema = Schema(versionedSchema: SchemaV8.self)
+        // User content syncs to the private iCloud database; achievements
+        // are local-only derived state (syncing them would duplicate the
+        // seeded rows on every device).
+        let cloudSchema = Schema([Child.self, Artwork.self, Tag.self, Comment.self])
+        let localSchema = Schema([Achievement.self])
+        let fullSchema = Schema([Child.self, Artwork.self, Tag.self, Comment.self, Achievement.self])
 
-        // SwiftData uses local-only storage. Firebase handles cloud sync
-        // through FirestoreSyncService.
+        #if DEBUG
+        // UI test mode: deterministic in-memory store, onboarding pre-completed
+        // unless the test asks for it via -uiTestShowOnboarding.
+        if ProcessInfo.processInfo.arguments.contains("-uiTesting") {
+            UserDefaults.standard.set(
+                !ProcessInfo.processInfo.arguments.contains("-uiTestShowOnboarding"),
+                forKey: "hasCompletedOnboarding"
+            )
+            let inMemoryConfig = ModelConfiguration(schema: fullSchema, isStoredInMemoryOnly: true)
+            if let container = try? ModelContainer(for: fullSchema, configurations: [inMemoryConfig]) {
+                ArtworkRepository.shared.modelContainer = container
+                AchievementService.seedAchievements(context: ModelContext(container))
+                return container
+            }
+        }
+        #endif
+
         let storeURL = appSupport.appendingPathComponent("default.store")
-        let modelConfiguration = ModelConfiguration(
-            schema: schema,
+        let localStoreURL = appSupport.appendingPathComponent("local.store")
+
+        let cloudConfiguration = ModelConfiguration(
+            "cloud",
+            schema: cloudSchema,
             url: storeURL,
+            cloudKitDatabase: .private(cloudKitContainerID)
+        )
+        let localConfiguration = ModelConfiguration(
+            "local",
+            schema: localSchema,
+            url: localStoreURL,
             cloudKitDatabase: .none
         )
 
-        // Configure Firebase before creating the container
-        FirebaseApp.configure()
-        FirebaseAuthService.shared.setup()
+        func makeContainer() throws -> ModelContainer {
+            try ModelContainer(
+                for: fullSchema,
+                configurations: [cloudConfiguration, localConfiguration]
+            )
+        }
 
         do {
-            let container = try ModelContainer(
-                for: schema,
-                configurations: [modelConfiguration]
-            )
+            let container = try makeContainer()
+            ArtworkRepository.shared.modelContainer = container
 
-            // Provide model container to sync services
-            FirestoreSyncService.shared.modelContainer = container
-            FirestoreRepository.shared.modelContainer = container
-
-            // Always-on Firebase sync (starts once auth user is available).
-            // Upload first to assign firestoreIds + populate localWriteIds,
-            // THEN start the listener so echo writes are properly suppressed.
-            Task { @MainActor in
-                while FirebaseAuthService.shared.userId == nil {
-                    try? await Task.sleep(for: .milliseconds(200))
-                }
-                await FirestoreRepository.shared.activateCloudSyncIfNeeded()
-            }
+            // Seed default achievements on first launch, then evaluate existing
+            // artworks so any already-qualifying achievements unlock immediately.
+            let startupContext = ModelContext(container)
+            AchievementService.seedAchievements(context: startupContext)
+            AchievementService.checkMilestones(context: startupContext)
 
             return container
         } catch {
-            // If migration fails, delete the old store and create fresh.
-            try? FileManager.default.removeItem(at: storeURL)
-            let storeDir = storeURL.deletingLastPathComponent()
-            for suffix in ["-shm", "-wal"] {
-                let related = storeDir.appendingPathComponent(storeURL.lastPathComponent + suffix)
-                try? FileManager.default.removeItem(at: related)
+            // If migration fails, delete the old stores and create fresh.
+            for url in [storeURL, localStoreURL] {
+                try? FileManager.default.removeItem(at: url)
+                let storeDir = url.deletingLastPathComponent()
+                for suffix in ["-shm", "-wal"] {
+                    let related = storeDir.appendingPathComponent(url.lastPathComponent + suffix)
+                    try? FileManager.default.removeItem(at: related)
+                }
             }
             do {
-                return try ModelContainer(for: schema, configurations: [modelConfiguration])
+                let container = try makeContainer()
+                ArtworkRepository.shared.modelContainer = container
+                let startupContext = ModelContext(container)
+                AchievementService.seedAchievements(context: startupContext)
+                return container
             } catch {
-                fatalError("Could not create ModelContainer: \(error)")
+                let logger = Logger(subsystem: "uk.co.flutterly.Little-Artist", category: "Migration")
+                logger.error("Could not create ModelContainer after store reset, using in-memory fallback: \(error)")
+                // An in-memory store keeps the app functional; data won't persist this session.
+                let inMemoryConfig = ModelConfiguration(schema: fullSchema, isStoredInMemoryOnly: true)
+                if let fallback = try? ModelContainer(for: fullSchema, configurations: [inMemoryConfig]) {
+                    ArtworkRepository.shared.modelContainer = fallback
+                    return fallback
+                }
+                logger.critical("Failed to create even an in-memory ModelContainer.")
+                preconditionFailure("Could not create any ModelContainer: \(error)")
             }
         }
     }()

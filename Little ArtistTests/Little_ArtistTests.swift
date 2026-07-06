@@ -8,12 +8,22 @@
 //
 
 import Foundation
+import SwiftData
 import SwiftUI
 import Testing
 #if canImport(UIKit)
 import UIKit
 #endif
 @testable import Little_Artist
+
+/// Builds an isolated in-memory context covering the full app schema.
+@MainActor
+private func makeInMemoryContext() throws -> ModelContext {
+    let schema = Schema([Child.self, Artwork.self, Tag.self, Comment.self, Achievement.self])
+    let config = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
+    let container = try ModelContainer(for: schema, configurations: [config])
+    return ModelContext(container)
+}
 
 // MARK: - Artwork Model Tests
 
@@ -143,34 +153,33 @@ struct PremiumManagerTests {
     @Test("canAddChild returns true when under limit")
     func canAddChildUnderLimit() {
         #expect(PremiumManager.canAddChild(currentCount: 0) == true)
-        #expect(PremiumManager.canAddChild(currentCount: 1) == true)
     }
 
     @Test("canAddChild returns false when at limit")
     func canAddChildAtLimit() {
         // Ensure we're testing free tier (isPremium defaults to false)
         UserDefaults.standard.removeObject(forKey: "isPremium")
-        #expect(PremiumManager.canAddChild(currentCount: 2) == false)
+        #expect(PremiumManager.canAddChild(currentCount: 1) == false)
         #expect(PremiumManager.canAddChild(currentCount: 5) == false)
     }
 
     @Test("canAddArtwork returns true when under limit")
     func canAddArtworkUnderLimit() {
         #expect(PremiumManager.canAddArtwork(currentCount: 0) == true)
-        #expect(PremiumManager.canAddArtwork(currentCount: 49) == true)
+        #expect(PremiumManager.canAddArtwork(currentCount: 39) == true)
     }
 
     @Test("canAddArtwork returns false when at limit")
     func canAddArtworkAtLimit() {
         UserDefaults.standard.removeObject(forKey: "isPremium")
-        #expect(PremiumManager.canAddArtwork(currentCount: 50) == false)
+        #expect(PremiumManager.canAddArtwork(currentCount: 40) == false)
         #expect(PremiumManager.canAddArtwork(currentCount: 100) == false)
     }
 
     @Test("Free tier limits are correct")
     func freeTierLimitsAreCorrect() {
-        #expect(PremiumManager.freeChildLimit == 2)
-        #expect(PremiumManager.freeArtworkLimit == 50)
+        #expect(PremiumManager.freeChildLimit == 1)
+        #expect(PremiumManager.freeArtworkLimit == 40)
     }
 
     @Test("Premium user bypasses limits")
@@ -184,5 +193,346 @@ struct PremiumManagerTests {
 
         #expect(canAddChild == true)
         #expect(canAddArtwork == true)
+    }
+}
+
+// MARK: - ArtworkRepository Tests
+
+@MainActor
+struct ArtworkRepositoryTests {
+
+    @Test("createChild persists a child")
+    func createChildPersists() throws {
+        let context = try makeInMemoryContext()
+
+        let child = ArtworkRepository.shared.createChild(
+            name: "Mia", avatarColor: "F2784B", in: context
+        )
+
+        #expect(child.name == "Mia")
+        #expect(try context.fetchCount(FetchDescriptor<Child>()) == 1)
+    }
+
+    @Test("updateChild changes only provided fields")
+    func updateChildPartial() throws {
+        let context = try makeInMemoryContext()
+        let child = ArtworkRepository.shared.createChild(
+            name: "Noah", avatarColor: "7EB8DA", in: context
+        )
+
+        ArtworkRepository.shared.updateChild(child, name: "Noah James", in: context)
+
+        #expect(child.name == "Noah James")
+        #expect(child.avatarColor == "7EB8DA")
+    }
+
+    @Test("deleteChild cascades to artworks")
+    func deleteChildCascades() throws {
+        let context = try makeInMemoryContext()
+        let child = ArtworkRepository.shared.createChild(
+            name: "Ivy", avatarColor: "A8C5A0", in: context
+        )
+        ArtworkRepository.shared.createArtwork(title: "Sun", child: child, in: context)
+        #expect(try context.fetchCount(FetchDescriptor<Artwork>()) == 1)
+
+        ArtworkRepository.shared.deleteChild(child, in: context)
+
+        #expect(try context.fetchCount(FetchDescriptor<Child>()) == 0)
+        #expect(try context.fetchCount(FetchDescriptor<Artwork>()) == 0)
+    }
+
+    @Test("createArtwork stores fields and links the child")
+    func createArtworkStoresFields() throws {
+        let context = try makeInMemoryContext()
+        let child = ArtworkRepository.shared.createChild(
+            name: "Leo", avatarColor: "B8A9D4", in: context
+        )
+
+        let artwork = ArtworkRepository.shared.createArtwork(
+            title: "Rocket",
+            caption: "To the moon",
+            imageData: Data([0x01]),
+            child: child,
+            in: context
+        )
+
+        #expect(artwork.title == "Rocket")
+        #expect(artwork.caption == "To the moon")
+        #expect(artwork.child === child)
+        #expect(child.artworks?.count == 1)
+    }
+
+    @Test("Voice notes are dropped for free-tier users and kept for premium")
+    func voiceNotePremiumGating() throws {
+        let context = try makeInMemoryContext()
+        let child = ArtworkRepository.shared.createChild(
+            name: "Zoe", avatarColor: "E8C94A", in: context
+        )
+        let voice = Data([0x0A, 0x0B])
+
+        PremiumManager._overrideIsPremium = false
+        let freeArtwork = ArtworkRepository.shared.createArtwork(
+            title: "Free", voiceNoteData: voice, child: child, in: context
+        )
+
+        PremiumManager._overrideIsPremium = true
+        let premiumArtwork = ArtworkRepository.shared.createArtwork(
+            title: "Premium", voiceNoteData: voice, child: child, in: context
+        )
+        PremiumManager._overrideIsPremium = nil
+
+        #expect(freeArtwork.voiceNoteData == nil)
+        #expect(premiumArtwork.voiceNoteData == voice)
+    }
+
+    @Test("updateArtwork edits fields and deleteArtwork removes it")
+    func updateAndDeleteArtwork() throws {
+        let context = try makeInMemoryContext()
+        let child = ArtworkRepository.shared.createChild(
+            name: "Ada", avatarColor: "D4928A", in: context
+        )
+        let artwork = ArtworkRepository.shared.createArtwork(
+            title: "Before", child: child, in: context
+        )
+
+        ArtworkRepository.shared.updateArtwork(
+            artwork, title: "After", isFavorited: true, in: context
+        )
+        #expect(artwork.title == "After")
+        #expect(artwork.isFavorited == true)
+
+        ArtworkRepository.shared.deleteArtwork(artwork, in: context)
+        #expect(try context.fetchCount(FetchDescriptor<Artwork>()) == 0)
+    }
+}
+
+// MARK: - AchievementService Tests
+
+@MainActor
+struct AchievementServiceTests {
+
+    @Test("Seeding creates the default achievements exactly once")
+    func seedingIsIdempotent() throws {
+        let context = try makeInMemoryContext()
+
+        AchievementService.seedAchievements(context: context)
+        let firstCount = try context.fetchCount(FetchDescriptor<Achievement>())
+
+        AchievementService.seedAchievements(context: context)
+        let secondCount = try context.fetchCount(FetchDescriptor<Achievement>())
+
+        #expect(firstCount == 13)
+        #expect(secondCount == 13)
+    }
+
+    @Test("First artwork unlocks First Masterpiece and reports it once")
+    func firstMasterpieceUnlocksOnce() throws {
+        let context = try makeInMemoryContext()
+        AchievementService.seedAchievements(context: context)
+
+        let child = Child(name: "Eli", avatarColor: "7BC8B5")
+        context.insert(child)
+        context.insert(Artwork(title: "Cat", child: child))
+        try context.save()
+
+        let earned = AchievementService.checkMilestones(context: context)
+        #expect(earned.contains { $0.identifier == "first_masterpiece" })
+
+        // A second check must not re-report the same achievement.
+        let earnedAgain = AchievementService.checkMilestones(context: context)
+        #expect(earnedAgain.isEmpty)
+    }
+
+    @Test("Three artworks in one week unlock the Creative Streak")
+    func creativeWeekUnlocks() throws {
+        let context = try makeInMemoryContext()
+        AchievementService.seedAchievements(context: context)
+
+        let child = Child(name: "Ren", avatarColor: "F2784B")
+        context.insert(child)
+        let base = Date(timeIntervalSince1970: 1_750_000_000)
+        for day in [0, 2, 5] {
+            context.insert(Artwork(title: "W\(day)", createdAt: base.addingTimeInterval(Double(day) * 86_400), child: child))
+        }
+        try context.save()
+
+        let earned = AchievementService.checkMilestones(context: context)
+        #expect(earned.contains { $0.identifier == "creative_week" })
+    }
+
+    @Test("Three artworks spread over months do not unlock the streak")
+    func spreadOutArtworksNoStreak() throws {
+        let context = try makeInMemoryContext()
+        AchievementService.seedAchievements(context: context)
+
+        let child = Child(name: "Kai", avatarColor: "7EB8DA")
+        context.insert(child)
+        let base = Date(timeIntervalSince1970: 1_750_000_000)
+        for day in [0, 30, 60] {
+            context.insert(Artwork(title: "M\(day)", createdAt: base.addingTimeInterval(Double(day) * 86_400), child: child))
+        }
+        try context.save()
+
+        let earned = AchievementService.checkMilestones(context: context)
+        #expect(!earned.contains { $0.identifier == "creative_week" })
+    }
+
+    @Test("A second child unlocks Art Family")
+    func secondChildUnlocksArtFamily() throws {
+        let context = try makeInMemoryContext()
+        AchievementService.seedAchievements(context: context)
+
+        context.insert(Child(name: "One", avatarColor: "F2784B"))
+        context.insert(Child(name: "Two", avatarColor: "A8C5A0"))
+        try context.save()
+
+        let earned = AchievementService.checkMilestones(context: context)
+        #expect(earned.contains { $0.identifier == "art_family" })
+    }
+
+    @Test("A voice memo unlocks First Story")
+    func voiceMemoUnlocksFirstStory() throws {
+        let context = try makeInMemoryContext()
+        AchievementService.seedAchievements(context: context)
+
+        let child = Child(name: "Vee", avatarColor: "B8A9D4")
+        context.insert(child)
+        context.insert(Artwork(title: "Talk", voiceNoteData: Data([0x01]), child: child))
+        try context.save()
+
+        let earned = AchievementService.checkMilestones(context: context)
+        #expect(earned.contains { $0.identifier == "first_story" })
+    }
+
+    @Test("No achievements are earned with an empty gallery")
+    func emptyGalleryEarnsNothing() throws {
+        let context = try makeInMemoryContext()
+        AchievementService.seedAchievements(context: context)
+
+        let earned = AchievementService.checkMilestones(context: context)
+        #expect(earned.isEmpty)
+    }
+}
+
+// MARK: - CelebrationCenter Tests
+
+@MainActor
+struct CelebrationCenterTests {
+
+    @Test("Celebrations queue in order and dismiss one at a time")
+    func queueAndDismiss() {
+        let center = CelebrationCenter.shared
+        // Drain anything left over from other tests.
+        while center.current != nil { center.dismissCurrent() }
+
+        let first = Achievement(
+            identifier: "a", title: "A", subtitle: "", iconName: "star", category: "test"
+        )
+        let second = Achievement(
+            identifier: "b", title: "B", subtitle: "", iconName: "star", category: "test"
+        )
+
+        center.celebrate([first, second])
+        #expect(center.current?.identifier == "a")
+
+        center.dismissCurrent()
+        #expect(center.current?.identifier == "b")
+
+        center.dismissCurrent()
+        #expect(center.current == nil)
+
+        // Dismissing with an empty queue must not crash.
+        center.dismissCurrent()
+        #expect(center.current == nil)
+    }
+}
+
+// MARK: - Comment Model Tests
+
+struct CommentModelTests {
+
+    @Test("Comment initializer stores values with sensible defaults")
+    func commentInitializer() {
+        let comment = Comment(text: "Lovely!", authorName: "Grandma")
+
+        #expect(comment.text == "Lovely!")
+        #expect(comment.authorName == "Grandma")
+        #expect(comment.authorAvatarData == nil)
+        #expect(comment.artwork == nil)
+    }
+}
+
+// MARK: - AI Engine Ladder Tests
+
+struct AIEngineLadderTests {
+
+    @Test("On-device engine leads the ladder when fully capable")
+    func onDevicePreferred() {
+        let availability = AIEngineAvailability(
+            onDeviceAvailable: true,
+            onDeviceSupportsVision: true,
+            privateCloudAvailable: true,
+            privateCloudSupportsVision: true,
+            privateCloudQuotaReached: false
+        )
+        #expect(availability.capableAppleEngines == [.onDevice, .privateCloudCompute])
+    }
+
+    @Test("Falls to Private Cloud Compute when on-device lacks vision")
+    func privateCloudWhenOnDeviceLacksVision() {
+        let availability = AIEngineAvailability(
+            onDeviceAvailable: true,
+            onDeviceSupportsVision: false,
+            privateCloudAvailable: true,
+            privateCloudSupportsVision: true,
+            privateCloudQuotaReached: false
+        )
+        #expect(availability.capableAppleEngines == [.privateCloudCompute])
+    }
+
+    @Test("Private Cloud Compute is skipped when quota is reached")
+    func privateCloudSkippedWhenQuotaReached() {
+        let availability = AIEngineAvailability(
+            onDeviceAvailable: false,
+            onDeviceSupportsVision: false,
+            privateCloudAvailable: true,
+            privateCloudSupportsVision: true,
+            privateCloudQuotaReached: true
+        )
+        #expect(availability.capableAppleEngines.isEmpty)
+    }
+
+    @Test("Empty ladder falls to static fallback when nothing available")
+    func emptyLadderFallsToStaticFallback() {
+        let availability = AIEngineAvailability()
+        #expect(availability.capableAppleEngines.isEmpty)
+    }
+
+    @Test("Privacy badge shown only for Apple engines")
+    func privacyBadges() {
+        #expect(AIEngine.onDevice.privacyBadge != nil)
+        #expect(AIEngine.privateCloudCompute.privacyBadge != nil)
+        #expect(AIEngine.fallback.privacyBadge == nil)
+    }
+}
+
+// MARK: - StoreKitManager Tests
+
+@MainActor
+struct StoreKitProductTests {
+
+    @Test("All three premium products are configured")
+    func allProductsConfigured() {
+        #expect(StoreKitManager.ProductID.all.count == 3)
+        #expect(StoreKitManager.ProductID.all.contains(StoreKitManager.ProductID.monthlyPremium))
+        #expect(StoreKitManager.ProductID.all.contains(StoreKitManager.ProductID.yearlyPremium))
+        #expect(StoreKitManager.ProductID.all.contains(StoreKitManager.ProductID.lifetimePremium))
+    }
+
+    @Test("Product identifiers use the app's bundle prefix")
+    func productIdentifiersUseBundlePrefix() {
+        for id in StoreKitManager.ProductID.all {
+            #expect(id.hasPrefix("com.flutterly.littleartist.premium."))
+        }
     }
 }

@@ -21,8 +21,6 @@ import ImagePlayground
 struct AddChildView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
-    @Environment(\.supportsImagePlayground) private var supportsImagePlayground
-
     @State private var name = ""
     @State private var selectedColor = Brand.defaultAvatarColor
     @State private var avatarImageData: Data?
@@ -53,7 +51,7 @@ struct AddChildView: View {
                 }
                 .ignoresSafeArea()
             }
-            .imagePlaygroundSheet(isPresented: $showImagePlayground) { url in
+            .imagePlaygroundSheetCompat(isPresented: $showImagePlayground) { url in
                 if let data = try? Data(contentsOf: url) {
                     avatarImageData = data
                 }
@@ -239,15 +237,15 @@ struct AddChildView: View {
             }
             .buttonStyle(.plain)
 
-            // Image Playground
-            Button {
-                showImagePlayground = true
-            } label: {
-                photoSourceLabel(icon: "apple.image.playground", title: "Create")
+            // Image Playground (iOS 18.1+)
+            if isImagePlaygroundAvailable {
+                Button {
+                    showImagePlayground = true
+                } label: {
+                    photoSourceLabel(icon: "apple.image.playground", title: "Create")
+                }
+                .buttonStyle(.plain)
             }
-            .buttonStyle(.plain)
-            .disabled(!supportsImagePlayground)
-            .opacity(supportsImagePlayground ? 1 : 0.4)
         }
     }
 
@@ -275,7 +273,7 @@ struct AddChildView: View {
     private func saveChild() {
         let trimmedName = name.trimmingCharacters(in: .whitespaces)
         guard !trimmedName.isEmpty else { return }
-        FirestoreRepository.shared.createChild(
+        ArtworkRepository.shared.createChild(
             name: trimmedName,
             avatarColor: selectedColor,
             avatarImageData: avatarImageData,

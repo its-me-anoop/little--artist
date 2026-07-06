@@ -1,0 +1,96 @@
+{
+  "identifier" : "8F3A2B1C-5D4E-4F6A-9B8C-7D6E5F4A3B2C",
+  "nonRenewingSubscriptions" : [
+
+  ],
+  "products" : [
+    {
+      "displayPrice" : "79.99",
+      "familyShareable" : true,
+      "internalID" : "6F1E2D3C-4B5A-6978-8A9B-0C1D2E3F4A5B",
+      "localizations" : [
+        {
+          "description" : "Every premium feature, yours forever. Pay once.",
+          "displayName" : "Premium Lifetime",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "com.flutterly.littleartist.premium.lifetime",
+      "referenceName" : "Premium Lifetime",
+      "type" : "NonConsumable"
+    }
+  ],
+  "settings" : {
+    "_failTransactionsEnabled" : false,
+    "_locale" : "en_US",
+    "_storefront" : "USA",
+    "_storeKitErrors" : [
+
+    ]
+  },
+  "subscriptionGroups" : [
+    {
+      "id" : "3A9B8C7D-6E5F-4A3B-2C1D-0E9F8A7B6C5D",
+      "localizations" : [
+
+      ],
+      "name" : "Premium",
+      "subscriptions" : [
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "4.99",
+          "familyShareable" : true,
+          "groupNumber" : 1,
+          "internalID" : "1B2C3D4E-5F6A-7B8C-9D0E-1F2A3B4C5D6E",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "Unlimited children, artworks, sync and AI.",
+              "displayName" : "Premium Monthly",
+              "locale" : "en_US"
+            }
+          ],
+          "productID" : "com.flutterly.littleartist.premium.monthly",
+          "recurringSubscriptionPeriod" : "P1M",
+          "referenceName" : "Premium Monthly",
+          "subscriptionGroupID" : "3A9B8C7D-6E5F-4A3B-2C1D-0E9F8A7B6C5D",
+          "type" : "RecurringSubscription"
+        },
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "34.99",
+          "familyShareable" : true,
+          "groupNumber" : 1,
+          "internalID" : "2C3D4E5F-6A7B-8C9D-0E1F-2A3B4C5D6E7F",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "Unlimited children, artworks, sync and AI.",
+              "displayName" : "Premium Yearly",
+              "locale" : "en_US"
+            }
+          ],
+          "productID" : "com.flutterly.littleartist.premium.yearly",
+          "recurringSubscriptionPeriod" : "P1Y",
+          "referenceName" : "Premium Yearly",
+          "subscriptionGroupID" : "3A9B8C7D-6E5F-4A3B-2C1D-0E9F8A7B6C5D",
+          "type" : "RecurringSubscription"
+        }
+      ]
+    }
+  ],
+  "version" : {
+    "major" : 3,
+    "minor" : 0
+  }
+}

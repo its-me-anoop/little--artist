@@ -49,14 +49,6 @@ enum ImageProcessingService {
         return processForStorage(image: image)
     }
 
-    /// Generates only a thumbnail from existing image data.
-    /// Used when downloading shared artwork from Firebase (main image already stored).
-    static func generateThumbnail(from data: Data) -> Data? {
-        guard let image = UIImage(data: data) else { return nil }
-        let thumb = resized(image, maxDimension: thumbnailMaxDimension)
-        return thumb.jpegData(compressionQuality: thumbnailQuality)
-    }
-
     // MARK: - Private
 
     /// Resizes an image so its longest edge is at most `maxDimension`.

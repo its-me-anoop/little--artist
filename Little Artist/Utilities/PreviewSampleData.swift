@@ -48,6 +48,18 @@ enum PreviewSampleData {
         createdAt: date(year: 2025, month: 8, day: 15)
     )
 
+    /// A sample child named "Lily" with a purple avatar.
+    static let lily = Child(
+        name: "Lily",
+        avatarColor: "9B59B6",
+        createdAt: date(year: 2026, month: 1, day: 10)
+    )
+
+    /// All sample children.
+    static var sampleChildren: [Child] {
+        [emma, noah, lily]
+    }
+
     // MARK: - Sample Artworks
 
     /// A collection of sample artworks spanning multiple months and years.
@@ -129,6 +141,16 @@ enum PreviewSampleData {
             title: "Rainbow House",
             caption: "My dream house with a rainbow on top",
             createdAt: date(year: 2026, month: 2, day: 14)
+        )
+    }
+
+    /// A sample artwork with a mock voice memo for preview testing.
+    static var artworkWithVoiceMemo: Artwork {
+        Artwork(
+            title: "My Dinosaur",
+            caption: "It's a T-Rex eating pizza",
+            voiceNoteData: Data(repeating: 0, count: 1024),
+            createdAt: date(year: 2026, month: 2, day: 18)
         )
     }
 
