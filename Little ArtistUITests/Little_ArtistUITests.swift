@@ -43,8 +43,16 @@ final class Little_ArtistUITests: XCTestCase {
 
         let skip = app.buttons["Skip"]
         XCTAssertTrue(skip.waitForExistence(timeout: 30), "Onboarding Skip button never appeared")
-        skip.tap()
 
+        // Give the page video/entrance animation a beat, then capture a
+        // store-listing screenshot.
+        Thread.sleep(forTimeInterval: 2)
+        let onboardingShot = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        onboardingShot.name = "onboarding"
+        onboardingShot.lifetime = .keepAlways
+        add(onboardingShot)
+
+        skip.tap()
         waitForMainTabs(app)
     }
 
@@ -77,6 +85,13 @@ final class Little_ArtistUITests: XCTestCase {
         tabBar.buttons["Milestones"].tap()
         XCTAssertTrue(app.staticTexts["First Masterpiece"].waitForExistence(timeout: 10),
                       "Seeded achievements should be visible on the Milestones tab")
+
+        // Store-listing screenshot of the milestones screen.
+        Thread.sleep(forTimeInterval: 1)
+        let milestonesShot = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        milestonesShot.name = "milestones"
+        milestonesShot.lifetime = .keepAlways
+        add(milestonesShot)
 
         tabBar.buttons["Settings"].tap()
         XCTAssertTrue(app.staticTexts["iCloud Sync"].waitForExistence(timeout: 10),
@@ -146,5 +161,11 @@ final class Little_ArtistUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["Monthly"].exists)
         XCTAssertTrue(app.staticTexts["Lifetime"].exists)
         XCTAssertTrue(app.buttons["Restore Purchases"].exists)
+
+        // Capture the paywall for App Store Connect IAP review screenshots.
+        let attachment = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        attachment.name = "paywall"
+        attachment.lifetime = .keepAlways
+        add(attachment)
     }
 }
