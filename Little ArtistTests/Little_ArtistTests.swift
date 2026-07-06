@@ -186,6 +186,61 @@ struct PremiumManagerTests {
     }
 }
 
+// MARK: - AI Engine Ladder Tests
+
+struct AIEngineLadderTests {
+
+    @Test("On-device engine leads the ladder when fully capable")
+    func onDevicePreferred() {
+        let availability = AIEngineAvailability(
+            onDeviceAvailable: true,
+            onDeviceSupportsVision: true,
+            privateCloudAvailable: true,
+            privateCloudSupportsVision: true,
+            privateCloudQuotaReached: false
+        )
+        #expect(availability.capableAppleEngines == [.onDevice, .privateCloudCompute])
+    }
+
+    @Test("Falls to Private Cloud Compute when on-device lacks vision")
+    func privateCloudWhenOnDeviceLacksVision() {
+        let availability = AIEngineAvailability(
+            onDeviceAvailable: true,
+            onDeviceSupportsVision: false,
+            privateCloudAvailable: true,
+            privateCloudSupportsVision: true,
+            privateCloudQuotaReached: false
+        )
+        #expect(availability.capableAppleEngines == [.privateCloudCompute])
+    }
+
+    @Test("Private Cloud Compute is skipped when quota is reached")
+    func privateCloudSkippedWhenQuotaReached() {
+        let availability = AIEngineAvailability(
+            onDeviceAvailable: false,
+            onDeviceSupportsVision: false,
+            privateCloudAvailable: true,
+            privateCloudSupportsVision: true,
+            privateCloudQuotaReached: true
+        )
+        #expect(availability.capableAppleEngines.isEmpty)
+    }
+
+    @Test("Empty ladder when no Apple engine is available")
+    func emptyLadderFallsToGemini() {
+        let availability = AIEngineAvailability()
+        #expect(availability.capableAppleEngines.isEmpty)
+    }
+
+    @Test("Privacy badge shown only for Apple engines")
+    func privacyBadges() {
+        #expect(AIEngine.onDevice.privacyBadge != nil)
+        #expect(AIEngine.privateCloudCompute.privacyBadge != nil)
+        #expect(AIEngine.gemini.privacyBadge == nil)
+        #expect(AIEngine.fallback.privacyBadge == nil)
+    }
+}
+
 // MARK: - StoreKitManager Tests
 
 @MainActor

@@ -2,9 +2,10 @@
 //  AISuggestionService.swift
 //  Little Artist
 //
-//  Provides AI-powered title and caption suggestions for artwork.
-//  Uses Firebase Vertex AI (Gemini) as the primary analysis engine
-//  with on-device Apple FoundationModels as a fallback.
+//  Orchestrates AI-powered title and caption suggestions for artwork
+//  through an engine ladder: on-device Apple Intelligence first, then
+//  Apple Private Cloud Compute (both iOS 27+), then Gemini (cloud),
+//  then static fallback text. Apple engines never consume Gemini quota.
 //
 
 import FirebaseAI
@@ -39,10 +40,10 @@ struct ArtworkValidationResult {
 
 /// Centralised service for generating AI-powered artwork suggestions.
 ///
-/// Uses cloud-based analysis via Firebase Vertex AI (Gemini),
-/// which can directly see the artwork image for higher quality results.
-/// If the cloud request fails, returns safe default text.
-/// All Gemini calls are gated by `GeminiUsageTracker` rate limits.
+/// Resolves every request through the engine ladder: on-device
+/// `SystemLanguageModel` → `PrivateCloudComputeLanguageModel` (iOS 27+,
+/// via ``AppleIntelligenceService``) → Gemini → static fallback.
+/// Only Gemini calls are gated by `GeminiUsageTracker` rate limits.
 enum AISuggestionService {
 
     // MARK: - Availability
@@ -87,11 +88,21 @@ enum AISuggestionService {
 
     /// Validates whether an image is children's artwork.
     ///
-    /// Tries Gemini (cloud) first for accurate multimodal classification,
-    /// then falls back to on-device Vision classification heuristics.
-    /// Returns a result indicating whether the image is artwork and appropriate.
+    /// Follows the engine ladder: Apple Intelligence (on-device, then
+    /// Private Cloud Compute) on iOS 27+, then Gemini, then on-device
+    /// Vision classification heuristics.
     static func validateArtwork(imageData: Data) async -> ArtworkValidationResult {
-        // Try cloud-based Gemini first
+        #if compiler(>=6.4)
+        if #available(iOS 27.0, *) {
+            if let result = await AppleIntelligenceService.screenArtwork(
+                imageData: imageData,
+                allowPrivateCloudCompute: true
+            ) {
+                return result
+            }
+        }
+        #endif
+
         do {
             return try await validateWithGemini(imageData: imageData)
         } catch {
@@ -100,12 +111,24 @@ enum AISuggestionService {
         }
     }
 
-    /// Validates an image purely on-device using Vision heuristics.
+    /// Validates an image purely on-device.
     ///
-    /// Used during artwork capture so newly taken photos are never sent to a
-    /// cloud model just to check whether they look like artwork.
-    static func validateArtworkOnDevice(imageData: Data) -> ArtworkValidationResult {
-        validateOnDevice(imageData: imageData)
+    /// Used during artwork capture so newly taken photos are never sent to
+    /// any cloud — not Gemini, and not Private Cloud Compute. Uses the
+    /// on-device Apple Intelligence model when available (iOS 27+), else
+    /// Vision classification heuristics.
+    static func validateArtworkOnDevice(imageData: Data) async -> ArtworkValidationResult {
+        #if compiler(>=6.4)
+        if #available(iOS 27.0, *) {
+            if let result = await AppleIntelligenceService.screenArtwork(
+                imageData: imageData,
+                allowPrivateCloudCompute: false
+            ) {
+                return result
+            }
+        }
+        #endif
+        return validateOnDevice(imageData: imageData)
     }
 
     /// Validates an image using Gemini multimodal analysis.
@@ -250,38 +273,77 @@ enum AISuggestionService {
 
     /// Generates a new title and caption for a child's artwork.
     ///
-    /// Uses Gemini multimodal image analysis.
-    static func generateSuggestions(imageData: Data, childName: String) async throws -> AISuggestion {
+    /// Resolves through the engine ladder and reports which engine
+    /// produced the result so the UI can surface privacy provenance.
+    /// Never throws — the ladder always terminates in safe fallback text.
+    static func generateSuggestions(
+        imageData: Data,
+        childName: String
+    ) async -> (suggestion: AISuggestion, engine: AIEngine) {
+        #if compiler(>=6.4)
+        if #available(iOS 27.0, *) {
+            if let result = await AppleIntelligenceService.generateSuggestion(
+                imageData: imageData,
+                childName: childName
+            ) {
+                return result
+            }
+        }
+        #endif
+
         do {
-            return try await generateWithGemini(imageData: imageData, childName: childName)
+            let suggestion = try await generateWithGemini(imageData: imageData, childName: childName)
+            return (suggestion, .gemini)
         } catch {
-            return AISuggestion(
-                title: "My Artwork",
-                caption: "A colorful creation full of imagination."
+            return (
+                AISuggestion(
+                    title: "My Artwork",
+                    caption: "A colorful creation full of imagination."
+                ),
+                .fallback
             )
         }
     }
 
     /// Improves an existing title and caption for a child's artwork.
     ///
-    /// Uses Gemini multimodal image analysis.
+    /// Resolves through the same engine ladder as ``generateSuggestions``.
+    /// Never throws — falls back to the existing text.
     static func improveSuggestions(
         imageData: Data?,
         existingTitle: String,
         existingCaption: String,
         childName: String
-    ) async throws -> AISuggestion {
+    ) async -> (suggestion: AISuggestion, engine: AIEngine) {
+        #if compiler(>=6.4)
+        if #available(iOS 27.0, *) {
+            if let imageData,
+               let result = await AppleIntelligenceService.generateSuggestion(
+                   imageData: imageData,
+                   childName: childName,
+                   existingTitle: existingTitle,
+                   existingCaption: existingCaption
+               ) {
+                return result
+            }
+        }
+        #endif
+
         do {
-            return try await improveWithGemini(
+            let suggestion = try await improveWithGemini(
                 imageData: imageData,
                 existingTitle: existingTitle,
                 existingCaption: existingCaption,
                 childName: childName
             )
+            return (suggestion, .gemini)
         } catch {
-            return AISuggestion(
-                title: existingTitle.isEmpty ? "My Artwork" : existingTitle,
-                caption: existingCaption.isEmpty ? "A colorful creation full of imagination." : existingCaption
+            return (
+                AISuggestion(
+                    title: existingTitle.isEmpty ? "My Artwork" : existingTitle,
+                    caption: existingCaption.isEmpty ? "A colorful creation full of imagination." : existingCaption
+                ),
+                .fallback
             )
         }
     }

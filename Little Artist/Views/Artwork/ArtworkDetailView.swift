@@ -34,6 +34,7 @@ struct ArtworkDetailView: View {
     @State private var editDate = Date.now
     @State private var isGeneratingSuggestions = false
     @State private var suggestionErrorMessage: String?
+    @State private var suggestionEngine: AIEngine?
     @State private var showAIPermissionCard = false
     @State private var newCommentText = ""
     @State private var showFullScreenZoom = false
@@ -715,6 +716,14 @@ struct ArtworkDetailView: View {
                         .multilineTextAlignment(.center)
                         .padding(.horizontal, 32)
                 }
+
+                if let badge = suggestionEngine?.privacyBadge {
+                    Label(badge, systemImage: "lock.shield")
+                        .font(Brand.caption2Font)
+                        .foregroundStyle(Brand.sage)
+                        .padding(.horizontal, 32)
+                        .transition(.opacity)
+                }
             }
         }
     }
@@ -846,24 +855,20 @@ struct ArtworkDetailView: View {
         let childName = artwork.child?.name ?? "the child"
 
         Task {
-            do {
-                let suggestions = try await AISuggestionService.improveSuggestions(
-                    imageData: artwork.imageData,
-                    existingTitle: currentTitle,
-                    existingCaption: currentCaption,
-                    childName: childName
-                )
+            let result = await AISuggestionService.improveSuggestions(
+                imageData: artwork.imageData,
+                existingTitle: currentTitle,
+                existingCaption: currentCaption,
+                childName: childName
+            )
 
-                await MainActor.run {
-                    editTitle = suggestions.title
-                    editCaption = suggestions.caption
-                    isGeneratingSuggestions = false
+            await MainActor.run {
+                editTitle = result.suggestion.title
+                editCaption = result.suggestion.caption
+                withAnimation(.snappy) {
+                    suggestionEngine = result.engine
                 }
-            } catch {
-                await MainActor.run {
-                    suggestionErrorMessage = "Suggestions unavailable right now."
-                    isGeneratingSuggestions = false
-                }
+                isGeneratingSuggestions = false
             }
         }
     }

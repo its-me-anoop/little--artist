@@ -39,6 +39,7 @@ struct AddArtworkView: View {
     @State private var artworkDate = Date.now
     @State private var isGeneratingSuggestions = false
     @State private var suggestionErrorMessage: String?
+    @State private var suggestionEngine: AIEngine?
     @State private var selectedTags: [Tag] = []
     @State private var validationResult: ArtworkValidationResult?
     @State private var isValidatingImage = false
@@ -141,6 +142,14 @@ struct AddArtworkView: View {
                                 .padding(.horizontal, Brand.screenPadding)
                         }
 
+                        if let badge = suggestionEngine?.privacyBadge {
+                            Label(badge, systemImage: "lock.shield")
+                                .font(Brand.caption2Font)
+                                .foregroundStyle(Brand.sage)
+                                .padding(.horizontal, Brand.screenPadding)
+                                .transition(.opacity)
+                        }
+
                         // MARK: Creative Notes
                         creativeNotesSection
                             .padding(.horizontal, Brand.screenPadding)
@@ -173,6 +182,12 @@ struct AddArtworkView: View {
                 if selectedChild == nil {
                     selectedChild = initialChild ?? children.first
                 }
+                // Warm the on-device model so the first suggestion is fast.
+                #if compiler(>=6.4)
+                if #available(iOS 27.0, *), canRequestAISuggestions, aiCaptionsEnabled {
+                    AppleIntelligenceService.prewarm()
+                }
+                #endif
             }
             .fullScreenCover(isPresented: $showCamera) {
                 CameraPicker { image in
@@ -675,7 +690,7 @@ struct AddArtworkView: View {
     private func validateCapturedImage(_ imageData: Data) {
         isValidatingImage = true
         Task {
-            let result = AISuggestionService.validateArtworkOnDevice(imageData: imageData)
+            let result = await AISuggestionService.validateArtworkOnDevice(imageData: imageData)
             await MainActor.run {
                 validationResult = result
                 isValidatingImage = false
@@ -718,25 +733,21 @@ struct AddArtworkView: View {
         let childName = selectedChild?.name ?? "the artist"
 
         Task {
-            do {
-                let suggestions = try await AISuggestionService.generateSuggestions(
-                    imageData: capturedImageData,
-                    childName: childName
-                )
-                await MainActor.run {
-                    if title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                        title = suggestions.title
-                    }
-                    if caption.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                        caption = suggestions.caption
-                    }
-                    isGeneratingSuggestions = false
+            let result = await AISuggestionService.generateSuggestions(
+                imageData: capturedImageData,
+                childName: childName
+            )
+            await MainActor.run {
+                if title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                    title = result.suggestion.title
                 }
-            } catch {
-                await MainActor.run {
-                    suggestionErrorMessage = "Suggestions unavailable right now."
-                    isGeneratingSuggestions = false
+                if caption.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                    caption = result.suggestion.caption
                 }
+                withAnimation(.snappy) {
+                    suggestionEngine = result.engine
+                }
+                isGeneratingSuggestions = false
             }
         }
     }

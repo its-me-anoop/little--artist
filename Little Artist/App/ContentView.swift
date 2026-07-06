@@ -148,6 +148,24 @@ struct ContentView: View {
             paywallReason = nil
             showPremiumUpsell = false
         }
+        .onChange(of: QuickActionRouter.shared.pendingAction, initial: true) { _, action in
+            guard let action else { return }
+            handleQuickAction(action)
+        }
+    }
+
+    /// Consumes a pending Siri / shortcut action and navigates to it.
+    private func handleQuickAction(_ action: QuickActionRouter.Action) {
+        QuickActionRouter.shared.pendingAction = nil
+        switch action {
+        case .captureArtwork:
+            selectedTab = .gallery
+            presentCreateFlow()
+        case .showMilestones:
+            selectedTab = .milestones
+        case .showTimeline:
+            selectedTab = .timeline
+        }
     }
 }
 
