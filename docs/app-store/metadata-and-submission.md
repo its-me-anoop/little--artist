@@ -104,9 +104,9 @@ damaging documented complaints against incumbents.
       the auto-converted tier — it overcharges UK users):
       | Product ID | Type | USD | GBP |
       |---|---|---|---|
-      | `uk.co.flutterly.littleartist.premium.monthly` | Auto-renew sub | $4.99 | £4.49 |
-      | `uk.co.flutterly.littleartist.premium.yearly` | Auto-renew sub | $34.99 | £29.99 |
-      | `uk.co.flutterly.littleartist.premium.lifetime` | Non-consumable | $79.99 | £69.99 |
+      | `com.flutterly.littleartist.premium.monthly` | Auto-renew sub | $4.99 | £4.49 |
+      | `com.flutterly.littleartist.premium.yearly` | Auto-renew sub | $34.99 | £29.99 |
+      | `com.flutterly.littleartist.premium.lifetime` | Non-consumable | $79.99 | £69.99 |
 - [ ] Put both subscriptions in one subscription group ("Premium")
 - [ ] Enable **Family Sharing** on all three IAPs (research: FamilyAlbum's
       family-wide unlock is its best-loved trait)

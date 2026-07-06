@@ -471,7 +471,7 @@ struct StoreKitProductTests {
     @Test("Product identifiers use the app's bundle prefix")
     func productIdentifiersUseBundlePrefix() {
         for id in StoreKitManager.ProductID.all {
-            #expect(id.hasPrefix("uk.co.flutterly.littleartist.premium."))
+            #expect(id.hasPrefix("com.flutterly.littleartist.premium."))
         }
     }
 }

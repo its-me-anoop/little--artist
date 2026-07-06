@@ -20,9 +20,9 @@ final class StoreKitManager {
 
     /// Product identifiers configured in App Store Connect.
     enum ProductID {
-        static let monthlyPremium = "uk.co.flutterly.littleartist.premium.monthly"
-        static let yearlyPremium = "uk.co.flutterly.littleartist.premium.yearly"
-        static let lifetimePremium = "uk.co.flutterly.littleartist.premium.lifetime"
+        static let monthlyPremium = "com.flutterly.littleartist.premium.monthly"
+        static let yearlyPremium = "com.flutterly.littleartist.premium.yearly"
+        static let lifetimePremium = "com.flutterly.littleartist.premium.lifetime"
 
         static let all: [String] = [monthlyPremium, yearlyPremium, lifetimePremium]
     }

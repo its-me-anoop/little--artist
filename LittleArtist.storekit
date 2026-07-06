@@ -15,7 +15,7 @@
           "locale" : "en_US"
         }
       ],
-      "productID" : "uk.co.flutterly.littleartist.premium.lifetime",
+      "productID" : "com.flutterly.littleartist.premium.lifetime",
       "referenceName" : "Premium Lifetime",
       "type" : "NonConsumable"
     }
@@ -55,7 +55,7 @@
               "locale" : "en_US"
             }
           ],
-          "productID" : "uk.co.flutterly.littleartist.premium.monthly",
+          "productID" : "com.flutterly.littleartist.premium.monthly",
           "recurringSubscriptionPeriod" : "P1M",
           "referenceName" : "Premium Monthly",
           "subscriptionGroupID" : "3A9B8C7D-6E5F-4A3B-2C1D-0E9F8A7B6C5D",
@@ -80,7 +80,7 @@
               "locale" : "en_US"
             }
           ],
-          "productID" : "uk.co.flutterly.littleartist.premium.yearly",
+          "productID" : "com.flutterly.littleartist.premium.yearly",
           "recurringSubscriptionPeriod" : "P1Y",
           "referenceName" : "Premium Yearly",
           "subscriptionGroupID" : "3A9B8C7D-6E5F-4A3B-2C1D-0E9F8A7B6C5D",
