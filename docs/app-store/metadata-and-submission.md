@@ -122,17 +122,20 @@ damaging documented complaints against incumbents.
 - [ ] In CloudKit Console, **deploy schema to Production** before release
       (releasing without this makes sync fail for App Store users)
 
-### Final steps
-- [ ] **Sign into Xcode first** — as of 2026-07-06 this Mac has zero code
-      signing identities (`security find-identity -v -p codesigning` →
-      "0 valid identities") and stable Xcode has no Apple ID account.
-      Open Xcode → Settings → Accounts, sign in with the team
-      (K6623R3GP5) Apple ID, and let Xcode manage certificates. The new
-      iCloud/CloudKit + push entitlements also need the App ID
-      capabilities refreshed (automatic signing handles this).
-- [ ] Archive with stable Xcode 26 (`Product → Archive`, team K6623R3GP5) —
-      an unsigned Release build already compiles clean, so the archive
-      itself should be routine once signing is set up
+### Final steps — ONE credential needed
+An App Store Connect API key is already installed on this Mac
+(`~/.appstoreconnect/private_keys/AuthKey_V9VT258MM6.p8`, added 2 Jul 2026).
+The only missing piece is its **Issuer ID** — a UUID shown at
+App Store Connect → Users and Access → Integrations → App Store Connect API
+(it is not stored anywhere on this Mac and cannot be derived from the key).
+
+- [ ] Copy the Issuer ID from App Store Connect, then run:
+      `ASC_ISSUER_ID=<uuid> ./scripts/publish.sh`
+      This archives with **cloud-managed signing** (no Xcode sign-in or
+      local certificates needed — none exist on this Mac) using stable
+      Xcode 26, exports, and uploads the build to App Store Connect.
+- Alternative manual route: sign into Xcode (Settings → Accounts, team
+  K6623R3GP5), then Product → Archive → Distribute.
 - [ ] TestFlight internal pass: onboarding → add child → scan artwork →
       AI caption (on an AI-capable device) → milestone confetti →
       slideshow → paywall purchase in sandbox → restore purchases
