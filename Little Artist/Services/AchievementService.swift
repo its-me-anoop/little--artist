@@ -18,21 +18,28 @@ enum AchievementService {
 
     private static let defaults: [(id: String, title: String, subtitle: String, icon: String, category: String)] = [
         ("first_masterpiece", "First Masterpiece", "The journey begins!", "star.fill", "artwork"),
+        ("fridge_door", "Fridge Door Full", "10 masterpieces saved.", "square.grid.3x3.fill", "artwork"),
+        ("little_curator", "Little Curator", "25 masterpieces saved.", "crown.fill", "artwork"),
         ("prolific", "Prolific", "A growing stack of art.", "square.stack.3d.up.fill", "artwork"),
         ("gallery_owner", "Gallery Owner", "100 masterpieces saved.", "person.crop.rectangle.stack.fill", "artwork"),
+        ("creative_week", "Creative Streak", "Three artworks in one week.", "flame.fill", "engagement"),
         ("memory_lane", "Memory Lane", "Relived your first memory.", "text.book.closed.fill", "engagement"),
+        ("art_family", "Art Family", "A second little artist joins.", "figure.2.and.child.holdinghands", "engagement"),
         ("year_in_review", "Year in Review", "365 days of creativity.", "calendar.badge.checkmark", "seasonal"),
         ("seasonal_artist", "Seasonal Artist", "Art in every season.", "leaf.fill", "seasonal"),
+        ("first_story", "First Story", "A voice memo saved forever.", "waveform", "voice"),
         ("storyteller", "Storyteller", "10 voice stories recorded.", "mic.fill", "voice"),
         ("rainbow_palette", "Rainbow Palette", "Every medium explored.", "paintpalette.fill", "medium")
     ]
 
-    /// Seeds all default achievements if none exist. Call on first launch.
+    /// Seeds any default achievements that don't exist yet. Idempotent by
+    /// identifier, so newly added badges appear on existing installs too.
     static func seedAchievements(context: ModelContext) {
-        let existing = (try? context.fetchCount(FetchDescriptor<Achievement>())) ?? 0
-        guard existing == 0 else { return }
+        let existing = (try? context.fetch(FetchDescriptor<Achievement>())) ?? []
+        let existingIds = Set(existing.map(\.identifier))
 
-        for def in defaults {
+        var inserted = false
+        for def in defaults where !existingIds.contains(def.id) {
             let achievement = Achievement(
                 identifier: def.id,
                 title: def.title,
@@ -41,8 +48,11 @@ enum AchievementService {
                 category: def.category
             )
             context.insert(achievement)
+            inserted = true
         }
-        try? context.save()
+        if inserted {
+            try? context.save()
+        }
     }
 
     /// Checks all milestone conditions and marks newly earned achievements.
@@ -66,14 +76,31 @@ enum AchievementService {
         let seasons: Set<Int> = Set(dates.map { (Calendar.current.component(.month, from: $0) - 1) / 3 })
         let hasFourSeasons = seasons.count >= 4
 
+        // Three artworks inside any rolling 7-day window.
+        let hasCreativeWeek: Bool = {
+            let sorted = dates.sorted()
+            guard sorted.count >= 3 else { return false }
+            for i in 0...(sorted.count - 3) where sorted[i + 2].timeIntervalSince(sorted[i]) <= 7 * 24 * 3600 {
+                return true
+            }
+            return false
+        }()
+
+        let childCount = (try? context.fetchCount(FetchDescriptor<Child>())) ?? 0
+
         var newlyEarned: [Achievement] = []
         for achievement in achievements where !achievement.isEarned {
             let shouldEarn: Bool = switch achievement.identifier {
             case "first_masterpiece": artworkCount >= 1
+            case "fridge_door": artworkCount >= 10
+            case "little_curator": artworkCount >= 25
             case "prolific": artworkCount >= 50
             case "gallery_owner": artworkCount >= 100
+            case "creative_week": hasCreativeWeek
+            case "art_family": childCount >= 2
             case "year_in_review": hasYearSpan
             case "seasonal_artist": hasFourSeasons
+            case "first_story": voiceMemoCount >= 1
             case "storyteller": voiceMemoCount >= 10
             case "rainbow_palette": usedMediums.count >= mediumTags.count
             default: false

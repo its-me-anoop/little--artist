@@ -159,11 +159,13 @@ struct ArtworkDetailView: View {
             // Paper-frame container
             VStack {
                 if let imageData = artwork.imageData, let uiImage = UIImage(data: imageData) {
+                    // Show the whole artwork at its own aspect ratio —
+                    // landscape pieces must not be cropped to a portrait frame.
                     Image(uiImage: uiImage)
                         .resizable()
-                        .scaledToFill()
-                        .aspectRatio(4.0 / 5.0, contentMode: .fit)
-                        .clipped()
+                        .scaledToFit()
+                        .frame(maxWidth: .infinity)
+                        .frame(maxHeight: 520)
                         .clipShape(RoundedRectangle(cornerRadius: Brand.radiusImage, style: .continuous))
                 } else {
                     RoundedRectangle(cornerRadius: Brand.radiusImage, style: .continuous)
@@ -532,8 +534,8 @@ struct ArtworkDetailView: View {
             if let imageData = artwork.imageData, let uiImage = UIImage(data: imageData) {
                 Image(uiImage: uiImage)
                     .resizable()
-                    .scaledToFill()
-                    .frame(height: 180)
+                    .scaledToFit()
+                    .frame(maxHeight: 200)
                     .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
                     .overlay(
                         RoundedRectangle(cornerRadius: 20, style: .continuous)

@@ -19,7 +19,7 @@ struct MilestonesView: View {
 
     // MARK: - Tier Configuration
 
-    private let tierTargets = [10, 50, 100, 250, 500]
+    private let tierTargets = [10, 25, 50, 100, 250, 500]
 
     // MARK: - Computed
 

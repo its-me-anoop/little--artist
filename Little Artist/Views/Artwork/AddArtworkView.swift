@@ -46,6 +46,8 @@ struct AddArtworkView: View {
     @State private var validationDismissed = false
     @State private var showAIPermissionCard = false
     @State private var showSourcePicker = false
+    @State private var showPhotoPicker = false
+    @State private var showBatchPicker = false
     @State private var showAddChild = false
     @State private var selectedMedium = "Painting"
     @State private var showDatePicker = false
@@ -241,22 +243,27 @@ struct AddArtworkView: View {
                 AddChildView()
             }
             .confirmationDialog("Choose Source", isPresented: $showSourcePicker) {
+                // Plain buttons only — a PhotosPicker embedded in a
+                // confirmation dialog never presents its picker UI.
                 Button("Camera") { showCamera = true }
-                PhotosPicker(selection: $photoPickerItem, matching: .images) {
-                    Text("Photo Library")
-                }
-                PhotosPicker(
-                    selection: $batchPickerItems,
-                    maxSelectionCount: 50,
-                    matching: .images
-                ) {
-                    Text("Batch Import")
-                }
+                Button("Photo Library") { showPhotoPicker = true }
+                Button("Batch Import") { showBatchPicker = true }
                 if VNDocumentCameraViewController.isSupported {
                     Button("Scan Document") { showDocumentScanner = true }
                 }
                 Button("Cancel", role: .cancel) {}
             }
+            .photosPicker(
+                isPresented: $showPhotoPicker,
+                selection: $photoPickerItem,
+                matching: .images
+            )
+            .photosPicker(
+                isPresented: $showBatchPicker,
+                selection: $batchPickerItems,
+                maxSelectionCount: 50,
+                matching: .images
+            )
             .overlay {
                 if isBatchImporting {
                     ZStack {
@@ -753,6 +760,10 @@ struct AddArtworkView: View {
                 }
                 if caption.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                     caption = result.suggestion.caption
+                }
+                // Auto-apply the detected medium so the piece files itself.
+                if let medium = result.suggestion.medium, !medium.isEmpty {
+                    selectedMedium = medium
                 }
                 withAnimation(.snappy) {
                     suggestionEngine = result.engine

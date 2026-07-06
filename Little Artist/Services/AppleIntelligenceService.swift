@@ -34,6 +34,9 @@ enum AppleIntelligenceService {
 
         @Guide(description: "One warm sentence of at most 15 words celebrating what the child created, specific about the subjects depicted.")
         var caption: String
+
+        @Guide(description: "The primary art medium visible in the piece.", .anyOf(["Craft", "Painting", "Drawing", "Watercolor", "Collage", "Sculpture", "Digital", "Mixed Media"]))
+        var medium: String
     }
 
     @Generable
@@ -54,6 +57,11 @@ enum AppleIntelligenceService {
         You name children's artwork with creative, fun, short titles.
         Focus on the SUBJECTS and SCENES depicted (animals, people, flowers, \
         houses, landscapes), never the colours or the medium.
+        Great titles sound like storybook names: "The Brave Dinosaur Parade", \
+        "Grandma's Garden Party", "Rocket to the Moon".
+        Captions celebrate warmly and name what is in the picture: \
+        "A cheerful dinosaur marches proudly through a field of flowers."
+        Also identify the primary art medium you can see in the piece.
         """
 
     private static let screeningInstructions = """
@@ -89,12 +97,15 @@ enum AppleIntelligenceService {
         )
     }
 
-    /// Warms up the on-device model so the first suggestion feels instant.
-    /// Call when the Add Artwork sheet appears and AI captions are enabled.
+    /// Warms up the on-device model with the real prompt prefix so the
+    /// first suggestion feels instant (loads model assets and primes the
+    /// KV cache). Call when the Add Artwork sheet appears and AI captions
+    /// are enabled.
     static func prewarm() {
         let model = SystemLanguageModel.default
         guard model.availability == .available else { return }
-        LanguageModelSession(model: model, instructions: suggestionInstructions).prewarm()
+        LanguageModelSession(model: model, instructions: suggestionInstructions)
+            .prewarm(promptPrefix: Prompt("Create a title and caption for this artwork"))
     }
 
     // MARK: - Suggestions
@@ -148,7 +159,8 @@ enum AppleIntelligenceService {
                 return (
                     AISuggestion(
                         title: title.isEmpty ? "My Artwork" : title,
-                        caption: caption.isEmpty ? "A colorful creation full of imagination." : caption
+                        caption: caption.isEmpty ? "A colorful creation full of imagination." : caption,
+                        medium: generated.medium
                     ),
                     engine
                 )
@@ -238,19 +250,28 @@ enum AppleIntelligenceService {
 
     /// Runs a guided-generation request against any language model.
     /// One fresh session per request — these are stateless use cases.
+    /// The schema is enforced at decode time, so it is omitted from the
+    /// prompt (`includeSchemaInPrompt: false`) for a faster first token;
+    /// a response-token cap bounds tail latency.
     private static func respond<Output: Generable>(
         model: some LanguageModel,
         instructions: String,
         prompt: Prompt
     ) async throws -> Output {
         let session = LanguageModelSession(model: model, instructions: instructions)
-        return try await session.respond(to: prompt, generating: Output.self).content
+        return try await session.respond(
+            to: prompt,
+            generating: Output.self,
+            includeSchemaInPrompt: false,
+            options: GenerationOptions(temperature: 0.8, maximumResponseTokens: 120)
+        ).content
     }
 
     /// Decodes, orientation-normalizes, and downsamples an image so the
     /// longest edge is at most `maxDimension` points before attaching it
-    /// to a prompt.
-    private static func preparedCGImage(from data: Data, maxDimension: CGFloat = 1024) -> CGImage? {
+    /// to a prompt. 768 px keeps plenty of detail for artwork recognition
+    /// while cutting vision-encoding latency versus larger attachments.
+    private static func preparedCGImage(from data: Data, maxDimension: CGFloat = 768) -> CGImage? {
         guard let image = UIImage(data: data) else { return nil }
 
         let longestEdge = max(image.size.width, image.size.height)

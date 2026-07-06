@@ -321,8 +321,8 @@ struct AchievementServiceTests {
         AchievementService.seedAchievements(context: context)
         let secondCount = try context.fetchCount(FetchDescriptor<Achievement>())
 
-        #expect(firstCount == 8)
-        #expect(secondCount == 8)
+        #expect(firstCount == 13)
+        #expect(secondCount == 13)
     }
 
     @Test("First artwork unlocks First Masterpiece and reports it once")
@@ -341,6 +341,67 @@ struct AchievementServiceTests {
         // A second check must not re-report the same achievement.
         let earnedAgain = AchievementService.checkMilestones(context: context)
         #expect(earnedAgain.isEmpty)
+    }
+
+    @Test("Three artworks in one week unlock the Creative Streak")
+    func creativeWeekUnlocks() throws {
+        let context = try makeInMemoryContext()
+        AchievementService.seedAchievements(context: context)
+
+        let child = Child(name: "Ren", avatarColor: "F2784B")
+        context.insert(child)
+        let base = Date(timeIntervalSince1970: 1_750_000_000)
+        for day in [0, 2, 5] {
+            context.insert(Artwork(title: "W\(day)", createdAt: base.addingTimeInterval(Double(day) * 86_400), child: child))
+        }
+        try context.save()
+
+        let earned = AchievementService.checkMilestones(context: context)
+        #expect(earned.contains { $0.identifier == "creative_week" })
+    }
+
+    @Test("Three artworks spread over months do not unlock the streak")
+    func spreadOutArtworksNoStreak() throws {
+        let context = try makeInMemoryContext()
+        AchievementService.seedAchievements(context: context)
+
+        let child = Child(name: "Kai", avatarColor: "7EB8DA")
+        context.insert(child)
+        let base = Date(timeIntervalSince1970: 1_750_000_000)
+        for day in [0, 30, 60] {
+            context.insert(Artwork(title: "M\(day)", createdAt: base.addingTimeInterval(Double(day) * 86_400), child: child))
+        }
+        try context.save()
+
+        let earned = AchievementService.checkMilestones(context: context)
+        #expect(!earned.contains { $0.identifier == "creative_week" })
+    }
+
+    @Test("A second child unlocks Art Family")
+    func secondChildUnlocksArtFamily() throws {
+        let context = try makeInMemoryContext()
+        AchievementService.seedAchievements(context: context)
+
+        context.insert(Child(name: "One", avatarColor: "F2784B"))
+        context.insert(Child(name: "Two", avatarColor: "A8C5A0"))
+        try context.save()
+
+        let earned = AchievementService.checkMilestones(context: context)
+        #expect(earned.contains { $0.identifier == "art_family" })
+    }
+
+    @Test("A voice memo unlocks First Story")
+    func voiceMemoUnlocksFirstStory() throws {
+        let context = try makeInMemoryContext()
+        AchievementService.seedAchievements(context: context)
+
+        let child = Child(name: "Vee", avatarColor: "B8A9D4")
+        context.insert(child)
+        context.insert(Artwork(title: "Talk", voiceNoteData: Data([0x01]), child: child))
+        try context.save()
+
+        let earned = AchievementService.checkMilestones(context: context)
+        #expect(earned.contains { $0.identifier == "first_story" })
     }
 
     @Test("No achievements are earned with an empty gallery")
