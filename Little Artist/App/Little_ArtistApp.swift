@@ -55,6 +55,23 @@ struct Little_ArtistApp: App {
         let localSchema = Schema([Achievement.self])
         let fullSchema = Schema([Child.self, Artwork.self, Tag.self, Comment.self, Achievement.self])
 
+        #if DEBUG
+        // UI test mode: deterministic in-memory store, onboarding pre-completed
+        // unless the test asks for it via -uiTestShowOnboarding.
+        if ProcessInfo.processInfo.arguments.contains("-uiTesting") {
+            UserDefaults.standard.set(
+                !ProcessInfo.processInfo.arguments.contains("-uiTestShowOnboarding"),
+                forKey: "hasCompletedOnboarding"
+            )
+            let inMemoryConfig = ModelConfiguration(schema: fullSchema, isStoredInMemoryOnly: true)
+            if let container = try? ModelContainer(for: fullSchema, configurations: [inMemoryConfig]) {
+                ArtworkRepository.shared.modelContainer = container
+                AchievementService.seedAchievements(context: ModelContext(container))
+                return container
+            }
+        }
+        #endif
+
         let storeURL = appSupport.appendingPathComponent("default.store")
         let localStoreURL = appSupport.appendingPathComponent("local.store")
 

@@ -8,12 +8,22 @@
 //
 
 import Foundation
+import SwiftData
 import SwiftUI
 import Testing
 #if canImport(UIKit)
 import UIKit
 #endif
 @testable import Little_Artist
+
+/// Builds an isolated in-memory context covering the full app schema.
+@MainActor
+private func makeInMemoryContext() throws -> ModelContext {
+    let schema = Schema([Child.self, Artwork.self, Tag.self, Comment.self, Achievement.self])
+    let config = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
+    let container = try ModelContainer(for: schema, configurations: [config])
+    return ModelContext(container)
+}
 
 // MARK: - Artwork Model Tests
 
@@ -183,6 +193,211 @@ struct PremiumManagerTests {
 
         #expect(canAddChild == true)
         #expect(canAddArtwork == true)
+    }
+}
+
+// MARK: - ArtworkRepository Tests
+
+@MainActor
+struct ArtworkRepositoryTests {
+
+    @Test("createChild persists a child")
+    func createChildPersists() throws {
+        let context = try makeInMemoryContext()
+
+        let child = ArtworkRepository.shared.createChild(
+            name: "Mia", avatarColor: "F2784B", in: context
+        )
+
+        #expect(child.name == "Mia")
+        #expect(try context.fetchCount(FetchDescriptor<Child>()) == 1)
+    }
+
+    @Test("updateChild changes only provided fields")
+    func updateChildPartial() throws {
+        let context = try makeInMemoryContext()
+        let child = ArtworkRepository.shared.createChild(
+            name: "Noah", avatarColor: "7EB8DA", in: context
+        )
+
+        ArtworkRepository.shared.updateChild(child, name: "Noah James", in: context)
+
+        #expect(child.name == "Noah James")
+        #expect(child.avatarColor == "7EB8DA")
+    }
+
+    @Test("deleteChild cascades to artworks")
+    func deleteChildCascades() throws {
+        let context = try makeInMemoryContext()
+        let child = ArtworkRepository.shared.createChild(
+            name: "Ivy", avatarColor: "A8C5A0", in: context
+        )
+        ArtworkRepository.shared.createArtwork(title: "Sun", child: child, in: context)
+        #expect(try context.fetchCount(FetchDescriptor<Artwork>()) == 1)
+
+        ArtworkRepository.shared.deleteChild(child, in: context)
+
+        #expect(try context.fetchCount(FetchDescriptor<Child>()) == 0)
+        #expect(try context.fetchCount(FetchDescriptor<Artwork>()) == 0)
+    }
+
+    @Test("createArtwork stores fields and links the child")
+    func createArtworkStoresFields() throws {
+        let context = try makeInMemoryContext()
+        let child = ArtworkRepository.shared.createChild(
+            name: "Leo", avatarColor: "B8A9D4", in: context
+        )
+
+        let artwork = ArtworkRepository.shared.createArtwork(
+            title: "Rocket",
+            caption: "To the moon",
+            imageData: Data([0x01]),
+            child: child,
+            in: context
+        )
+
+        #expect(artwork.title == "Rocket")
+        #expect(artwork.caption == "To the moon")
+        #expect(artwork.child === child)
+        #expect(child.artworks?.count == 1)
+    }
+
+    @Test("Voice notes are dropped for free-tier users and kept for premium")
+    func voiceNotePremiumGating() throws {
+        let context = try makeInMemoryContext()
+        let child = ArtworkRepository.shared.createChild(
+            name: "Zoe", avatarColor: "E8C94A", in: context
+        )
+        let voice = Data([0x0A, 0x0B])
+
+        PremiumManager._overrideIsPremium = false
+        let freeArtwork = ArtworkRepository.shared.createArtwork(
+            title: "Free", voiceNoteData: voice, child: child, in: context
+        )
+
+        PremiumManager._overrideIsPremium = true
+        let premiumArtwork = ArtworkRepository.shared.createArtwork(
+            title: "Premium", voiceNoteData: voice, child: child, in: context
+        )
+        PremiumManager._overrideIsPremium = nil
+
+        #expect(freeArtwork.voiceNoteData == nil)
+        #expect(premiumArtwork.voiceNoteData == voice)
+    }
+
+    @Test("updateArtwork edits fields and deleteArtwork removes it")
+    func updateAndDeleteArtwork() throws {
+        let context = try makeInMemoryContext()
+        let child = ArtworkRepository.shared.createChild(
+            name: "Ada", avatarColor: "D4928A", in: context
+        )
+        let artwork = ArtworkRepository.shared.createArtwork(
+            title: "Before", child: child, in: context
+        )
+
+        ArtworkRepository.shared.updateArtwork(
+            artwork, title: "After", isFavorited: true, in: context
+        )
+        #expect(artwork.title == "After")
+        #expect(artwork.isFavorited == true)
+
+        ArtworkRepository.shared.deleteArtwork(artwork, in: context)
+        #expect(try context.fetchCount(FetchDescriptor<Artwork>()) == 0)
+    }
+}
+
+// MARK: - AchievementService Tests
+
+@MainActor
+struct AchievementServiceTests {
+
+    @Test("Seeding creates the default achievements exactly once")
+    func seedingIsIdempotent() throws {
+        let context = try makeInMemoryContext()
+
+        AchievementService.seedAchievements(context: context)
+        let firstCount = try context.fetchCount(FetchDescriptor<Achievement>())
+
+        AchievementService.seedAchievements(context: context)
+        let secondCount = try context.fetchCount(FetchDescriptor<Achievement>())
+
+        #expect(firstCount == 8)
+        #expect(secondCount == 8)
+    }
+
+    @Test("First artwork unlocks First Masterpiece and reports it once")
+    func firstMasterpieceUnlocksOnce() throws {
+        let context = try makeInMemoryContext()
+        AchievementService.seedAchievements(context: context)
+
+        let child = Child(name: "Eli", avatarColor: "7BC8B5")
+        context.insert(child)
+        context.insert(Artwork(title: "Cat", child: child))
+        try context.save()
+
+        let earned = AchievementService.checkMilestones(context: context)
+        #expect(earned.contains { $0.identifier == "first_masterpiece" })
+
+        // A second check must not re-report the same achievement.
+        let earnedAgain = AchievementService.checkMilestones(context: context)
+        #expect(earnedAgain.isEmpty)
+    }
+
+    @Test("No achievements are earned with an empty gallery")
+    func emptyGalleryEarnsNothing() throws {
+        let context = try makeInMemoryContext()
+        AchievementService.seedAchievements(context: context)
+
+        let earned = AchievementService.checkMilestones(context: context)
+        #expect(earned.isEmpty)
+    }
+}
+
+// MARK: - CelebrationCenter Tests
+
+@MainActor
+struct CelebrationCenterTests {
+
+    @Test("Celebrations queue in order and dismiss one at a time")
+    func queueAndDismiss() {
+        let center = CelebrationCenter.shared
+        // Drain anything left over from other tests.
+        while center.current != nil { center.dismissCurrent() }
+
+        let first = Achievement(
+            identifier: "a", title: "A", subtitle: "", iconName: "star", category: "test"
+        )
+        let second = Achievement(
+            identifier: "b", title: "B", subtitle: "", iconName: "star", category: "test"
+        )
+
+        center.celebrate([first, second])
+        #expect(center.current?.identifier == "a")
+
+        center.dismissCurrent()
+        #expect(center.current?.identifier == "b")
+
+        center.dismissCurrent()
+        #expect(center.current == nil)
+
+        // Dismissing with an empty queue must not crash.
+        center.dismissCurrent()
+        #expect(center.current == nil)
+    }
+}
+
+// MARK: - Comment Model Tests
+
+struct CommentModelTests {
+
+    @Test("Comment initializer stores values with sensible defaults")
+    func commentInitializer() {
+        let comment = Comment(text: "Lovely!", authorName: "Grandma")
+
+        #expect(comment.text == "Lovely!")
+        #expect(comment.authorName == "Grandma")
+        #expect(comment.authorAvatarData == nil)
+        #expect(comment.artwork == nil)
     }
 }
 

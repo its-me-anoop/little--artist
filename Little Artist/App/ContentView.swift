@@ -132,6 +132,7 @@ struct ContentView: View {
                     .clipShape(Circle())
                     .brandFABShadow()
             }
+            .accessibilityLabel("Add artwork")
             .padding(.trailing, Brand.screenPadding)
             .padding(.bottom, 80)
         }
