@@ -222,7 +222,7 @@ struct HomeView: View {
                 .scaledToFit()
                 .frame(width: 36, height: 36)
 
-            Text("Artling")
+            Text("Little Artist")
                 .font(.system(size: 34, weight: .bold, design: .rounded))
                 .foregroundStyle(.primary)
 
@@ -388,7 +388,7 @@ struct HomeView: View {
 
     var body: some View {
         mainContent
-            .navigationTitle("Artling")
+            .navigationTitle("Little Artist")
             .navigationBarTitleDisplayMode(.large)
             .background(BrandAppBackground())
             .toolbar {
