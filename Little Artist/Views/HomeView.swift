@@ -97,7 +97,7 @@ struct HomeView: View {
     }
 
     private var navigationTitleText: String {
-        children.isEmpty ? "Artling" : selectedChildMenuTitle
+        children.isEmpty ? "Little Artist" : selectedChildMenuTitle
     }
 
     private var navigationSubtitleText: String? {

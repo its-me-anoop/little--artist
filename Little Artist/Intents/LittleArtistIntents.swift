@@ -14,7 +14,7 @@ import SwiftData
 /// Opens the app straight into the capture flow.
 struct CaptureArtworkIntent: AppIntent {
     static let title: LocalizedStringResource = "Capture Artwork"
-    static let description = IntentDescription("Open Artling ready to save a new masterpiece.")
+    static let description = IntentDescription("Open Little Artist ready to save a new masterpiece.")
     static let openAppWhenRun = true
 
     @MainActor
@@ -49,7 +49,7 @@ struct GalleryStatsIntent: AppIntent {
     @MainActor
     func perform() async throws -> some IntentResult & ProvidesDialog {
         guard let container = ArtworkRepository.shared.modelContainer else {
-            return .result(dialog: "Open Artling first to set up your gallery.")
+            return .result(dialog: "Open Little Artist first to set up your gallery.")
         }
 
         let context = ModelContext(container)
