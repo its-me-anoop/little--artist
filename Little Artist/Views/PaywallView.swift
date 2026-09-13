@@ -43,9 +43,9 @@ struct PaywallView: View {
         var message: String {
             switch self {
             case .children:
-                return "Add unlimited child profiles, AI captions, voice memos, and more with Artling Premium."
+                return "Add unlimited child profiles, AI captions, voice memos, and more with Little Artist Premium."
             case .artworks:
-                return "Save unlimited artworks and unlock on-device AI captions, voice memos, and PDF export with Artling Premium."
+                return "Save unlimited artworks and unlock on-device AI captions, voice memos, and PDF export with Little Artist Premium."
             }
         }
 
