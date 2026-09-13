@@ -301,9 +301,9 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Little Artist/Info.plist";
 				INFOPLIST_KEY_UIBackgroundModes = "remote-notification";
-				INFOPLIST_KEY_NSCameraUsageDescription = "Artling uses the camera to photograph your child's artwork for their art collection.";
-				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Artling uses the microphone to record voice memos that your child can attach to their artwork.";
-				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Artling accesses your photo library so you can select artwork photos to add to your child's collection.";
+				INFOPLIST_KEY_NSCameraUsageDescription = "Little Artist uses the camera to photograph your child's artwork for their art collection.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Little Artist uses the microphone to record voice memos that your child can attach to their artwork.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Little Artist accesses your photo library so you can select artwork photos to add to your child's collection.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = "Launch Screen";
@@ -346,9 +346,9 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Little Artist/Info.plist";
 				INFOPLIST_KEY_UIBackgroundModes = "remote-notification";
-				INFOPLIST_KEY_NSCameraUsageDescription = "Artling uses the camera to photograph your child's artwork for their art collection.";
-				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Artling uses the microphone to record voice memos that your child can attach to their artwork.";
-				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Artling accesses your photo library so you can select artwork photos to add to your child's collection.";
+				INFOPLIST_KEY_NSCameraUsageDescription = "Little Artist uses the camera to photograph your child's artwork for their art collection.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Little Artist uses the microphone to record voice memos that your child can attach to their artwork.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Little Artist accesses your photo library so you can select artwork photos to add to your child's collection.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = "Launch Screen";
