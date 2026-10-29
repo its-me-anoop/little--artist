@@ -59,6 +59,7 @@ final class StoreKitManager {
         do {
             let storeProducts = try await Product.products(for: ProductID.all)
             products = storeProducts.sorted { $0.price < $1.price }
+            await updateIntroOfferEligibility()
         } catch {
             errorMessage = "Unable to load subscription options."
         }
@@ -77,6 +78,54 @@ final class StoreKitManager {
     /// Returns the lifetime (one-time purchase) product, if loaded.
     var lifetimeProduct: Product? {
         products.first { $0.id == ProductID.lifetimePremium }
+    }
+
+    // MARK: - Free Trial
+
+    /// Whether this Apple Account can still claim the subscription group's
+    /// introductory offer (Apple allows one per group, ever).
+    private(set) var isEligibleForIntroOffer = false
+
+    /// The free-trial offer on a subscription, if one is configured in
+    /// App Store Connect and this account is still eligible for it.
+    func freeTrial(for product: Product?) -> Product.SubscriptionOffer? {
+        guard isEligibleForIntroOffer,
+              let offer = product?.subscription?.introductoryOffer,
+              offer.paymentMode == .freeTrial else { return nil }
+        return offer
+    }
+
+    /// Trial length as (count, unit), with weeks expressed in days.
+    private static func trialLength(_ offer: Product.SubscriptionOffer) -> (Int, String) {
+        let count = offer.period.value * max(offer.periodCount, 1)
+        switch offer.period.unit {
+        case .day: return (count, "day")
+        case .week: return (count * 7, "day")
+        case .month: return (count, "month")
+        case .year: return (count, "year")
+        @unknown default: return (count, "day")
+        }
+    }
+
+    /// A compact label like "7-day" for buttons and badges.
+    static func trialLengthLabel(_ offer: Product.SubscriptionOffer) -> String {
+        let (count, unit) = trialLength(offer)
+        return "\(count)-\(unit)"
+    }
+
+    /// A phrase like "7 days" or "1 month" for disclosure text.
+    static func trialDurationText(_ offer: Product.SubscriptionOffer) -> String {
+        let (count, unit) = trialLength(offer)
+        return "\(count) \(unit)\(count == 1 ? "" : "s")"
+    }
+
+    /// Refreshes intro-offer eligibility from the App Store.
+    private func updateIntroOfferEligibility() async {
+        guard let subscription = yearlyProduct?.subscription ?? monthlyProduct?.subscription else {
+            isEligibleForIntroOffer = false
+            return
+        }
+        isEligibleForIntroOffer = await subscription.isEligibleForIntroOffer
     }
 
     // MARK: - Purchase
@@ -141,6 +190,7 @@ final class StoreKitManager {
 
         isPremium = hasActiveSubscription
         UserDefaults.standard.set(hasActiveSubscription, forKey: "isPremium")
+        await updateIntroOfferEligibility()
     }
 
     // MARK: - Transaction Listener

@@ -20,7 +20,7 @@ import UIKit
 @MainActor
 private func makeInMemoryContext() throws -> ModelContext {
     let schema = Schema([Child.self, Artwork.self, Tag.self, Comment.self, Achievement.self])
-    let config = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
+    let config = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true, cloudKitDatabase: .none)
     let container = try ModelContainer(for: schema, configurations: [config])
     return ModelContext(container)
 }

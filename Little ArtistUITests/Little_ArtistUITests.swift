@@ -18,11 +18,14 @@ final class Little_ArtistUITests: XCTestCase {
 
     /// Launches the app in UI-test mode (in-memory store, onboarding
     /// pre-completed unless `showOnboarding` is true).
-    private func launchApp(showOnboarding: Bool = false) -> XCUIApplication {
+    private func launchApp(showOnboarding: Bool = false, sampleArtwork: Bool = false) -> XCUIApplication {
         let app = XCUIApplication()
         app.launchArguments += ["-uiTesting"]
         if showOnboarding {
             app.launchArguments += ["-uiTestShowOnboarding"]
+        }
+        if sampleArtwork {
+            app.launchArguments += ["-uiTestSeedSampleArtwork"]
         }
         app.launch()
         return app
@@ -161,11 +164,75 @@ final class Little_ArtistUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["Monthly"].exists)
         XCTAssertTrue(app.staticTexts["Lifetime"].exists)
         XCTAssertTrue(app.buttons["Restore Purchases"].exists)
+        // The no-lock-in promise must be visible before purchase.
+        XCTAssertTrue(app.staticTexts.containing(NSPredicate(format: "label CONTAINS 'Your art stays yours'")).firstMatch.exists)
 
         // Capture the paywall for App Store Connect IAP review screenshots.
         let attachment = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
         attachment.name = "paywall"
         attachment.lifetime = .keepAlways
         add(attachment)
+    }
+
+    // MARK: - Growth Features
+
+    func testSettingsOffersFreeExportAndRating() throws {
+        let app = launchApp(sampleArtwork: true)
+        waitForMainTabs(app)
+
+        app.tabBars.firstMatch.buttons["Settings"].tap()
+        let export = app.buttons["exportEverythingButton"]
+        XCTAssertTrue(export.waitForExistence(timeout: 10), "Export Everything row missing")
+        XCTAssertTrue(export.isEnabled, "Export Everything must be free (enabled without Premium)")
+
+        export.tap()
+        XCTAssertTrue(app.buttons["Download Archive (ZIP)"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["Save All Images to Photos"].exists)
+        // iOS 26 presents the dialog as a popover without a Cancel button.
+        if app.buttons["Cancel"].exists {
+            app.buttons["Cancel"].firstMatch.tap()
+        } else {
+            app.otherElements["PopoverDismissRegion"].firstMatch.tap()
+        }
+
+        XCTAssertTrue(app.links["Rate Little Artist"].waitForExistence(timeout: 5)
+                      || app.buttons["Rate Little Artist"].exists)
+    }
+
+    // MARK: - Store Screenshots
+
+    /// Captures App Store screenshots with a gallery full of sample artwork.
+    /// Run on the 6.9" iPhone and 13" iPad simulators and export the
+    /// attachments from the test report.
+    func testCaptureStoreScreenshotsWithSampleArtwork() throws {
+        let app = launchApp(sampleArtwork: true)
+        let tabBar = waitForMainTabs(app)
+
+        func capture(_ name: String) {
+            Thread.sleep(forTimeInterval: 1.5)
+            let shot = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+            shot.name = name
+            shot.lifetime = .keepAlways
+            add(shot)
+        }
+
+        capture("01-gallery")
+
+        tabBar.buttons["Timeline"].tap()
+        capture("02-timeline")
+
+        tabBar.buttons["Milestones"].tap()
+        capture("03-milestones")
+
+        tabBar.buttons["Gallery"].tap()
+        let firstArtwork = app.scrollViews.images.firstMatch
+        if firstArtwork.waitForExistence(timeout: 5) {
+            firstArtwork.tap()
+            capture("04-artwork-detail")
+            app.navigationBars.buttons.firstMatch.tap()
+        }
+
+        tabBar.buttons["Settings"].tap()
+        capture("05-settings-export")
     }
 }

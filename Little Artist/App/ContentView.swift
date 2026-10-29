@@ -10,6 +10,7 @@
 
 import SwiftUI
 import SwiftData
+import StoreKit
 
 /// The root content view displayed after onboarding is complete.
 struct ContentView: View {
@@ -17,6 +18,9 @@ struct ContentView: View {
     @Query private var allArtworks: [Artwork]
 
     @Environment(\.horizontalSizeClass) private var sizeClass
+    @Environment(\.requestReview) private var requestReview
+    @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.modelContext) private var modelContext
 
     @AppStorage("hasSeenFirstArtworkUpsell") private var hasSeenUpsell = false
 
@@ -31,6 +35,15 @@ struct ContentView: View {
 
     private var store: StoreKitManager { StoreKitManager.shared }
     private var celebration: CelebrationCenter { CelebrationCenter.shared }
+    private var reviewPrompt: ReviewPromptService { ReviewPromptService.shared }
+
+    /// True when nothing modal is on screen, so a rating prompt won't
+    /// interrupt the user mid-task.
+    private var isIdleForReviewPrompt: Bool {
+        celebration.current == nil
+            && !showCreateSheet && !showAddChild && !showSlideshow
+            && !showPremiumUpsell && paywallReason == nil
+    }
 
     /// Artworks in chronological order for exhibition mode, so the
     /// slideshow tells the growth story from first to latest.
@@ -140,6 +153,10 @@ struct ContentView: View {
             AddChildView()
         }
         .sheet(isPresented: $showCreateSheet, onDismiss: {
+            let savedCount = allArtworks.count - artworkCountBeforeSheet
+            if savedCount > 0 {
+                reviewPrompt.record(.artworkSaved(count: savedCount))
+            }
             if artworkCountBeforeSheet == 0
                 && allArtworks.count > artworkCountBeforeSheet
                 && !store.isPremium
@@ -170,6 +187,7 @@ struct ContentView: View {
             if let achievement = celebration.current {
                 AchievementCelebrationView(achievement: achievement) {
                     celebration.dismissCurrent()
+                    reviewPrompt.record(.milestoneCelebrated)
                 }
                 .transition(.opacity)
             }
@@ -179,6 +197,23 @@ struct ContentView: View {
             guard isPremium else { return }
             paywallReason = nil
             showPremiumUpsell = false
+        }
+        .task(id: reviewPrompt.shouldRequestReview && isIdleForReviewPrompt) {
+            guard reviewPrompt.shouldRequestReview, isIdleForReviewPrompt else { return }
+            // Let the dismiss animation settle so the prompt feels calm.
+            try? await Task.sleep(for: .seconds(1.5))
+            guard !Task.isCancelled, isIdleForReviewPrompt else { return }
+            reviewPrompt.didRequestReview()
+            requestReview()
+        }
+        // Keep the Home Screen widget fresh.
+        .task(id: allArtworks.count) {
+            WidgetSnapshotService.refresh(container: modelContext.container)
+        }
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .background {
+                WidgetSnapshotService.refresh(container: modelContext.container)
+            }
         }
         .onChange(of: QuickActionRouter.shared.pendingAction, initial: true) { _, action in
             guard let action else { return }

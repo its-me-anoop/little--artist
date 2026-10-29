@@ -220,6 +220,7 @@ struct HomeView: View {
         .buttonStyle(.plain)
         .simultaneousGesture(TapGesture().onEnded {
             AchievementService.markMemoryViewed(context: modelContext)
+            ReviewPromptService.shared.record(.memoryViewed)
         })
     }
 

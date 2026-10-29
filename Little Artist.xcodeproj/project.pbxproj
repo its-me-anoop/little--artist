@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		AA1000082F90000000000000 /* Little Artist Widget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = AA1000012F90000000000000 /* Little Artist Widget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -24,12 +25,34 @@
 			remoteGlobalIDString = 6B5FAE002F3FD7E1006B1D0D;
 			remoteInfo = "Little Artist";
 		};
+		AA1000092F90000000000000 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 6B5FADF92F3FD7E1006B1D0D /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = AA10000B2F90000000000000;
+			remoteInfo = "Little Artist Widget";
+		};
 /* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		AA1000072F90000000000000 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				AA1000082F90000000000000 /* Little Artist Widget.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		6B5FAE012F3FD7E1006B1D0D /* Little Artist.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Little Artist.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		6B5FAE122F3FD7E3006B1D0D /* Little ArtistTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Little ArtistTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		6B5FAE1C2F3FD7E3006B1D0D /* Little ArtistUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Little ArtistUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		AA1000012F90000000000000 /* Little Artist Widget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "Little Artist Widget.appex"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -39,6 +62,13 @@
 				Info.plist,
 			);
 			target = 6B5FAE002F3FD7E1006B1D0D /* Little Artist */;
+		};
+		AA10000F2F90000000000000 /* Exceptions for "Little Artist Widget" folder in "Little Artist Widget" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = AA10000B2F90000000000000 /* Little Artist Widget */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
@@ -59,6 +89,19 @@
 		6B5FAE1F2F3FD7E3006B1D0D /* Little ArtistUITests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = "Little ArtistUITests";
+			sourceTree = "<group>";
+		};
+		AA1000022F90000000000000 /* Little Artist Widget */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				AA10000F2F90000000000000 /* Exceptions for "Little Artist Widget" folder in "Little Artist Widget" target */,
+			);
+			path = "Little Artist Widget";
+			sourceTree = "<group>";
+		};
+		AA1000032F90000000000000 /* Shared */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = Shared;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -85,6 +128,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		AA1000042F90000000000000 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -94,6 +144,8 @@
 				6B5FAE032F3FD7E1006B1D0D /* Little Artist */,
 				6B5FAE152F3FD7E3006B1D0D /* Little ArtistTests */,
 				6B5FAE1F2F3FD7E3006B1D0D /* Little ArtistUITests */,
+				AA1000022F90000000000000 /* Little Artist Widget */,
+				AA1000032F90000000000000 /* Shared */,
 				6B5FAE022F3FD7E1006B1D0D /* Products */,
 			);
 			sourceTree = "<group>";
@@ -104,6 +156,7 @@
 				6B5FAE012F3FD7E1006B1D0D /* Little Artist.app */,
 				6B5FAE122F3FD7E3006B1D0D /* Little ArtistTests.xctest */,
 				6B5FAE1C2F3FD7E3006B1D0D /* Little ArtistUITests.xctest */,
+				AA1000012F90000000000000 /* Little Artist Widget.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -118,13 +171,16 @@
 				6B5FADFD2F3FD7E1006B1D0D /* Sources */,
 				6B5FADFE2F3FD7E1006B1D0D /* Frameworks */,
 				6B5FADFF2F3FD7E1006B1D0D /* Resources */,
+				AA1000072F90000000000000 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				AA10000A2F90000000000000 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				6B5FAE032F3FD7E1006B1D0D /* Little Artist */,
+				AA1000032F90000000000000 /* Shared */,
 			);
 			name = "Little Artist";
 			packageProductDependencies = (
@@ -179,6 +235,29 @@
 			productReference = 6B5FAE1C2F3FD7E3006B1D0D /* Little ArtistUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
+		AA10000B2F90000000000000 /* Little Artist Widget */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AA10000E2F90000000000000 /* Build configuration list for PBXNativeTarget "Little Artist Widget" */;
+			buildPhases = (
+				AA1000062F90000000000000 /* Sources */,
+				AA1000042F90000000000000 /* Frameworks */,
+				AA1000052F90000000000000 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				AA1000022F90000000000000 /* Little Artist Widget */,
+				AA1000032F90000000000000 /* Shared */,
+			);
+			name = "Little Artist Widget";
+			packageProductDependencies = (
+			);
+			productName = "Little Artist Widget";
+			productReference = AA1000012F90000000000000 /* Little Artist Widget.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -199,6 +278,9 @@
 					6B5FAE1B2F3FD7E3006B1D0D = {
 						CreatedOnToolsVersion = 26.3;
 						TestTargetID = 6B5FAE002F3FD7E1006B1D0D;
+					};
+					AA10000B2F90000000000000 = {
+						CreatedOnToolsVersion = 27.2;
 					};
 				};
 			};
@@ -221,6 +303,7 @@
 				6B5FAE002F3FD7E1006B1D0D /* Little Artist */,
 				6B5FAE112F3FD7E3006B1D0D /* Little ArtistTests */,
 				6B5FAE1B2F3FD7E3006B1D0D /* Little ArtistUITests */,
+				AA10000B2F90000000000000 /* Little Artist Widget */,
 			);
 		};
 /* End PBXProject section */
@@ -241,6 +324,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		6B5FAE1A2F3FD7E3006B1D0D /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AA1000052F90000000000000 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -271,6 +361,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		AA1000062F90000000000000 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -284,6 +381,11 @@
 			target = 6B5FAE002F3FD7E1006B1D0D /* Little Artist */;
 			targetProxy = 6B5FAE1D2F3FD7E3006B1D0D /* PBXContainerItemProxy */;
 		};
+		AA10000A2F90000000000000 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = AA10000B2F90000000000000 /* Little Artist Widget */;
+			targetProxy = AA1000092F90000000000000 /* PBXContainerItemProxy */;
+		};
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
@@ -295,7 +397,7 @@
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
 				CODE_SIGN_ENTITLEMENTS = "Little Artist/Little_Artist.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 19;
+				CURRENT_PROJECT_VERSION = 20;
 				DEVELOPMENT_TEAM = K6623R3GP5;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -303,6 +405,7 @@
 				INFOPLIST_KEY_UIBackgroundModes = "remote-notification";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Little Artist uses the camera to photograph your child's artwork for their art collection.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Little Artist uses the microphone to record voice memos that your child can attach to their artwork.";
+				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "Little Artist saves copies of your child's artwork to your Photos library when you choose Export Everything.";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Little Artist accesses your photo library so you can select artwork photos to add to your child's collection.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -314,7 +417,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.1;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-weak_framework",
@@ -340,7 +443,7 @@
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
 				CODE_SIGN_ENTITLEMENTS = "Little Artist/Little_Artist.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 19;
+				CURRENT_PROJECT_VERSION = 20;
 				DEVELOPMENT_TEAM = K6623R3GP5;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -348,6 +451,7 @@
 				INFOPLIST_KEY_UIBackgroundModes = "remote-notification";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Little Artist uses the camera to photograph your child's artwork for their art collection.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Little Artist uses the microphone to record voice memos that your child can attach to their artwork.";
+				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "Little Artist saves copies of your child's artwork to your Photos library when you choose Export Everything.";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Little Artist accesses your photo library so you can select artwork photos to add to your child's collection.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -359,7 +463,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.1;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-weak_framework",
@@ -503,11 +607,11 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 19;
+				CURRENT_PROJECT_VERSION = 20;
 				DEVELOPMENT_TEAM = K6623R3GP5;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.1;
 				PRODUCT_BUNDLE_IDENTIFIER = "uk.co.flutterly.Little-ArtistTests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
@@ -525,11 +629,11 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 19;
+				CURRENT_PROJECT_VERSION = 20;
 				DEVELOPMENT_TEAM = K6623R3GP5;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.1;
 				PRODUCT_BUNDLE_IDENTIFIER = "uk.co.flutterly.Little-ArtistTests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
@@ -546,10 +650,10 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 19;
+				CURRENT_PROJECT_VERSION = 20;
 				DEVELOPMENT_TEAM = K6623R3GP5;
 				GENERATE_INFOPLIST_FILE = YES;
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.1;
 				PRODUCT_BUNDLE_IDENTIFIER = "uk.co.flutterly.Little-ArtistUITests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
@@ -566,10 +670,10 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 19;
+				CURRENT_PROJECT_VERSION = 20;
 				DEVELOPMENT_TEAM = K6623R3GP5;
 				GENERATE_INFOPLIST_FILE = YES;
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.1;
 				PRODUCT_BUNDLE_IDENTIFIER = "uk.co.flutterly.Little-ArtistUITests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
@@ -579,6 +683,66 @@
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_TARGET_NAME = "Little Artist";
+			};
+			name = Release;
+		};
+		AA10000C2F90000000000000 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = "Little Artist Widget/LittleArtistWidget.entitlements";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 20;
+				DEVELOPMENT_TEAM = K6623R3GP5;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Little Artist Widget/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "Little Artist";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.1;
+				PRODUCT_BUNDLE_IDENTIFIER = "uk.co.flutterly.Little-Artist.Widget";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		AA10000D2F90000000000000 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = "Little Artist Widget/LittleArtistWidget.entitlements";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 20;
+				DEVELOPMENT_TEAM = K6623R3GP5;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Little Artist Widget/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "Little Artist";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.1;
+				PRODUCT_BUNDLE_IDENTIFIER = "uk.co.flutterly.Little-Artist.Widget";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
 		};
@@ -617,6 +781,15 @@
 			buildConfigurations = (
 				6B5FAE2E2F3FD7E3006B1D0D /* Debug */,
 				6B5FAE2F2F3FD7E3006B1D0D /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		AA10000E2F90000000000000 /* Build configuration list for PBXNativeTarget "Little Artist Widget" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AA10000C2F90000000000000 /* Debug */,
+				AA10000D2F90000000000000 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

@@ -64,6 +64,27 @@ struct PaywallView: View {
     /// The currently selected plan.
     @State private var selectedPlan: Plan = .yearly
 
+    /// The free trial on the yearly plan, when configured and eligible.
+    private var yearlyTrial: Product.SubscriptionOffer? {
+        store.freeTrial(for: store.yearlyProduct)
+    }
+
+    /// The free trial attached to whichever plan is selected.
+    private var selectedTrial: Product.SubscriptionOffer? {
+        switch selectedPlan {
+        case .yearly: return yearlyTrial
+        case .monthly: return store.freeTrial(for: store.monthlyProduct)
+        case .lifetime: return nil
+        }
+    }
+
+    /// Yearly price expressed per month, e.g. "£2.49/mo".
+    private var yearlyPerMonthText: String? {
+        guard let yearly = store.yearlyProduct else { return nil }
+        let monthly = yearly.price / 12
+        return monthly.formatted(yearly.priceFormatStyle) + "/mo"
+    }
+
     // MARK: - Body
 
     var body: some View {
@@ -175,8 +196,8 @@ struct PaywallView: View {
             benefitCard(
                 icon: "doc.text",
                 tint: Brand.lavender,
-                title: "PDF Portfolio Export",
-                description: "Create beautiful keepsake portfolios"
+                title: "Portfolios & Photo Books",
+                description: "Keepsake PDFs and print-ready 8×8 photo books"
             )
             // Emphasized card for Voice Memo & AI
             benefitCard(
@@ -215,13 +236,23 @@ struct PaywallView: View {
                             .font(Brand.headlineFont)
                             .foregroundStyle(Brand.charcoal)
 
-                        Text(store.yearlyProduct?.displayPrice ?? "$34.99")
+                        Text(store.yearlyProduct?.displayPrice ?? "$24.99")
                             .font(Brand.title2Font)
                             .foregroundStyle(Brand.primary)
 
-                        Text("per year")
+                        Text(yearlyPerMonthText.map { "per year · just \($0)" } ?? "per year")
                             .font(Brand.caption2Font)
                             .foregroundStyle(Brand.warmGray)
+
+                        if let yearlyTrial {
+                            Label(
+                                "\(StoreKitManager.trialLengthLabel(yearlyTrial)) free trial",
+                                systemImage: "gift.fill"
+                            )
+                            .font(Brand.caption2Font.weight(.semibold))
+                            .foregroundStyle(Brand.primary)
+                            .padding(.top, 4)
+                        }
                     }
                     .padding(.vertical, Brand.buttonPadding)
                     .frame(maxWidth: .infinity)
@@ -319,7 +350,7 @@ struct PaywallView: View {
                     }
                 }
             } label: {
-                Text(selectedPlan == .lifetime ? "Unlock Forever" : "Subscribe Now")
+                Text(ctaTitle)
                     .font(Brand.headlineFont)
                     .foregroundStyle(.white)
                     .frame(maxWidth: .infinity)
@@ -330,11 +361,39 @@ struct PaywallView: View {
             }
             .disabled(store.isPurchasing || store.products.isEmpty)
 
-            Text("Cancel anytime · No hidden fees")
+            Text(ctaFootnote)
                 .font(Brand.caption2Font)
                 .foregroundStyle(Brand.warmGray)
+                .multilineTextAlignment(.center)
+
+            // The promise competitors break: art is never held hostage.
+            Label("Your art stays yours. View and export it free, even if you cancel.", systemImage: "lock.open.fill")
+                .font(Brand.caption2Font.weight(.medium))
+                .foregroundStyle(Brand.sage)
+                .multilineTextAlignment(.center)
+                .padding(.top, 2)
         }
         .padding(.horizontal, Brand.screenPadding)
+    }
+
+    private var ctaTitle: String {
+        if selectedPlan == .lifetime { return "Unlock Forever" }
+        if let selectedTrial {
+            return "Start \(StoreKitManager.trialLengthLabel(selectedTrial)) Free Trial"
+        }
+        return "Subscribe Now"
+    }
+
+    /// Clear pre-purchase disclosure of what is charged and when.
+    private var ctaFootnote: String {
+        if selectedPlan == .lifetime {
+            return "One payment · No subscription"
+        }
+        if let selectedTrial, let product = selectedProduct {
+            let unit = selectedPlan == .yearly ? "year" : "month"
+            return "Free for \(StoreKitManager.trialDurationText(selectedTrial)), then \(product.displayPrice)/\(unit). Cancel anytime."
+        }
+        return "Cancel anytime · No hidden fees"
     }
 
     // MARK: - Status Section

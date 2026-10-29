@@ -1,8 +1,6 @@
 {
   "identifier" : "8F3A2B1C-5D4E-4F6A-9B8C-7D6E5F4A3B2C",
-  "nonRenewingSubscriptions" : [
-
-  ],
+  "nonRenewingSubscriptions" : [],
   "products" : [
     {
       "displayPrice" : "79.99",
@@ -24,25 +22,17 @@
     "_failTransactionsEnabled" : false,
     "_locale" : "en_US",
     "_storefront" : "USA",
-    "_storeKitErrors" : [
-
-    ]
+    "_storeKitErrors" : []
   },
   "subscriptionGroups" : [
     {
       "id" : "3A9B8C7D-6E5F-4A3B-2C1D-0E9F8A7B6C5D",
-      "localizations" : [
-
-      ],
+      "localizations" : [],
       "name" : "Premium",
       "subscriptions" : [
         {
-          "adHocOffers" : [
-
-          ],
-          "codeOffers" : [
-
-          ],
+          "adHocOffers" : [],
+          "codeOffers" : [],
           "displayPrice" : "4.99",
           "familyShareable" : true,
           "groupNumber" : 1,
@@ -62,17 +52,18 @@
           "type" : "RecurringSubscription"
         },
         {
-          "adHocOffers" : [
-
-          ],
-          "codeOffers" : [
-
-          ],
-          "displayPrice" : "34.99",
+          "adHocOffers" : [],
+          "codeOffers" : [],
+          "displayPrice" : "24.99",
           "familyShareable" : true,
           "groupNumber" : 1,
           "internalID" : "2C3D4E5F-6A7B-8C9D-0E1F-2A3B4C5D6E7F",
-          "introductoryOffer" : null,
+          "introductoryOffer" : {
+            "internalID" : "7E1D2C3B-4A59-6877-9A8B-1C2D3E4F5A6B",
+            "numberOfPeriods" : 1,
+            "paymentMode" : "free",
+            "subscriptionPeriod" : "P1W"
+          },
           "localizations" : [
             {
               "description" : "Unlimited children, artworks, sync and AI.",

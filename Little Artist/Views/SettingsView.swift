@@ -37,6 +37,11 @@ struct SettingsView: View {
     @State private var exportPayload: SharePayload?
     @State private var isExporting = false
     @State private var showPaywall = false
+    @State private var showArchiveOptions = false
+    /// Child whose portfolio is waiting for a format choice.
+    @State private var portfolioChild: Child?
+    @State private var archiveProgress: Double?
+    @State private var archiveMessage: String?
 
     @State private var storageUsedString: String = "Calculating…"
     @State private var storageCalcTask: Task<Void, Never>?
@@ -397,11 +402,57 @@ struct SettingsView: View {
                 Divider()
                     .padding(.leading, 70)
 
+                // Export Everything — free forever, no lock-in
+                Button {
+                    showArchiveOptions = true
+                } label: {
+                    HStack(spacing: 14) {
+                        ZStack {
+                            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                .fill(Brand.sage.opacity(0.15))
+                                .frame(width: 40, height: 40)
+                            Image(systemName: "square.and.arrow.down.on.square")
+                                .font(.system(size: 18))
+                                .foregroundStyle(Brand.sage)
+                        }
+
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Export Everything")
+                                .font(Brand.bodyFont.weight(.medium))
+                                .foregroundStyle(Brand.charcoal)
+                            Text("Free, always. Your art is yours.")
+                                .font(Brand.caption2Font)
+                                .foregroundStyle(Brand.warmGray)
+                        }
+
+                        Spacer()
+
+                        if let archiveProgress {
+                            ProgressView(value: archiveProgress)
+                                .progressViewStyle(.circular)
+                                .controlSize(.small)
+                        } else {
+                            Image(systemName: "chevron.right")
+                                .font(.system(size: 13, weight: .semibold))
+                                .foregroundStyle(Brand.warmGray.opacity(0.5))
+                        }
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 14)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .disabled(archiveProgress != nil || artworks.isEmpty)
+                .accessibilityIdentifier("exportEverythingButton")
+
+                Divider()
+                    .padding(.leading, 70)
+
                 // PDF Portfolio Export row
                 Button {
                     if store.isPremium {
                         if let firstChild = children.first {
-                            exportPortfolio(for: firstChild)
+                            portfolioChild = firstChild
                         }
                     } else {
                         paywallReason = .artworks
@@ -451,7 +502,7 @@ struct SettingsView: View {
 
                         Button {
                             if store.isPremium {
-                                exportPortfolio(for: child)
+                                portfolioChild = child
                             } else {
                                 paywallReason = .artworks
                             }
@@ -529,6 +580,45 @@ struct SettingsView: View {
                         title: "Privacy Policy",
                         trailing: {
                             Image(systemName: "arrow.up.right.square")
+                                .font(.system(size: 14))
+                                .foregroundStyle(Brand.warmGray.opacity(0.5))
+                        }
+                    )
+                }
+                .buttonStyle(.plain)
+
+                Divider()
+                    .padding(.leading, 70)
+
+                // Rate the app
+                Link(destination: ReviewPromptService.writeReviewURL) {
+                    settingsRow(
+                        icon: "star.fill",
+                        iconColor: Brand.primary,
+                        title: "Rate Little Artist",
+                        trailing: {
+                            Image(systemName: "arrow.up.right.square")
+                                .font(.system(size: 14))
+                                .foregroundStyle(Brand.warmGray.opacity(0.5))
+                        }
+                    )
+                }
+                .buttonStyle(.plain)
+
+                Divider()
+                    .padding(.leading, 70)
+
+                // Tell a friend
+                ShareLink(
+                    item: ReviewPromptService.appStoreURL,
+                    message: Text("I'm saving the kids' artwork with Little Artist — no more overflowing fridge!")
+                ) {
+                    settingsRow(
+                        icon: "heart.fill",
+                        iconColor: Brand.dustyRose,
+                        title: "Share with a Friend",
+                        trailing: {
+                            Image(systemName: "square.and.arrow.up")
                                 .font(.system(size: 14))
                                 .foregroundStyle(Brand.warmGray.opacity(0.5))
                         }
@@ -683,6 +773,44 @@ struct SettingsView: View {
             } message: {
                 deleteChildMessageView
             }
+            .confirmationDialog(
+                "Choose a Format",
+                isPresented: Binding(
+                    get: { portfolioChild != nil },
+                    set: { if !$0 { portfolioChild = nil } }
+                ),
+                titleVisibility: .visible,
+                presenting: portfolioChild
+            ) { child in
+                ForEach(PDFExportService.Format.allCases) { format in
+                    Button(format.title) { exportPortfolio(for: child, format: format) }
+                }
+                Button("Cancel", role: .cancel) {}
+            } message: { _ in
+                Text("The photo book is an 8×8 in PDF with bleed, ready to upload to any photo-book printer.")
+            }
+            .confirmationDialog(
+                "Export Everything",
+                isPresented: $showArchiveOptions,
+                titleVisibility: .visible
+            ) {
+                Button("Download Archive (ZIP)") { exportArchiveZIP() }
+                Button("Save All Images to Photos") { saveAllToPhotos() }
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                Text("Every artwork, voice memo and caption — free for everyone, whether or not you subscribe.")
+            }
+            .alert(
+                "Export",
+                isPresented: Binding(
+                    get: { archiveMessage != nil },
+                    set: { if !$0 { archiveMessage = nil } }
+                )
+            ) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text(archiveMessage ?? "")
+            }
     }
 
     @ViewBuilder
@@ -694,15 +822,53 @@ struct SettingsView: View {
 
     // MARK: - Actions
 
-    private func exportPortfolio(for child: Child) {
+    /// Builds a ZIP of the whole collection and opens the share sheet.
+    private func exportArchiveZIP() {
+        archiveProgress = 0
+        let container = modelContext.container
+        Task {
+            do {
+                let url = try await ArchiveExportService.exportZIP(container: container) { value in
+                    archiveProgress = value
+                }
+                archiveProgress = nil
+                exportPayload = SharePayload(items: [url])
+            } catch {
+                archiveProgress = nil
+                archiveMessage = error.localizedDescription
+            }
+        }
+    }
+
+    /// Saves every artwork image into the Photos library.
+    private func saveAllToPhotos() {
+        archiveProgress = 0
+        let container = modelContext.container
+        Task {
+            do {
+                let count = try await ArchiveExportService.saveAllToPhotos(container: container) { value in
+                    archiveProgress = value
+                }
+                archiveProgress = nil
+                HapticService.success()
+                archiveMessage = "Saved \(count) artwork\(count == 1 ? "" : "s") to your Photos library."
+            } catch {
+                archiveProgress = nil
+                archiveMessage = error.localizedDescription
+            }
+        }
+    }
+
+    private func exportPortfolio(for child: Child, format: PDFExportService.Format) {
         isExporting = true
         let childArtworks = child.artworks ?? []
         let name = child.name
 
         Task {
-            let pdfData = PDFExportService.generatePortfolio(childName: name, artworks: childArtworks)
+            let pdfData = PDFExportService.generatePortfolio(childName: name, artworks: childArtworks, format: format)
+            let safeName = ArchiveExportService.sanitized(name)
             let tempURL = FileManager.default.temporaryDirectory
-                .appendingPathComponent("\(name)_Portfolio.pdf")
+                .appendingPathComponent("\(safeName)_\(format.fileSuffix).pdf")
             try? pdfData.write(to: tempURL)
             isExporting = false
             exportPayload = SharePayload(items: [tempURL])

@@ -63,10 +63,22 @@ struct Little_ArtistApp: App {
                 !ProcessInfo.processInfo.arguments.contains("-uiTestShowOnboarding"),
                 forKey: "hasCompletedOnboarding"
             )
-            let inMemoryConfig = ModelConfiguration(schema: fullSchema, isStoredInMemoryOnly: true)
+            // No CloudKit in UI tests: the default (.automatic) would try to
+            // mirror this throwaway store to iCloud and can make saves flaky.
+            let inMemoryConfig = ModelConfiguration(
+                schema: fullSchema,
+                isStoredInMemoryOnly: true,
+                cloudKitDatabase: .none
+            )
             if let container = try? ModelContainer(for: fullSchema, configurations: [inMemoryConfig]) {
                 ArtworkRepository.shared.modelContainer = container
-                AchievementService.seedAchievements(context: ModelContext(container))
+                let context = ModelContext(container)
+                AchievementService.seedAchievements(context: context)
+                // Screenshot mode: fill the gallery with sample artwork.
+                if ProcessInfo.processInfo.arguments.contains("-uiTestSeedSampleArtwork") {
+                    ScreenshotSampleData.seed(into: context)
+                    AchievementService.checkMilestones(context: context)
+                }
                 return container
             }
         }
@@ -126,7 +138,7 @@ struct Little_ArtistApp: App {
                 let logger = Logger(subsystem: "uk.co.flutterly.Little-Artist", category: "Migration")
                 logger.error("Could not create ModelContainer after store reset, using in-memory fallback: \(error)")
                 // An in-memory store keeps the app functional; data won't persist this session.
-                let inMemoryConfig = ModelConfiguration(schema: fullSchema, isStoredInMemoryOnly: true)
+                let inMemoryConfig = ModelConfiguration(schema: fullSchema, isStoredInMemoryOnly: true, cloudKitDatabase: .none)
                 if let fallback = try? ModelContainer(for: fullSchema, configurations: [inMemoryConfig]) {
                     ArtworkRepository.shared.modelContainer = fallback
                     return fallback
