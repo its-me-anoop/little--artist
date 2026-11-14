@@ -317,14 +317,14 @@ struct OnboardingView: View {
 
                 Spacer()
 
-                titleSection
+                titleSection(for: pages[currentPage])
                     .multilineTextAlignment(.leading)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal, 40)
 
                 Spacer().frame(height: 20)
 
-                descriptionSection
+                descriptionSection(for: pages[currentPage])
                     .multilineTextAlignment(.leading)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal, 40)
