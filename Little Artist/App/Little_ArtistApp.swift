@@ -9,6 +9,7 @@
 //  Created by Anoop Jose on 13/02/2026.
 //
 
+import AppIntents
 import os
 import SwiftData
 import SwiftUI
