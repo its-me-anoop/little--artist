@@ -544,23 +544,27 @@ struct AIEngineLadderTests {
     }
 }
 
-// MARK: - StoreKitManager Tests
+// MARK: - Product Catalog Tests
 
-@MainActor
-struct StoreKitProductTests {
+struct ProductCatalogTests {
 
-    @Test("All three premium products are configured")
-    func allProductsConfigured() {
-        #expect(StoreKitManager.ProductID.all.count == 3)
-        #expect(StoreKitManager.ProductID.all.contains(StoreKitManager.ProductID.monthlyPremium))
-        #expect(StoreKitManager.ProductID.all.contains(StoreKitManager.ProductID.yearlyPremium))
-        #expect(StoreKitManager.ProductID.all.contains(StoreKitManager.ProductID.lifetimePremium))
+    @Test("The paywall sells the free trial and the existing lifetime unlock")
+    func purchasableProducts() {
+        #expect(ProductCatalog.purchasable == [ProductCatalog.trial, ProductCatalog.lifetime])
+        #expect(ProductCatalog.lifetime == "com.flutterly.littleartist.premium.lifetime")
     }
 
-    @Test("Product identifiers use the app's bundle prefix")
-    func productIdentifiersUseBundlePrefix() {
-        for id in StoreKitManager.ProductID.all {
-            #expect(id.hasPrefix("com.flutterly.littleartist.premium."))
+    @Test("Retired subscriptions are grandfathered, and lifetime is not listed as retired")
+    func legacyProducts() {
+        #expect(ProductCatalog.legacyProducts.contains("com.flutterly.littleartist.premium.monthly"))
+        #expect(ProductCatalog.legacyProducts.contains("com.flutterly.littleartist.premium.yearly"))
+        #expect(!ProductCatalog.legacyProducts.contains(ProductCatalog.lifetime))
+    }
+
+    @Test("Product identifiers use the app's prefix")
+    func productIdentifiersUsePrefix() {
+        for id in ProductCatalog.purchasable + ProductCatalog.legacyProducts {
+            #expect(id.hasPrefix("com.flutterly.littleartist."))
         }
     }
 }

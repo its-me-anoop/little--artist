@@ -369,43 +369,30 @@ struct TimelineView: View {
 
     // MARK: - Voice Memo Card
 
+    @ViewBuilder
     private func voiceMemoCard(for artwork: Artwork) -> some View {
-        HStack(spacing: 12) {
-            Image(systemName: "play.fill")
-                .font(.system(size: 12, weight: .semibold))
-                .foregroundStyle(Brand.primary)
-                .frame(width: 32, height: 32)
-                .background(Brand.primaryTint, in: Circle())
-
-            // Waveform bars
-            HStack(spacing: 3) {
-                ForEach(0..<8, id: \.self) { bar in
-                    RoundedRectangle(cornerRadius: 1.5)
-                        .fill(Brand.primary.opacity(0.5))
-                        .frame(width: 3, height: waveformBarHeight(for: bar))
+        if let audio = artwork.voiceNoteData {
+            VStack(alignment: .leading, spacing: 8) {
+                HStack {
+                    Text(artwork.title.isEmpty ? String(localized: "Voice Story") : artwork.title)
+                        .font(Brand.captionFont)
+                        .foregroundStyle(Brand.charcoal)
+                        .lineLimit(1)
+                    Spacer()
+                    Text(artwork.createdAt.formatted(date: .abbreviated, time: .omitted))
+                        .font(Brand.caption2Font)
+                        .foregroundStyle(Brand.warmGray)
                 }
+                VoiceMemoPlayerView(audioData: audio)
             }
-
-            VStack(alignment: .leading, spacing: 2) {
-                Text(artwork.title.isEmpty ? "Voice Story" : artwork.title)
-                    .font(Brand.captionFont)
-                    .foregroundStyle(Brand.charcoal)
-                    .lineLimit(1)
-
-                Text(artwork.createdAt.formatted(.dateTime.month(.abbreviated).day()))
-                    .font(Brand.caption2Font)
-                    .foregroundStyle(Brand.warmGray)
-            }
-
-            Spacer()
+            .padding(12)
+            .background(Brand.glass)
+            .clipShape(RoundedRectangle(cornerRadius: Brand.radiusCard, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: Brand.radiusCard, style: .continuous)
+                    .strokeBorder(Brand.glassStroke, lineWidth: 1)
+            )
         }
-        .padding(12)
-        .background(Brand.glass)
-        .clipShape(RoundedRectangle(cornerRadius: Brand.radiusCard, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: Brand.radiusCard, style: .continuous)
-                .strokeBorder(Brand.glassStroke, lineWidth: 1)
-        )
     }
 
     // MARK: - Helpers

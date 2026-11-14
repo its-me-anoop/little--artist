@@ -900,12 +900,17 @@ struct ArtworkDetailView: View {
             )
 
             await MainActor.run {
+                isGeneratingSuggestions = false
+                guard result.engine != .fallback else {
+                    suggestionEngine = nil
+                    suggestionErrorMessage = String(localized: "Couldn't improve the caption right now. Try again in a moment.")
+                    return
+                }
                 editTitle = result.suggestion.title
                 editCaption = result.suggestion.caption
                 withAnimation(.snappy) {
                     suggestionEngine = result.engine
                 }
-                isGeneratingSuggestions = false
             }
         }
     }

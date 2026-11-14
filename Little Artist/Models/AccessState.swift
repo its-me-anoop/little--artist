@@ -18,16 +18,15 @@ enum ProductCatalog {
     /// the user's Apple Account, so reinstalling cannot restart the trial.
     static let trial = "com.flutterly.littleartist.trial.30day"
 
-    /// One-time, non-consumable lifetime unlock. Family Sharing is OFF for
-    /// this product: Little Artist is a single-user app.
-    static let lifetime = "com.flutterly.littleartist.lifetime"
+    /// One-time, non-consumable lifetime unlock. This is the existing
+    /// lifetime product, so earlier buyers keep their unlock automatically.
+    static let lifetime = "com.flutterly.littleartist.premium.lifetime"
 
-    /// Retired products (the old subscriptions and the family-shareable
-    /// lifetime unlock). Anyone who ever bought one keeps full access for life.
+    /// Retired subscriptions. Anyone who ever subscribed keeps full access
+    /// for life.
     static let legacyProducts = [
         "com.flutterly.littleartist.premium.monthly",
-        "com.flutterly.littleartist.premium.yearly",
-        "com.flutterly.littleartist.premium.lifetime"
+        "com.flutterly.littleartist.premium.yearly"
     ]
 
     /// Products the paywall loads.

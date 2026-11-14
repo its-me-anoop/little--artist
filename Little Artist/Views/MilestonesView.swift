@@ -19,14 +19,13 @@ struct MilestonesView: View {
 
     // MARK: - Tier Configuration
 
-    private let tierTargets = [10, 25, 50, 100, 250, 500]
 
     // MARK: - Computed
 
     private var artworkCount: Int { allArtworks.count }
 
     private var nextTier: Int {
-        tierTargets.first(where: { $0 > artworkCount }) ?? 1000
+        MilestoneTiers.nextTier(after: artworkCount)
     }
 
     private var remainingForNextTier: Int {
@@ -115,33 +114,33 @@ struct MilestonesView: View {
 
     // MARK: - Voice Note Highlight
 
+    @ViewBuilder
     private var voiceNoteHighlight: some View {
-        HStack(spacing: 14) {
-            // Play button
-            ZStack {
-                Circle()
-                    .fill(Brand.primary)
-                    .frame(width: 48, height: 48)
-                Image(systemName: "play.fill")
-                    .font(.system(size: 18, weight: .semibold))
-                    .foregroundStyle(.white)
-                    .offset(x: 2)
+        if let artwork = artworkWithVoiceMemo, let audio = artwork.voiceNoteData {
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Latest Voice Memo")
+                    .font(Brand.captionFont)
+                    .foregroundStyle(Brand.charcoal)
+                VoiceMemoPlayerView(audioData: audio)
             }
-
-            // Decorative waveform bars
-            DecorativeWaveformView()
-
-            // Label
-            Text("Latest Voice Memo")
-                .font(Brand.captionFont)
-                .foregroundStyle(Brand.charcoal)
-                .lineLimit(2)
-                .fixedSize(horizontal: false, vertical: true)
+            .padding(.horizontal, 20)
+            .padding(.vertical, 14)
+            .background(.ultraThinMaterial)
+            .clipShape(RoundedRectangle(cornerRadius: Brand.radiusCard, style: .continuous))
         }
-        .padding(.horizontal, 20)
-        .padding(.vertical, 14)
-        .background(.ultraThinMaterial)
-        .clipShape(Capsule())
+    }
+}
+
+// MARK: - Milestone Tiers
+
+/// Artwork-count tiers shown on the Milestones progress bar.
+enum MilestoneTiers {
+    /// Fixed early tiers; beyond the last one, tiers continue every 500.
+    static let targets = [10, 25, 50, 100, 250, 500]
+
+    /// The next tier strictly above `count`.
+    static func nextTier(after count: Int) -> Int {
+        targets.first(where: { $0 > count }) ?? (count / 500 + 1) * 500
     }
 }
 

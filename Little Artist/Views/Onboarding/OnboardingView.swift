@@ -95,25 +95,27 @@ struct OnboardingView: View {
         }
     }
 
-    private var titleSection: some View {
+    /// Takes the page being rendered (not `currentPage`) so each page in
+    /// the swipe shows its own text mid-transition.
+    private func titleSection(for page: OnboardingPage) -> some View {
         VStack(spacing: 4) {
-            Text(pages[currentPage].titleTop)
+            Text(page.titleTop)
                 .font(Brand.displayFont)
                 .foregroundStyle(Brand.charcoal)
                 .contentTransition(.numericText())
                 .crayonStyle()
 
-            Text(pages[currentPage].titleHighlight)
+            Text(page.titleHighlight)
                 .font(Brand.displayFont)
-                .foregroundStyle(pages[currentPage].color)
+                .foregroundStyle(page.color)
                 .contentTransition(.numericText())
                 .crayonStyle()
         }
         .animation(.spring(response: 0.5, dampingFraction: 0.7), value: currentPage)
     }
 
-    private var descriptionSection: some View {
-        Text(pages[currentPage].description)
+    private func descriptionSection(for page: OnboardingPage) -> some View {
+        Text(page.description)
             .font(Brand.title3Font)
             .multilineTextAlignment(.center)
             .foregroundStyle(Brand.warmGray)
@@ -250,12 +252,12 @@ struct OnboardingView: View {
 
                         Spacer().frame(height: 48)
 
-                        titleSection
+                        titleSection(for: page)
                             .multilineTextAlignment(.center)
 
                         Spacer().frame(height: 24)
 
-                        descriptionSection
+                        descriptionSection(for: page)
                             .multilineTextAlignment(.center)
                             .padding(.horizontal, 40)
                             
