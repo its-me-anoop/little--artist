@@ -145,3 +145,25 @@ Release type is set to MANUAL for exactly this reason:
   never in-house fulfilment (Artkive's failure mode)
 - Richer store screenshots with sample artwork (app-store-screenshots
   skill or manual capture with real data)
+
+## Version 1.2 — free month, then pay once (Nov 2026)
+
+Pricing model changed from subscriptions to **30-day free trial, then a
+one-time lifetime unlock**:
+
+| Product ID | Type | Price | Notes |
+|---|---|---|---|
+| `com.flutterly.littleartist.trial.30day` | Non-consumable | $0 (Free) | **New.** Reference name "30-Day Free Trial". Its purchase date starts the trial (Guideline 3.1.1). |
+| `com.flutterly.littleartist.premium.lifetime` | Non-consumable | owner's choice (was $79.99) | Existing product, reused. Family Sharing stays on. |
+| `com.flutterly.littleartist.premium.monthly` / `.yearly` | Auto-renew | — | **Remove from sale.** Past subscribers are grandfathered to lifetime in code. |
+
+Gating: creating children, artwork, AI captions and voice memos needs an
+active trial or lifetime. Viewing, editing and exporting are always free.
+
+Before submitting 1.2:
+- [ ] Create the $0 trial IAP with a review screenshot (UI test
+      `testTrialOfferShownBeforeTrialStarts` captures `paywall-trial`)
+- [ ] Remove the monthly/yearly subscriptions from sale
+- [ ] Deploy the CloudKit schema to Production (new `uuid` fields on
+      Child and Artwork, used by Siri / Spotlight)
+- [ ] Update the description: "Free for 30 days, then pay once"
