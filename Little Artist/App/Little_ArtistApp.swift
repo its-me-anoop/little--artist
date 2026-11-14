@@ -13,7 +13,7 @@ import os
 import SwiftData
 import SwiftUI
 
-/// The main application entry point for Artling.
+/// The main application entry point for Little Artist.
 ///
 /// Sets up the shared `ModelContainer` — user content (children,
 /// artworks, tags, comments) syncs to the user's private iCloud database
@@ -28,8 +28,11 @@ struct Little_ArtistApp: App {
     @AppStorage("appAppearance") private var appAppearance = AppAppearance.system.rawValue
     @State private var splashFinished = false
 
-    /// Reference to StoreKit manager so transaction listener starts early.
-    private let storeKit = StoreKitManager.shared
+    init() {
+        // Evaluate the trial / lifetime state and listen for transaction
+        // updates (refunds, Ask to Buy approvals, other devices) right away.
+        StoreKitManager.shared.start()
+    }
 
     /// The CloudKit container that mirrors the user's private data.
     private static let cloudKitContainerID = "iCloud.uk.co.flutterly.Little-Artist"
@@ -40,13 +43,6 @@ struct Little_ArtistApp: App {
         if !FileManager.default.fileExists(atPath: appSupport.path) {
             try? FileManager.default.createDirectory(at: appSupport, withIntermediateDirectories: true)
         }
-
-        #if DEBUG
-        // Enable premium for testing via launch argument: -debugPremium
-        if ProcessInfo.processInfo.arguments.contains("-debugPremium") {
-            UserDefaults.standard.set(true, forKey: "isPremium")
-        }
-        #endif
 
         // User content syncs to the private iCloud database; achievements
         // are local-only derived state (syncing them would duplicate the
@@ -119,13 +115,16 @@ struct Little_ArtistApp: App {
 
             return container
         } catch {
-            // If migration fails, delete the old stores and create fresh.
+            // If the stores can't be opened, move them aside (never delete a
+            // family's artwork) and start fresh. iCloud re-downloads synced
+            // data; the quarantined files allow manual recovery.
+            let stamp = Int(Date.now.timeIntervalSince1970)
             for url in [storeURL, localStoreURL] {
-                try? FileManager.default.removeItem(at: url)
-                let storeDir = url.deletingLastPathComponent()
-                for suffix in ["-shm", "-wal"] {
-                    let related = storeDir.appendingPathComponent(url.lastPathComponent + suffix)
-                    try? FileManager.default.removeItem(at: related)
+                for suffix in ["", "-shm", "-wal"] {
+                    let source = URL(fileURLWithPath: url.path + suffix)
+                    guard FileManager.default.fileExists(atPath: source.path) else { continue }
+                    let destination = URL(fileURLWithPath: url.path + ".recovered-\(stamp)" + suffix)
+                    try? FileManager.default.moveItem(at: source, to: destination)
                 }
             }
             do {
@@ -170,16 +169,6 @@ struct Little_ArtistApp: App {
                 let appearance = AppAppearance(rawValue: newValue) ?? .system
                 applyAppearance(appearance)
             }
-            #if DEBUG
-            .onAppear {
-                // Activate debug premium override via launch argument:
-                //   -debugPremium YES
-                if ProcessInfo.processInfo.arguments.contains("-debugPremium") {
-                    PremiumManager._overrideIsPremium = true
-                    UserDefaults.standard.set(true, forKey: "isPremium")
-                }
-            }
-            #endif
         }
         .modelContainer(sharedModelContainer)
     }

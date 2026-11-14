@@ -150,49 +150,35 @@ struct ColorHexTests {
 
 struct PremiumManagerTests {
 
-    @Test("canAddChild returns true when under limit")
-    func canAddChildUnderLimit() {
-        #expect(PremiumManager.canAddChild(currentCount: 0) == true)
-    }
-
-    @Test("canAddChild returns false when at limit")
-    func canAddChildAtLimit() {
-        // Ensure we're testing free tier (isPremium defaults to false)
-        UserDefaults.standard.removeObject(forKey: "isPremium")
-        #expect(PremiumManager.canAddChild(currentCount: 1) == false)
-        #expect(PremiumManager.canAddChild(currentCount: 5) == false)
-    }
-
-    @Test("canAddArtwork returns true when under limit")
-    func canAddArtworkUnderLimit() {
-        #expect(PremiumManager.canAddArtwork(currentCount: 0) == true)
-        #expect(PremiumManager.canAddArtwork(currentCount: 39) == true)
-    }
-
-    @Test("canAddArtwork returns false when at limit")
-    func canAddArtworkAtLimit() {
-        UserDefaults.standard.removeObject(forKey: "isPremium")
-        #expect(PremiumManager.canAddArtwork(currentCount: 40) == false)
-        #expect(PremiumManager.canAddArtwork(currentCount: 100) == false)
-    }
-
-    @Test("Free tier limits are correct")
-    func freeTierLimitsAreCorrect() {
-        #expect(PremiumManager.freeChildLimit == 1)
-        #expect(PremiumManager.freeArtworkLimit == 40)
-    }
-
-    @Test("Premium user bypasses limits")
-    func premiumUserBypassesLimits() {
+    @Test("There are no count limits once access is unlocked")
+    func unlimitedWithAccess() {
         PremiumManager._overrideIsPremium = true
+        defer { PremiumManager._overrideIsPremium = nil }
 
-        let canAddChild = PremiumManager.canAddChild(currentCount: 100)
-        let canAddArtwork = PremiumManager.canAddArtwork(currentCount: 1000)
+        #expect(PremiumManager.canAddChild(currentCount: 100))
+        #expect(PremiumManager.canAddArtwork(currentCount: 10_000))
+    }
 
-        PremiumManager._overrideIsPremium = nil
+    @Test("Creating content is locked without access, whatever the count")
+    func lockedWithoutAccess() {
+        PremiumManager._overrideIsPremium = false
+        defer { PremiumManager._overrideIsPremium = nil }
 
-        #expect(canAddChild == true)
-        #expect(canAddArtwork == true)
+        #expect(PremiumManager.canAddChild(currentCount: 0) == false)
+        #expect(PremiumManager.canAddArtwork(currentCount: 0) == false)
+    }
+
+    @Test("Access is read from the cached store state")
+    func readsCachedState() {
+        let defaults = UserDefaults.standard
+        let previous = defaults.data(forKey: UserDefaultsAccessCache.key)
+        defer { defaults.set(previous, forKey: UserDefaultsAccessCache.key) }
+
+        UserDefaultsAccessCache().save(.lifetime)
+        #expect(PremiumManager.accessState == .lifetime)
+
+        UserDefaultsAccessCache().save(.expired)
+        #expect(PremiumManager.accessState == .expired)
     }
 }
 

@@ -3,7 +3,7 @@
 //  Little Artist
 //
 //  Scrollable artwork detail page with hero image, smart analysis,
-//  action buttons, family comments, and full-screen zoom overlay.
+//  action buttons, notes, and full-screen zoom overlay.
 //  Supports AI-powered caption improvement via AISuggestionService.
 //
 //  Created by Codex on 15/02/2026.
@@ -73,7 +73,7 @@ struct ArtworkDetailView: View {
                 smartAnalysisSection
                 actionButtonsSection
                 voiceMemoSection
-                familyLoveSection
+                notesSection
             }
             .padding(Brand.Adaptive.screenPadding(for: sizeClass))
         }
@@ -361,24 +361,33 @@ struct ArtworkDetailView: View {
         }
     }
 
-    // MARK: - 5. Family Love Section
+    // MARK: - 5. Notes Section
 
-    private var familyLoveSection: some View {
+    /// Notes in the order they were written.
+    private var sortedNotes: [Comment] {
+        (artwork.comments ?? []).sorted { $0.createdAt < $1.createdAt }
+    }
+
+    private var notesSection: some View {
         VStack(alignment: .leading, spacing: 14) {
-            Text("Family Love")
+            Text("Notes")
                 .font(Brand.headlineFont)
                 .foregroundStyle(Brand.charcoal)
 
-            // Existing comments
-            if let comments = artwork.comments, !comments.isEmpty {
-                ForEach(comments) { comment in
-                    FamilyCommentView(comment: comment)
-                }
+            ForEach(sortedNotes) { note in
+                ArtworkNoteView(note: note)
+                    .contextMenu {
+                        Button("Delete Note", systemImage: "trash", role: .destructive) {
+                            modelContext.delete(note)
+                            try? modelContext.save()
+                        }
+                    }
             }
 
-            // Add comment input
+            // Add note input
             HStack(spacing: 10) {
-                TextField("Add a comment...", text: $newCommentText)
+                TextField("Add a note about this piece…", text: $newCommentText, axis: .vertical)
+                    .lineLimit(1...4)
                     .font(Brand.bodyFont)
                     .padding(.horizontal, 16)
                     .padding(.vertical, 10)
@@ -517,7 +526,7 @@ struct ArtworkDetailView: View {
 
         let comment = Comment(
             text: trimmed,
-            authorName: "Me",
+            authorName: "",
             artwork: artwork
         )
         modelContext.insert(comment)
@@ -620,7 +629,7 @@ struct ArtworkDetailView: View {
             )
             .padding(.horizontal, 20)
 
-            // Voice memo card (premium only)
+            // Voice memo card (recording needs the trial or lifetime unlock)
             if PremiumManager.isPremium {
                 VStack(spacing: 12) {
                     Label("Voice Memo", systemImage: "mic.fill")

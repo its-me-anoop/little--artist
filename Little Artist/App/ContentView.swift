@@ -3,7 +3,8 @@
 //  Little Artist
 //
 //  Root view displayed after onboarding. Provides the main 4-tab navigation
-//  shell (Gallery, Timeline, Milestones, Settings) with a floating action button.
+//  shell (Gallery, Timeline, Milestones, Settings) with a floating capture
+//  button on the browsing tabs.
 //
 //  Created by Anoop Jose on 13/02/2026.
 //
@@ -22,13 +23,10 @@ struct ContentView: View {
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.modelContext) private var modelContext
 
-    @AppStorage("hasSeenFirstArtworkUpsell") private var hasSeenUpsell = false
-
     @State private var selectedTab: AppTab = .gallery
     @State private var selectedChildID: PersistentIdentifier?
     @State private var showCreateSheet = false
     @State private var showAddChild = false
-    @State private var showPremiumUpsell = false
     @State private var showSlideshow = false
     @State private var paywallReason: PaywallView.LimitReason?
     @State private var artworkCountBeforeSheet = 0
@@ -42,7 +40,7 @@ struct ContentView: View {
     private var isIdleForReviewPrompt: Bool {
         celebration.current == nil
             && !showCreateSheet && !showAddChild && !showSlideshow
-            && !showPremiumUpsell && paywallReason == nil
+            && paywallReason == nil
     }
 
     /// Artworks in chronological order for exhibition mode, so the
@@ -56,13 +54,6 @@ struct ContentView: View {
         return children.first { $0.persistentModelID == selectedChildID }
     }
 
-    private var premiumUpsellPresented: Binding<Bool> {
-        Binding(
-            get: { showPremiumUpsell && !store.isPremium },
-            set: { showPremiumUpsell = $0 }
-        )
-    }
-
     private var paywallPresented: Binding<PaywallView.LimitReason?> {
         Binding(
             get: { store.isPremium ? nil : paywallReason },
@@ -70,14 +61,18 @@ struct ContentView: View {
         )
     }
 
+    /// Opens capture, or the add-child sheet when there are no children
+    /// yet. Both need an active trial or the lifetime unlock.
     private func presentCreateFlow() {
+        guard store.isPremium else {
+            paywallReason = children.isEmpty ? .children : .artworks
+            return
+        }
         if children.isEmpty {
             showAddChild = true
-        } else if PremiumManager.canAddArtwork(currentCount: allArtworks.count) {
+        } else {
             artworkCountBeforeSheet = allArtworks.count
             showCreateSheet = true
-        } else {
-            paywallReason = .artworks
         }
     }
 
@@ -157,14 +152,6 @@ struct ContentView: View {
             if savedCount > 0 {
                 reviewPrompt.record(.artworkSaved(count: savedCount))
             }
-            if artworkCountBeforeSheet == 0
-                && allArtworks.count > artworkCountBeforeSheet
-                && !store.isPremium
-                && !hasSeenUpsell
-            {
-                hasSeenUpsell = true
-                showPremiumUpsell = true
-            }
         }) {
             // Honor the current child filter — attribute the new artwork to
             // the selected child when one is active, otherwise fall back to
@@ -173,9 +160,6 @@ struct ContentView: View {
                 AddArtworkView(child: child)
                     .adaptiveSheetSizing(sizeClass: sizeClass)
             }
-        }
-        .sheet(isPresented: premiumUpsellPresented) {
-            PremiumUpsellView()
         }
         .sheet(item: paywallPresented) { reason in
             PaywallView(reason: reason)
@@ -196,7 +180,6 @@ struct ContentView: View {
         .onChange(of: store.isPremium) { _, isPremium in
             guard isPremium else { return }
             paywallReason = nil
-            showPremiumUpsell = false
         }
         .task(id: reviewPrompt.shouldRequestReview && isIdleForReviewPrompt) {
             guard reviewPrompt.shouldRequestReview, isIdleForReviewPrompt else { return }

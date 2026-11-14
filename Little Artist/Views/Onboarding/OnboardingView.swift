@@ -26,6 +26,7 @@ struct OnboardingView: View {
     @Query private var children: [Child]
     @State private var currentPage = 0
     @State private var showAddChild = false
+    @State private var showTrialOffer = false
 
     private let selectionFeedback = UISelectionFeedbackGenerator()
     private let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
@@ -191,6 +192,18 @@ struct OnboardingView: View {
         }) {
             AddChildView()
         }
+        .sheet(isPresented: $showTrialOffer, onDismiss: {
+            // Trial started (or lifetime bought): go straight to adding the
+            // first child. Otherwise let them look around; the offer comes
+            // back the first time they try to add something.
+            if StoreKitManager.shared.isPremium && children.isEmpty {
+                showAddChild = true
+            } else {
+                hasCompletedOnboarding = true
+            }
+        }) {
+            PaywallView(reason: .children)
+        }
     }
 
     private var animatedBackground: some View {
@@ -332,10 +345,12 @@ struct OnboardingView: View {
 
     @MainActor
     private func completeOnboarding() {
-        if children.isEmpty {
+        if !children.isEmpty {
+            hasCompletedOnboarding = true
+        } else if StoreKitManager.shared.isPremium {
             showAddChild = true
         } else {
-            hasCompletedOnboarding = true
+            showTrialOffer = true
         }
     }
 }

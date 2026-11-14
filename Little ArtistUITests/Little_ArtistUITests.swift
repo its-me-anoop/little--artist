@@ -18,9 +18,13 @@ final class Little_ArtistUITests: XCTestCase {
 
     /// Launches the app in UI-test mode (in-memory store, onboarding
     /// pre-completed unless `showOnboarding` is true).
-    private func launchApp(showOnboarding: Bool = false, sampleArtwork: Bool = false) -> XCUIApplication {
+    private func launchApp(
+        showOnboarding: Bool = false,
+        sampleArtwork: Bool = false,
+        access: String = "trial"
+    ) -> XCUIApplication {
         let app = XCUIApplication()
-        app.launchArguments += ["-uiTesting"]
+        app.launchArguments += ["-uiTesting", "-uiTestAccess", access]
         if showOnboarding {
             app.launchArguments += ["-uiTestShowOnboarding"]
         }
@@ -78,6 +82,19 @@ final class Little_ArtistUITests: XCTestCase {
         XCTAssertTrue(app.textFields["Child's name"].waitForExistence(timeout: 10))
     }
 
+    func testOnboardingGetStartedOffersTrialFirst() throws {
+        let app = launchApp(showOnboarding: true, access: "notStarted")
+
+        XCTAssertTrue(app.buttons["Next"].waitForExistence(timeout: 30))
+        for _ in 0..<4 {
+            app.buttons["Next"].tap()
+        }
+        app.buttons["Get Started"].tap()
+
+        // Before the trial is started, Get Started offers it.
+        XCTAssertTrue(app.buttons["Start 30-Day Free Trial"].waitForExistence(timeout: 10))
+    }
+
     // MARK: - Main Navigation
 
     func testAllTabsNavigate() throws {
@@ -114,64 +131,67 @@ final class Little_ArtistUITests: XCTestCase {
                       "FAB should open Add Child when no children exist")
     }
 
-    func testCreateChildThenSecondChildHitsPaywall() throws {
-        let app = launchApp()
+    func testUnlimitedChildrenDuringTrial() throws {
+        let app = launchApp(access: "trial")
         waitForMainTabs(app)
 
-        // Create the first (free-tier) child.
+        // First child from the add button (no children yet).
         app.buttons["Add artwork"].tap()
+        addChild(named: "Mia", in: app)
+
+        // Second and third children from Settings: no limit during the trial.
+        app.tabBars.firstMatch.buttons["Settings"].tap()
+        for name in ["Leo", "Zoe"] {
+            let addNew = app.buttons["Add New"]
+            XCTAssertTrue(addNew.waitForExistence(timeout: 10))
+            addNew.tap()
+            addChild(named: name, in: app)
+        }
+    }
+
+    /// Fills in and saves the Add Child sheet.
+    private func addChild(named name: String, in app: XCUIApplication) {
         let nameField = app.textFields["Child's name"]
-        XCTAssertTrue(nameField.waitForExistence(timeout: 10))
+        XCTAssertTrue(nameField.waitForExistence(timeout: 10),
+                      "Adding \(name) must open Add Child, not a paywall")
         nameField.tap()
-        nameField.typeText("Mia")
+        nameField.typeText(name)
         // Scope to the sheet's scroll view — the software keyboard can
         // expose an identically-labelled key element.
         app.scrollViews.buttons["Add Child"].firstMatch.tap()
-
-        // A second child is over the free limit — Settings Add New shows the paywall.
-        let tabBar = app.tabBars.firstMatch
-        tabBar.buttons["Settings"].tap()
-        let addNew = app.buttons["Add New"]
-        XCTAssertTrue(addNew.waitForExistence(timeout: 10))
-        addNew.tap()
-
-        XCTAssertTrue(app.staticTexts["Unlock Your Full Studio"].waitForExistence(timeout: 10),
-                      "Second child on the free tier should hit the paywall")
+        XCTAssertTrue(nameField.waitForNonExistence(timeout: 10))
     }
 
     // MARK: - Paywall
 
-    func testPaywallShowsAllThreePlans() throws {
-        let app = launchApp()
+    func testTrialOfferShownBeforeTrialStarts() throws {
+        let app = launchApp(access: "notStarted")
         waitForMainTabs(app)
 
-        // Create a child, then trigger the paywall via Settings → Add New.
         app.buttons["Add artwork"].tap()
-        let nameField = app.textFields["Child's name"]
-        XCTAssertTrue(nameField.waitForExistence(timeout: 10))
-        nameField.tap()
-        nameField.typeText("Noah")
-        // Scope to the sheet's scroll view — the software keyboard can
-        // expose an identically-labelled key element.
-        app.scrollViews.buttons["Add Child"].firstMatch.tap()
 
-        app.tabBars.firstMatch.buttons["Settings"].tap()
-        let addNew = app.buttons["Add New"]
-        XCTAssertTrue(addNew.waitForExistence(timeout: 10))
-        addNew.tap()
-
-        XCTAssertTrue(app.staticTexts["Yearly"].waitForExistence(timeout: 10))
-        XCTAssertTrue(app.staticTexts["Monthly"].exists)
-        XCTAssertTrue(app.staticTexts["Lifetime"].exists)
+        XCTAssertTrue(app.buttons["Start 30-Day Free Trial"].waitForExistence(timeout: 10))
         XCTAssertTrue(app.buttons["Restore Purchases"].exists)
-        // The no-lock-in promise must be visible before purchase.
+        // Guideline 3.1.1: length, what happens after and price disclosed up front.
+        XCTAssertTrue(app.staticTexts.containing(NSPredicate(format: "label CONTAINS 'Free for 30 days'")).firstMatch.exists)
         XCTAssertTrue(app.staticTexts.containing(NSPredicate(format: "label CONTAINS 'Your art stays yours'")).firstMatch.exists)
 
         // Capture the paywall for App Store Connect IAP review screenshots.
         let attachment = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
-        attachment.name = "paywall"
+        attachment.name = "paywall-trial"
         attachment.lifetime = .keepAlways
         add(attachment)
+    }
+
+    func testLifetimeOfferAfterTrialEnds() throws {
+        let app = launchApp(sampleArtwork: true, access: "expired")
+        waitForMainTabs(app)
+
+        app.buttons["Add artwork"].tap()
+
+        XCTAssertTrue(app.staticTexts["Your free month has ended"].waitForExistence(timeout: 10))
+        XCTAssertFalse(app.buttons["Start 30-Day Free Trial"].exists, "The trial can only be used once")
+        XCTAssertTrue(app.buttons.containing(NSPredicate(format: "label BEGINSWITH 'Unlock Lifetime'")).firstMatch.exists)
     }
 
     // MARK: - Growth Features

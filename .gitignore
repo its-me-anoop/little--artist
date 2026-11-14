@@ -20,3 +20,4 @@ Podfile.lock
 .codex-derived/
 .claude/worktrees/
 *.xcarchive
+Little Artist.xcodeproj/Artling.xcodeproj/

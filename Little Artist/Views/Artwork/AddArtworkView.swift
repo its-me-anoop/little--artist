@@ -445,7 +445,7 @@ struct AddArtworkView: View {
     private var actionButtonsSection: some View {
         VStack(spacing: 16) {
             HStack(spacing: 16) {
-                // Voice memo (premium only)
+                // Voice memo (needs the trial or lifetime unlock)
                 if PremiumManager.isPremium {
                     VStack(spacing: 8) {
                         ZStack {
@@ -500,7 +500,7 @@ struct AddArtworkView: View {
                 }
             }
 
-            // Inline voice memo recorder (premium only)
+            // Inline voice memo recorder (needs the trial or lifetime unlock)
             if PremiumManager.isPremium {
                 VoiceMemoRecorderView(voiceNoteData: $voiceNoteData)
             }

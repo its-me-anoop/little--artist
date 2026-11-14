@@ -87,7 +87,7 @@ struct SettingsView: View {
 
     private var paywallPresented: Binding<PaywallView.LimitReason?> {
         Binding(
-            get: { store.isPremium ? nil : paywallReason },
+            get: { store.state == .lifetime ? nil : paywallReason },
             set: { paywallReason = $0 }
         )
     }
@@ -137,122 +137,87 @@ struct SettingsView: View {
         .navigationBarTitleDisplayMode(.large)
     }
 
-    // MARK: - 1. Premium Hero Card
+    // MARK: - 1. Access Card
+
+    private var accessTitle: String {
+        switch store.state {
+        case .notStarted: String(localized: "Try Little Artist free")
+        case .trial(let days, _):
+            days == 1 ? String(localized: "Free trial: last day") : String(localized: "Free trial: \(days) days left")
+        case .expired: String(localized: "Free trial ended")
+        case .lifetime: String(localized: "Lifetime Access")
+        }
+    }
+
+    private var accessSubtitle: String {
+        switch store.state {
+        case .notStarted:
+            String(localized: "30 days of everything, free. Then pay once if you love it.")
+        case .trial(_, let endsAt):
+            String(localized: "Ends \(endsAt.formatted(date: .abbreviated, time: .omitted)). Pay once to keep adding artwork forever.")
+        case .expired:
+            String(localized: "Your artwork is safe. Unlock once to keep adding.")
+        case .lifetime:
+            String(localized: "Unlimited children and artwork, forever. Thank you!")
+        }
+    }
+
+    private var accessPill: String {
+        switch store.state {
+        case .lifetime: String(localized: "Owned")
+        case .trial: String(localized: "Trial")
+        case .notStarted, .expired: String(localized: "Locked")
+        }
+    }
 
     private var premiumHeroCard: some View {
-        Group {
-            if store.isPremium {
-                premiumActiveCard
-            } else {
-                premiumUpsellCard
-            }
-        }
-    }
-
-    private var premiumActiveCard: some View {
         ZStack(alignment: .topTrailing) {
-            // Decorative medal icon
-            Image(systemName: "medal.fill")
-                .font(.system(size: 80))
+            Image(systemName: store.state == .lifetime ? "medal.fill" : "sparkles")
+                .font(Brand.heroIconFont(size: 72))
                 .foregroundStyle(Brand.primary.opacity(0.12))
                 .offset(x: -8, y: -4)
+                .accessibilityHidden(true)
 
             VStack(alignment: .leading, spacing: 12) {
-                // Current Plan pill
-                Text("Current Plan")
+                Text(accessPill)
                     .font(Brand.caption2Font.weight(.medium))
                     .foregroundStyle(Brand.charcoal)
                     .padding(.horizontal, 12)
                     .padding(.vertical, 5)
-                    .background(.white.opacity(0.3))
-                    .clipShape(Capsule())
+                    .background(Brand.surface.opacity(0.6), in: Capsule())
 
-                Text("Premium Account")
+                Text(accessTitle)
                     .font(Brand.title2Font)
                     .foregroundStyle(Brand.charcoal)
 
-                // Active status
-                HStack(spacing: 6) {
-                    Circle()
-                        .fill(Brand.sage)
-                        .frame(width: 8, height: 8)
-                    Text("Status: Active")
-                        .font(Brand.captionFont)
-                        .foregroundStyle(Brand.warmGray)
-                }
-
-                Spacer().frame(height: 4)
-
-                // Manage button
-                Button {
-                    paywallReason = .artworks
-                } label: {
-                    Text("Manage")
-                        .font(Brand.captionFont.weight(.semibold))
-                        .foregroundStyle(Brand.primary)
-                        .padding(.horizontal, 20)
-                        .padding(.vertical, 10)
-                        .background(Brand.surface)
-                        .clipShape(Capsule())
-                }
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(Brand.screenPadding)
-        }
-        .background(Brand.primary.opacity(0.15))
-        .clipShape(RoundedRectangle(cornerRadius: Brand.radiusCard, style: .continuous))
-        .rotationEffect(.degrees(-1))
-    }
-
-    private var premiumUpsellCard: some View {
-        ZStack(alignment: .topTrailing) {
-            Image(systemName: "sparkles")
-                .font(.system(size: 64))
-                .foregroundStyle(Brand.primary.opacity(0.12))
-                .offset(x: -12, y: 4)
-
-            VStack(alignment: .leading, spacing: 12) {
-                Text("Free Plan")
-                    .font(Brand.caption2Font.weight(.medium))
-                    .foregroundStyle(Brand.charcoal)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 5)
-                    .background(.white.opacity(0.3))
-                    .clipShape(Capsule())
-
-                Text("Upgrade to Premium")
-                    .font(Brand.title2Font)
-                    .foregroundStyle(Brand.charcoal)
-
-                Text("Unlock unlimited children, unlimited artworks, AI captions, voice memos, and PDF export.")
+                Text(accessSubtitle)
                     .font(Brand.captionFont)
                     .foregroundStyle(Brand.warmGray)
                     .lineSpacing(2)
 
-                Spacer().frame(height: 4)
-
                 HStack(spacing: 12) {
-                    Button {
-                        paywallReason = .artworks
-                    } label: {
-                        Text("Upgrade")
-                            .font(Brand.captionFont.weight(.semibold))
-                            .foregroundStyle(.white)
-                            .padding(.horizontal, 20)
-                            .padding(.vertical, 10)
-                            .background(Brand.primary)
-                            .clipShape(Capsule())
+                    if store.state != .lifetime {
+                        Button {
+                            paywallReason = .upgrade
+                        } label: {
+                            Text(store.state.canStartTrial ? "Start Free Trial" : "Unlock Lifetime")
+                                .font(Brand.captionFont.weight(.semibold))
+                                .foregroundStyle(.white)
+                                .padding(.horizontal, 20)
+                                .padding(.vertical, 10)
+                                .background(Brand.primary, in: Capsule())
+                        }
                     }
 
                     Button {
                         isRestoring = true
                         Task {
-                            await store.restorePurchases()
+                            await store.restore()
                             isRestoring = false
                         }
                     } label: {
                         HStack(spacing: 4) {
-                            Text("Restore")
+                            Text("Restore Purchases")
                                 .font(Brand.captionFont)
                                 .foregroundStyle(Brand.warmGray)
                             if isRestoring {
@@ -263,13 +228,13 @@ struct SettingsView: View {
                     }
                     .disabled(isRestoring)
                 }
+                .padding(.top, 4)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(Brand.screenPadding)
         }
         .background(Brand.primary.opacity(0.15))
         .clipShape(RoundedRectangle(cornerRadius: Brand.radiusCard, style: .continuous))
-        .rotationEffect(.degrees(-1))
     }
 
     // MARK: - 2. Child Profiles Section
@@ -449,13 +414,10 @@ struct SettingsView: View {
                     .padding(.leading, 70)
 
                 // PDF Portfolio Export row
+                // PDF export is free: a family's art is never held hostage.
                 Button {
-                    if store.isPremium {
-                        if let firstChild = children.first {
-                            portfolioChild = firstChild
-                        }
-                    } else {
-                        paywallReason = .artworks
+                    if let firstChild = children.first {
+                        portfolioChild = firstChild
                     }
                 } label: {
                     HStack(spacing: 14) {
@@ -501,18 +463,14 @@ struct SettingsView: View {
                             .padding(.leading, 70)
 
                         Button {
-                            if store.isPremium {
-                                portfolioChild = child
-                            } else {
-                                paywallReason = .artworks
-                            }
+                            portfolioChild = child
                         } label: {
                             HStack(spacing: 14) {
                                 Spacer().frame(width: 40)
 
                                 Text("Export \(child.name)'s Portfolio")
                                     .font(Brand.captionFont)
-                                    .foregroundStyle(store.isPremium ? Brand.primary : Brand.disabled)
+                                    .foregroundStyle(Brand.primary)
 
                                 Spacer()
 
@@ -798,7 +756,7 @@ struct SettingsView: View {
                 Button("Save All Images to Photos") { saveAllToPhotos() }
                 Button("Cancel", role: .cancel) {}
             } message: {
-                Text("Every artwork, voice memo and caption — free for everyone, whether or not you subscribe.")
+                Text("Every artwork, voice memo and caption. Free for everyone, always, even after the trial.")
             }
             .alert(
                 "Export",

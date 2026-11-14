@@ -47,7 +47,7 @@ final class Artwork {
     /// Tags applied to this artwork for categorization.
     var tags: [Tag]?
 
-    /// Comments left by family members on this artwork.
+    /// Notes the parent wrote about this artwork (stored as `Comment`).
     @Relationship(deleteRule: .cascade, inverse: \Comment.artwork)
     var comments: [Comment]?
 
