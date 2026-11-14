@@ -216,7 +216,7 @@ nonisolated enum ArchiveExportService {
 
 private extension String {
     /// `nil` when the string is empty or only whitespace.
-    var nonEmpty: String? {
+    nonisolated var nonEmpty: String? {
         let trimmed = trimmingCharacters(in: .whitespacesAndNewlines)
         return trimmed.isEmpty ? nil : trimmed
     }

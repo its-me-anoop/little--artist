@@ -53,7 +53,7 @@ struct NoChildrenView: View {
                             .foregroundStyle(Brand.charcoal)
                             .multilineTextAlignment(.center)
 
-                        Text("Use Create to add a child\nand start capturing their artwork.")
+                        Text("Tap the + button to add a child\nand start capturing their artwork.")
                             .font(Brand.bodyFont)
                             .foregroundStyle(Brand.warmGray)
                             .multilineTextAlignment(.center)

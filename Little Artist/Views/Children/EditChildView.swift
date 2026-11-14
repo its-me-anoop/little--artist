@@ -145,7 +145,7 @@ struct EditChildView: View {
             }
             .fullScreenCover(isPresented: $showCamera) {
                 CameraPicker { image in
-                    if let data = image.jpegData(compressionQuality: 0.8) {
+                    if let data = ImageProcessingService.processAvatar(image: image) {
                         avatarImageData = data
                     }
                 }
@@ -153,14 +153,14 @@ struct EditChildView: View {
             }
             .imagePlaygroundSheetCompat(isPresented: $showImagePlayground) { url in
                 if let data = try? Data(contentsOf: url) {
-                    avatarImageData = data
+                    avatarImageData = ImageProcessingService.processAvatar(data: data)
                 }
             }
             .onChange(of: photoPickerItem) { _, newItem in
                 if let newItem {
                     Task {
                         if let data = try? await newItem.loadTransferable(type: Data.self) {
-                            avatarImageData = data
+                            avatarImageData = ImageProcessingService.processAvatar(data: data)
                         }
                         photoPickerItem = nil
                     }
@@ -263,6 +263,7 @@ struct EditChildView: View {
             name: trimmedName,
             avatarColor: selectedColor,
             avatarImageData: avatarImageData,
+            removeAvatar: avatarImageData == nil,
             in: modelContext
         )
         dismiss()

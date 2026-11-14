@@ -145,7 +145,7 @@ struct SearchView: View {
                                 HStack(spacing: 4) {
                                     Image(systemName: showFavoritesOnly ? "heart.fill" : "heart")
                                         .font(.system(size: 11))
-                                Text("Starred")
+                                Text("Favorites")
                                     .font(Brand.captionFont.bold())
                                     .crayonStyle()
                             }

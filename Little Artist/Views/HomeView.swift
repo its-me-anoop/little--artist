@@ -280,7 +280,7 @@ struct HomeView: View {
         .padding(.horizontal, padding)
     }
 
-    // MARK: - Earlier This Month Section
+    // MARK: - Earlier Pieces Section
 
     private var earlierThisMonthSection: some View {
         let padding = Brand.Adaptive.screenPadding(for: sizeClass)
@@ -288,7 +288,7 @@ struct HomeView: View {
         let columns = Array(repeating: GridItem(.flexible(), spacing: 12), count: columnCount)
 
         return VStack(alignment: .leading, spacing: 12) {
-            Text("Earlier this Month")
+            Text("Earlier Pieces")
                 .font(Brand.title2Font)
                 .foregroundStyle(Brand.charcoal)
                 .padding(.horizontal, padding)
@@ -421,6 +421,7 @@ struct HomeView: View {
                         } label: {
                             Image(systemName: "rectangle.split.2x1")
                         }
+                        .accessibilityLabel("Compare artwork over time")
                     }
                 }
             }
@@ -433,8 +434,12 @@ struct HomeView: View {
             .sheet(item: paywallPresented) { reason in
                 PaywallView(reason: reason)
             }
-            .onChange(of: selectedChildID) { _, _ in
-                // Child filter changed — UI updates via filteredArtworks
+            // Fall back to "All Children" if the selected child is deleted,
+            // otherwise the gallery filters on a stale ID and shows nothing.
+            .onChange(of: children.map(\.persistentModelID)) { _, ids in
+                if let selectedChildID, !ids.contains(selectedChildID) {
+                    self.selectedChildID = nil
+                }
             }
             .onChange(of: store.isPremium) { _, isPremium in
                 guard isPremium else { return }

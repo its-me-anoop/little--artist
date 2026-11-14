@@ -212,6 +212,30 @@ struct ArtworkRepositoryTests {
         #expect(child.avatarColor == "7EB8DA")
     }
 
+    @Test("updateChild can remove the avatar photo")
+    func updateChildRemovesAvatar() throws {
+        let context = try makeInMemoryContext()
+        let child = ArtworkRepository.shared.createChild(
+            name: "Remy", avatarColor: "7EB8DA", avatarImageData: Data([0x01]), in: context
+        )
+
+        ArtworkRepository.shared.updateChild(child, removeAvatar: true, in: context)
+
+        #expect(child.avatarImageData == nil)
+    }
+
+    @Test("updateChild without new avatar data keeps the existing photo")
+    func updateChildKeepsAvatar() throws {
+        let context = try makeInMemoryContext()
+        let child = ArtworkRepository.shared.createChild(
+            name: "Kai", avatarColor: "7EB8DA", avatarImageData: Data([0x01]), in: context
+        )
+
+        ArtworkRepository.shared.updateChild(child, name: "Kai B", in: context)
+
+        #expect(child.avatarImageData == Data([0x01]))
+    }
+
     @Test("deleteChild cascades to artworks")
     func deleteChildCascades() throws {
         let context = try makeInMemoryContext()
@@ -289,6 +313,24 @@ struct ArtworkRepositoryTests {
 
         ArtworkRepository.shared.deleteArtwork(artwork, in: context)
         #expect(try context.fetchCount(FetchDescriptor<Artwork>()) == 0)
+    }
+
+    @Test("updateArtwork can remove a voice memo, even without access")
+    func updateArtworkRemovesVoiceNote() throws {
+        let context = try makeInMemoryContext()
+        let child = ArtworkRepository.shared.createChild(
+            name: "Ola", avatarColor: "D4928A", in: context
+        )
+        PremiumManager._overrideIsPremium = true
+        let artwork = ArtworkRepository.shared.createArtwork(
+            title: "Song", voiceNoteData: Data([0x0A]), child: child, in: context
+        )
+        PremiumManager._overrideIsPremium = false
+        defer { PremiumManager._overrideIsPremium = nil }
+
+        ArtworkRepository.shared.updateArtwork(artwork, removeVoiceNote: true, in: context)
+
+        #expect(artwork.voiceNoteData == nil)
     }
 }
 

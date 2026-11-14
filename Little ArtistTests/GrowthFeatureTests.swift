@@ -224,3 +224,40 @@ struct PhotoBookPDFTests {
         #expect(bounds.size == CGSize(width: 612, height: 792))
     }
 }
+
+// MARK: - ImageProcessingService Tests
+
+import UIKit
+
+struct ImageProcessingServiceTests {
+
+    private func solidImage(width: CGFloat, height: CGFloat) -> UIImage {
+        let format = UIGraphicsImageRendererFormat.default()
+        format.scale = 1
+        return UIGraphicsImageRenderer(size: CGSize(width: width, height: height), format: format)
+            .image { context in
+                UIColor.orange.setFill()
+                context.fill(CGRect(x: 0, y: 0, width: width, height: height))
+            }
+    }
+
+    @Test("Avatars are downscaled to at most 512px on the longest edge")
+    func avatarDownscaled() throws {
+        let data = try #require(ImageProcessingService.processAvatar(image: solidImage(width: 3000, height: 2000)))
+        let decoded = try #require(UIImage(data: data))
+        let longest = max(decoded.size.width * decoded.scale, decoded.size.height * decoded.scale)
+        #expect(longest == 512)
+    }
+
+    @Test("Main images are capped in pixels, not points times screen scale")
+    func mainImagePixelCap() throws {
+        let output = ImageProcessingService.processForStorage(image: solidImage(width: 4000, height: 1000))
+        let decoded = try #require(UIImage(data: output.imageData))
+        #expect(decoded.size.width * decoded.scale == 2048)
+    }
+
+    @Test("Non-image data is rejected for avatars")
+    func avatarRejectsGarbage() {
+        #expect(ImageProcessingService.processAvatar(data: Data([0x00, 0x01])) == nil)
+    }
+}

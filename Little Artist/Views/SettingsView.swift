@@ -32,6 +32,7 @@ struct SettingsView: View {
     @State private var showAddChild = false
     @State private var showDeleteChildConfirmation = false
     @State private var childToDelete: Child?
+    @State private var editingChild: Child?
     @State private var paywallReason: PaywallView.LimitReason?
     @State private var isRestoring = false
     @State private var exportPayload: SharePayload?
@@ -269,12 +270,15 @@ struct SettingsView: View {
             // Child cards
             VStack(spacing: 0) {
                 ForEach(Array(children.enumerated()), id: \.element.id) { index, child in
-                    NavigationLink {
-                        EditChildView(child: child) {}
+                    // EditChildView brings its own NavigationStack and
+                    // Cancel button, so present it as a sheet, not a push.
+                    Button {
+                        editingChild = child
                     } label: {
                         childCardRow(child: child)
                     }
                     .buttonStyle(.plain)
+                    .accessibilityHint("Edit profile")
 
                     if index < children.count - 1 {
                         Divider()
@@ -702,6 +706,9 @@ struct SettingsView: View {
             }
             .sheet(isPresented: $showAddChild) {
                 AddChildView()
+            }
+            .sheet(item: $editingChild) { child in
+                EditChildView(child: child)
             }
             .sheet(item: paywallPresented) { reason in
                 PaywallView(reason: reason)

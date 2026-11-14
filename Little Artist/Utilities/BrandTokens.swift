@@ -145,6 +145,11 @@ enum Brand {
     static let captionFont = Font.caption
     /// Caption 2 – SF Pro (system default).
     static let caption2Font = Font.caption2
+    /// Large decorative SF Symbol (e.g. watermark icons on hero cards).
+    /// Decorative only, so a fixed size is fine; hide it from VoiceOver.
+    static func heroIconFont(size: CGFloat) -> Font {
+        .system(size: size, weight: .bold, design: .rounded)
+    }
 
     // MARK: - Corner Radii
 

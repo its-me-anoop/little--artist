@@ -50,7 +50,7 @@ struct NoArtworkView: View {
                             .foregroundStyle(Brand.charcoal)
                             .multilineTextAlignment(.center)
 
-                        Text("Capture your first masterpiece with Create in the toolbar.")
+                        Text("Tap the + button to capture your first masterpiece.")
                             .font(Brand.bodyFont)
                             .foregroundStyle(Brand.warmGray)
                             .multilineTextAlignment(.center)

@@ -25,13 +25,15 @@ struct TimelineView: View {
     @State private var selectedChildID: PersistentIdentifier?
     @State private var showAddChild = false
     @State private var editingChild: Child?
+    @State private var showPaywall = false
 
     @Environment(\.modelContext) private var modelContext
 
     // MARK: - Computed Properties
 
     private var selectedChild: Child? {
-        guard let selectedChildID else { return children.first }
+        // nil means "All children".
+        guard let selectedChildID else { return nil }
         return children.first { $0.persistentModelID == selectedChildID }
     }
 
@@ -109,50 +111,65 @@ struct TimelineView: View {
     // MARK: - Body
 
     var body: some View {
-        NavigationStack {
-            ScrollView {
-                VStack(spacing: Brand.sectionSpacing) {
-                    // MARK: Child Slider
-                    if !children.isEmpty {
-                        ChildSliderView(
-                            children: children,
-                            selectedChild: selectedChildBinding,
-                            onAddChild: { showAddChild = true },
-                            onEditChild: { child in editingChild = child }
-                        )
-                    }
-
-                    // MARK: Profile Hero
-                    if let child = selectedChild {
-                        profileHero(for: child)
-                    }
-
-                    // MARK: Milestones
-                    if !achievements.isEmpty {
-                        MilestoneCarouselView(
-                            achievements: achievements,
-                            onViewAll: nil
-                        )
-                    }
-
-                    // MARK: Art Timeline
-                    if groupedArtworks.isEmpty {
-                        emptyState
-                    } else {
-                        timelineContent
-                    }
+        ScrollView {
+            VStack(spacing: Brand.sectionSpacing) {
+                // MARK: Child Slider
+                if !children.isEmpty {
+                    ChildSliderView(
+                        children: children,
+                        selectedChild: selectedChildBinding,
+                        onAddChild: {
+                            // Adding children needs the trial or lifetime unlock.
+                            if StoreKitManager.shared.isPremium {
+                                showAddChild = true
+                            } else {
+                                showPaywall = true
+                            }
+                        },
+                        onEditChild: { child in editingChild = child }
+                    )
                 }
-                .padding(.bottom, Brand.sectionSpacing)
+
+                // MARK: Profile Hero
+                if let child = selectedChild {
+                    profileHero(for: child)
+                }
+
+                // MARK: Milestones
+                if !achievements.isEmpty {
+                    MilestoneCarouselView(
+                        achievements: achievements,
+                        onViewAll: nil
+                    )
+                }
+
+                // MARK: Art Timeline
+                if groupedArtworks.isEmpty {
+                    emptyState
+                } else {
+                    timelineContent
+                }
             }
-            .background(BrandAppBackground())
-            .navigationTitle("Timeline")
-            .navigationDestination(for: Artwork.self) { artwork in
-                ArtworkDetailView(artwork: artwork)
-            }
+            .padding(.bottom, Brand.sectionSpacing)
         }
-        .onAppear {
-            if selectedChildID == nil, let first = children.first {
-                selectedChildID = first.persistentModelID
+        .background(BrandAppBackground())
+        .navigationTitle("Timeline")
+        .navigationDestination(for: Artwork.self) { artwork in
+            ArtworkDetailView(artwork: artwork)
+        }
+        .sheet(isPresented: $showAddChild) {
+            AddChildView()
+        }
+        .sheet(item: $editingChild) { child in
+            EditChildView(child: child)
+        }
+        .sheet(isPresented: $showPaywall) {
+            PaywallView(reason: .children)
+        }
+        // Fall back to "All" if the selected child is deleted.
+        .onChange(of: children.map(\.persistentModelID)) { _, ids in
+            if let selectedChildID, !ids.contains(selectedChildID) {
+                self.selectedChildID = nil
             }
         }
     }

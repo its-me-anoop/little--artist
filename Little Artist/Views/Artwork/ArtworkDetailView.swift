@@ -43,6 +43,7 @@ struct ArtworkDetailView: View {
     @State private var imageScale: CGFloat = 1.0
     @State private var imageOffset: CGSize = .zero
     @State private var lastScale: CGFloat = 1.0
+    @State private var lastOffset: CGSize = .zero
 
     // MARK: - Computed
 
@@ -90,6 +91,23 @@ struct ArtworkDetailView: View {
                     Image(systemName: artwork.isFavorited ? "heart.fill" : "heart")
                         .foregroundStyle(artwork.isFavorited ? Brand.dustyRose : Brand.charcoal)
                 }
+                .accessibilityLabel(artwork.isFavorited ? "Remove from Favorites" : "Add to Favorites")
+            }
+
+            ToolbarItem(placement: .topBarTrailing) {
+                Menu {
+                    Button("Edit", systemImage: "pencil") {
+                        showEditSheet = true
+                    }
+                    Divider()
+                    Button("Delete Artwork", systemImage: "trash", role: .destructive) {
+                        showDeleteConfirmation = true
+                    }
+                } label: {
+                    Image(systemName: "ellipsis")
+                        .foregroundStyle(Brand.charcoal)
+                }
+                .accessibilityLabel("More")
             }
         }
         .fullScreenCover(isPresented: $showFullScreenZoom) {
@@ -197,6 +215,7 @@ struct ArtworkDetailView: View {
                     .background(.ultraThinMaterial)
                     .clipShape(Circle())
             }
+            .accessibilityLabel("Zoom")
             .padding(16)
         }
     }
@@ -427,7 +446,7 @@ struct ArtworkDetailView: View {
                         withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) {
                             if imageScale > 1.0 {
                                 imageScale = 1.0
-                                imageOffset = .zero
+                                imageOffset = .zero; lastOffset = .zero
                             } else {
                                 imageScale = 2.5
                             }
@@ -441,7 +460,7 @@ struct ArtworkDetailView: View {
                     Spacer()
                     Button {
                         imageScale = 1.0
-                        imageOffset = .zero
+                        imageOffset = .zero; lastOffset = .zero
                         lastScale = 1.0
                         showFullScreenZoom = false
                     } label: {
@@ -452,6 +471,7 @@ struct ArtworkDetailView: View {
                             .background(.ultraThinMaterial)
                             .clipShape(Circle())
                     }
+                    .accessibilityLabel("Close")
                     .padding()
                 }
                 Spacer()
@@ -472,25 +492,31 @@ struct ArtworkDetailView: View {
                 withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) {
                     if imageScale < 1.0 {
                         imageScale = 1.0
-                        imageOffset = .zero
+                        imageOffset = .zero; lastOffset = .zero
                     }
                     lastScale = imageScale
                 }
             }
     }
 
-    /// Drag-to-pan while zoomed, springs back on release.
+    /// Drag-to-pan while zoomed; keeps its position between drags.
     private var panGesture: some Gesture {
         DragGesture()
             .onChanged { value in
                 guard imageScale > 1.0 else { return }
-                imageOffset = value.translation
+                // Accumulate from where the last drag ended so the image
+                // stays where the user left it.
+                imageOffset = CGSize(
+                    width: lastOffset.width + value.translation.width,
+                    height: lastOffset.height + value.translation.height
+                )
             }
             .onEnded { _ in
                 withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) {
                     if imageScale <= 1.0 {
-                        imageOffset = .zero
+                        imageOffset = .zero; lastOffset = .zero
                     }
+                    lastOffset = imageOffset
                 }
             }
     }
@@ -779,6 +805,7 @@ struct ArtworkDetailView: View {
             title: editTitle.trimmingCharacters(in: .whitespacesAndNewlines),
             caption: editCaption.trimmingCharacters(in: .whitespacesAndNewlines),
             voiceNoteData: editVoiceNoteData,
+            removeVoiceNote: editVoiceNoteData == nil,
             createdAt: anchoredDate,
             tags: editTags,
             in: modelContext
