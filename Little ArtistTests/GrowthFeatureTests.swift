@@ -261,3 +261,18 @@ struct ImageProcessingServiceTests {
         #expect(ImageProcessingService.processAvatar(data: Data([0x00, 0x01])) == nil)
     }
 }
+
+// MARK: - Milestone Tiers
+
+struct MilestoneTiersTests {
+
+    @Test("Next tier follows the fixed targets", arguments: [(0, 10), (10, 25), (99, 100), (499, 500)])
+    func fixedTargets(count: Int, expected: Int) {
+        #expect(MilestoneTiers.nextTier(after: count) == expected)
+    }
+
+    @Test("Beyond 500, tiers continue every 500 and stay above the count", arguments: [(500, 1000), (1200, 1500), (1500, 2000)])
+    func openEndedTiers(count: Int, expected: Int) {
+        #expect(MilestoneTiers.nextTier(after: count) == expected)
+    }
+}
