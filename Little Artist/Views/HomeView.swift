@@ -54,21 +54,7 @@ struct HomeView: View {
     /// Scans `allArtworks` for "On This Day" matches. O(n) in the number of
     /// artworks; called from `.task(id:)` not on every body eval.
     private func rebuildMemoriesArtworks() -> [MemoryEntry] {
-        let calendar = Calendar.current
-        let today = calendar.dateComponents([.month, .day], from: Date.now)
-        guard let todayMonth = today.month, let todayDay = today.day else { return [] }
-        let currentYear = calendar.component(.year, from: Date.now)
-
-        var results: [MemoryEntry] = []
-        for artwork in allArtworks {
-            let components = calendar.dateComponents([.year, .month, .day], from: artwork.createdAt)
-            guard components.month == todayMonth, components.day == todayDay else { continue }
-            let yearsAgo = currentYear - (components.year ?? currentYear)
-            if yearsAgo >= 1 {
-                results.append(MemoryEntry(artwork: artwork, yearsAgo: yearsAgo))
-            }
-        }
-        return results.sorted { $0.yearsAgo < $1.yearsAgo }
+        LibraryQuery.onThisDay(in: allArtworks)
     }
 
     /// Artworks filtered by the currently selected child. Sorting is already
@@ -454,16 +440,6 @@ struct HomeView: View {
                 memoriesArtworks = rebuildMemoriesArtworks()
             }
     }
-}
-
-// MARK: - Memory Entry
-
-/// A single "On This Day" memory entry — one artwork plus how many years ago
-/// it was created.
-struct MemoryEntry: Identifiable {
-    let artwork: Artwork
-    let yearsAgo: Int
-    var id: PersistentIdentifier { artwork.persistentModelID }
 }
 
 // MARK: - Previews
