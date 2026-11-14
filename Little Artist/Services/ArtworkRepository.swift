@@ -23,6 +23,10 @@ final class ArtworkRepository {
     /// Intents that need data access outside the SwiftUI environment.
     var modelContainer: ModelContainer?
 
+    /// Keeps Spotlight / Siri in step with writes. Set at launch; nil in
+    /// unit tests unless a test injects a spy.
+    var indexer: (any ContentIndexing)?
+
     private init() {}
 
     /// Whether voice notes may be attached (premium feature).
@@ -47,6 +51,7 @@ final class ArtworkRepository {
         )
         modelContext.insert(child)
         try? modelContext.save()
+        indexer?.index(child: child)
         return child
     }
 
@@ -68,12 +73,17 @@ final class ArtworkRepository {
             child.avatarImageData = avatarImageData
         }
         try? modelContext.save()
+        indexer?.index(child: child)
     }
 
     /// Deletes a child and all their artworks (cascade).
     func deleteChild(_ child: Child, in modelContext: ModelContext) {
+        let artworkIDs = (child.artworks ?? []).map(\.uuid)
+        let childID = child.uuid
         modelContext.delete(child)
         try? modelContext.save()
+        indexer?.remove(artworkIDs: artworkIDs)
+        indexer?.remove(childIDs: [childID])
     }
 
     // MARK: - Artworks
@@ -105,6 +115,8 @@ final class ArtworkRepository {
         )
         modelContext.insert(artwork)
         try? modelContext.save()
+        indexer?.index(artwork: artwork)
+        indexer?.index(child: child) // artwork count changed
         return artwork
     }
 
@@ -135,11 +147,16 @@ final class ArtworkRepository {
         if let createdAt { artwork.createdAt = createdAt }
         if let tags { artwork.tags = tags }
         try? modelContext.save()
+        indexer?.index(artwork: artwork)
     }
 
     /// Deletes an artwork.
     func deleteArtwork(_ artwork: Artwork, in modelContext: ModelContext) {
+        let artworkID = artwork.uuid
+        let child = artwork.child
         modelContext.delete(artwork)
         try? modelContext.save()
+        indexer?.remove(artworkIDs: [artworkID])
+        if let child { indexer?.index(child: child) }
     }
 }

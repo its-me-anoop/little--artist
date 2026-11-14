@@ -18,9 +18,14 @@ final class QuickActionRouter {
 
     /// Destinations the app can jump straight into.
     enum Action: Equatable {
-        case captureArtwork
+        /// Open capture, attributing the piece to a child when given.
+        case captureArtwork(childID: UUID? = nil)
         case showMilestones
         case showTimeline
+        /// Show one piece of artwork (from Siri, Shortcuts or Spotlight).
+        case openArtwork(UUID)
+        /// Show the gallery filtered to one child.
+        case openChild(UUID)
     }
 
     /// The action waiting to be handled, if any. Consumers reset this to

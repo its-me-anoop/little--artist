@@ -16,6 +16,11 @@ import SwiftData
 /// optional voice-note URL, and a back-reference to its owning child.
 @Model
 final class Artwork {
+    /// Stable identifier used by Siri, Shortcuts and Spotlight. Rows that
+    /// existed before this field was added are given unique values at
+    /// launch by ``IdentifierBackfill``.
+    var uuid: UUID = UUID()
+
     /// A short title for the artwork (may be empty).
     var title: String = ""
 

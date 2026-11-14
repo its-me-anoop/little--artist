@@ -30,6 +30,8 @@ struct ContentView: View {
     @State private var showSlideshow = false
     @State private var paywallReason: PaywallView.LimitReason?
     @State private var artworkCountBeforeSheet = 0
+    /// Artwork opened from Siri, Shortcuts or Spotlight.
+    @State private var routedArtwork: Artwork?
 
     private var store: StoreKitManager { StoreKitManager.shared }
     private var celebration: CelebrationCenter { CelebrationCenter.shared }
@@ -164,6 +166,16 @@ struct ContentView: View {
         .sheet(item: paywallPresented) { reason in
             PaywallView(reason: reason)
         }
+        .sheet(item: $routedArtwork) { artwork in
+            NavigationStack {
+                ArtworkDetailView(artwork: artwork, onDelete: { routedArtwork = nil })
+                    .toolbar {
+                        ToolbarItem(placement: .cancellationAction) {
+                            Button("Done") { routedArtwork = nil }
+                        }
+                    }
+            }
+        }
         .fullScreenCover(isPresented: $showSlideshow) {
             ArtworkSlideshowView(artworks: slideshowArtworks)
         }
@@ -208,13 +220,21 @@ struct ContentView: View {
     private func handleQuickAction(_ action: QuickActionRouter.Action) {
         QuickActionRouter.shared.pendingAction = nil
         switch action {
-        case .captureArtwork:
+        case .captureArtwork(let childID):
             selectedTab = .gallery
+            if let childID, let child = children.first(where: { $0.uuid == childID }) {
+                selectedChildID = child.persistentModelID
+            }
             presentCreateFlow()
         case .showMilestones:
             selectedTab = .milestones
         case .showTimeline:
             selectedTab = .timeline
+        case .openArtwork(let id):
+            routedArtwork = allArtworks.first { $0.uuid == id }
+        case .openChild(let id):
+            selectedTab = .gallery
+            selectedChildID = children.first { $0.uuid == id }?.persistentModelID
         }
     }
 }

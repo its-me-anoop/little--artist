@@ -165,12 +165,32 @@ struct Little_ArtistApp: App {
             .onAppear {
                 applyAppearance(selectedAppearance)
             }
+            .task {
+                await prepareSystemIntegrations()
+            }
             .onChange(of: appAppearance) { _, newValue in
                 let appearance = AppAppearance(rawValue: newValue) ?? .system
                 applyAppearance(appearance)
             }
         }
         .modelContainer(sharedModelContainer)
+    }
+
+    /// Gives every record a unique identifier, then exposes the library to
+    /// Spotlight, Siri and Shortcuts. Re-indexes each launch so changes that
+    /// arrived from other devices through iCloud become searchable too.
+    @MainActor
+    private func prepareSystemIntegrations() async {
+        let context = sharedModelContainer.mainContext
+        do {
+            try IdentifierBackfill.run(in: context)
+        } catch {
+            Logger(subsystem: "uk.co.flutterly.Little-Artist", category: "Migration")
+                .error("Identifier backfill failed: \(error.localizedDescription, privacy: .public)")
+        }
+        ArtworkRepository.shared.indexer = SpotlightIndexService.shared
+        SpotlightIndexService.shared.reindexAll(in: context)
+        LittleArtistShortcuts.updateAppShortcutParameters()
     }
 
     @MainActor
