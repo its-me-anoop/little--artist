@@ -154,7 +154,7 @@ one-time lifetime unlock**:
 | Product ID | Type | Price | Notes |
 |---|---|---|---|
 | `com.flutterly.littleartist.trial.30day` | Non-consumable | $0 (Free) | **New.** Reference name "30-Day Free Trial". Its purchase date starts the trial (Guideline 3.1.1). |
-| `com.flutterly.littleartist.premium.lifetime` | Non-consumable | owner's choice (was $79.99) | Existing product, reused. Family Sharing stays on. |
+| `com.flutterly.littleartist.premium.lifetime` | Non-consumable | **$19.99 / £19.99** (lowered from $79.99 / £69.99, Nov 2026) | Existing product, reused. Family Sharing stays on. |
 | `com.flutterly.littleartist.premium.monthly` / `.yearly` | Auto-renew | — | **Remove from sale.** Past subscribers are grandfathered to lifetime in code. |
 
 Gating: creating children, artwork, AI captions and voice memos needs an
@@ -166,4 +166,5 @@ Before submitting 1.2:
 - [ ] Remove the monthly/yearly subscriptions from sale
 - [ ] Deploy the CloudKit schema to Production (new `uuid` fields on
       Child and Artwork, used by Siri / Spotlight)
-- [ ] Update the description: "Free for 30 days, then pay once"
+- [ ] Set the lifetime price to $19.99 / £19.99 (Pricing and Availability on the IAP)
+- [ ] Update the description: "Free for 30 days, then $19.99 once"
