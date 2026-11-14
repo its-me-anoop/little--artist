@@ -123,24 +123,11 @@ struct ArtworkDetailView: View {
                     .scrollDismissesKeyboard(.interactively)
 
                     // Save button pinned at bottom
-                    Button {
+                    Button("Save Changes") {
                         saveEdits()
-                    } label: {
-                        Text("Save Changes")
-                            .font(Brand.title2Font.bold())
-                            .foregroundStyle(.white)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 20)
-                            .background(Brand.primary.gradient)
-                            .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 24, style: .continuous)
-                                    .stroke(Brand.glassStrokeSoft, lineWidth: 3)
-                            )
-                            .shadow(color: Brand.primary.opacity(0.35), radius: 10, x: 0, y: 5)
-                            .crayonStyle()
                     }
-                    .padding(.horizontal, 28)
+                    .buttonStyle(.brandPrimary)
+                    .padding(.horizontal, Brand.screenPadding)
                     .padding(.bottom, 16)
                     .background(Color(.systemBackground).opacity(0.01))
                 }

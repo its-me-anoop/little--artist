@@ -200,22 +200,7 @@ struct TimelineView: View {
                     .offset(x: -8, y: 8)
 
                 // Avatar
-                if let imageData = child.avatarImageData, let uiImage = UIImage(data: imageData) {
-                    Image(uiImage: uiImage)
-                        .resizable()
-                        .scaledToFill()
-                        .frame(width: 140, height: 140)
-                        .clipShape(Circle())
-                } else {
-                    Circle()
-                        .fill(Color(hex: child.avatarColor))
-                        .frame(width: 140, height: 140)
-                        .overlay {
-                            Text(String(child.name.prefix(1)).uppercased())
-                                .font(.system(size: 56, weight: .bold, design: .rounded))
-                                .foregroundStyle(.white)
-                        }
-                }
+                AvatarCircleView(child: child, size: 140)
 
                 // Paint palette badge
                 Circle()

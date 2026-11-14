@@ -198,16 +198,10 @@ struct SettingsView: View {
 
                 HStack(spacing: 12) {
                     if store.state != .lifetime {
-                        Button {
+                        Button(store.state.canStartTrial ? "Start Free Trial" : "Unlock Lifetime") {
                             paywallReason = .upgrade
-                        } label: {
-                            Text(store.state.canStartTrial ? "Start Free Trial" : "Unlock Lifetime")
-                                .font(Brand.captionFont.weight(.semibold))
-                                .foregroundStyle(.white)
-                                .padding(.horizontal, 20)
-                                .padding(.vertical, 10)
-                                .background(Brand.primary, in: Capsule())
                         }
+                        .buttonStyle(.brandPrimaryCompact)
                     }
 
                     Button {
@@ -295,22 +289,8 @@ struct SettingsView: View {
     private func childCardRow(child: Child) -> some View {
         HStack(spacing: 14) {
             // Avatar
-            Circle()
-                .fill(Color(hex: child.avatarColor))
-                .frame(width: 64, height: 64)
-                .overlay {
-                    if let data = child.avatarImageData,
-                       let uiImage = UIImage(data: data) {
-                        Image(uiImage: uiImage)
-                            .resizable()
-                            .scaledToFill()
-                            .clipShape(Circle())
-                    } else {
-                        Text(String(child.name.prefix(1)).uppercased())
-                            .font(.system(size: 24, weight: .bold, design: .rounded))
-                            .foregroundStyle(.white)
-                    }
-                }
+            AvatarCircleView(child: child, size: 64)
+                .accessibilityHidden(true)
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(child.name)

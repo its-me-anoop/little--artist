@@ -56,8 +56,8 @@ struct MilestonesView: View {
             .padding(.top, Brand.screenPadding)
             .padding(.bottom, Brand.sectionSpacing)
         }
-        .navigationTitle("Achievements")
-        .background(Brand.cream.ignoresSafeArea())
+        .navigationTitle("Milestones")
+        .background(BrandAppBackground())
     }
 
     // MARK: - Progress Hero Card

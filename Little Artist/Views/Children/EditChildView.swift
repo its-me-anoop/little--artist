@@ -120,17 +120,10 @@ struct EditChildView: View {
                     .padding(.horizontal, 32)
 
                     // Save button
-                    Button {
+                    Button("Save Changes") {
                         saveChanges()
-                    } label: {
-                        Text("Save Changes")
-                            .font(Brand.headlineFont)
-                            .foregroundStyle(.white)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 18)
-                            .background(name.trimmingCharacters(in: .whitespaces).isEmpty ? Brand.disabled : Brand.primary)
-                            .clipShape(Capsule())
                     }
+                    .buttonStyle(.brandPrimary)
                     .disabled(name.trimmingCharacters(in: .whitespaces).isEmpty)
                     .padding(.horizontal, 32)
                 }

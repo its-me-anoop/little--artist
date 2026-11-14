@@ -218,28 +218,13 @@ struct PaywallView: View {
     // MARK: - Buttons
 
     private func primaryButton(_ title: String, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Text(title)
-                .font(Brand.headlineFont)
-                .foregroundStyle(.white)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, Brand.buttonPadding)
-                .background(Brand.primary, in: Capsule())
-                .brandFABShadow()
-        }
-        .buttonStyle(.plain)
+        Button(title, action: action)
+            .buttonStyle(.brandPrimary)
     }
 
     private func secondaryButton(_ title: String, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Text(title)
-                .font(Brand.subheadlineFont.weight(.semibold))
-                .foregroundStyle(Brand.primary)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 14)
-                .overlay(Capsule().strokeBorder(Brand.primary, lineWidth: 1.5))
-        }
-        .buttonStyle(.plain)
+        Button(title, action: action)
+            .buttonStyle(.brandSecondary)
     }
 
     // MARK: - Benefit Card Helper

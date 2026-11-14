@@ -175,12 +175,8 @@ struct AddArtworkView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button {
+                    Button("Cancel") {
                         dismiss()
-                    } label: {
-                        Image(systemName: "xmark")
-                            .font(.body.weight(.medium))
-                            .foregroundStyle(Brand.charcoal)
                     }
                 }
             }
@@ -553,17 +549,10 @@ struct AddArtworkView: View {
     // MARK: - Save Button
 
     private var saveButton: some View {
-        Button {
+        Button("Save to Gallery") {
             saveArtwork()
-        } label: {
-            Text("Save to Gallery")
-                .font(.headline)
-                .foregroundStyle(.white)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, Brand.buttonPadding)
-                .background(isSaveDisabled ? Brand.disabled : Brand.primary)
-                .clipShape(Capsule())
         }
+        .buttonStyle(.brandPrimary)
         .disabled(isSaveDisabled)
         .padding(.horizontal, Brand.screenPadding)
         .padding(.top, 12)
@@ -642,10 +631,10 @@ struct AddArtworkView: View {
             .padding(.horizontal, 14)
             .background(
                 RoundedRectangle(cornerRadius: Brand.radiusField)
-                    .fill(isBlocked ? Brand.dustyRose.opacity(0.08) : Color.orange.opacity(0.08))
+                    .fill(isBlocked ? Brand.dustyRose.opacity(0.08) : Brand.primary.opacity(0.08))
                     .overlay(
                         RoundedRectangle(cornerRadius: Brand.radiusField)
-                            .strokeBorder(isBlocked ? Brand.dustyRose.opacity(0.3) : Color.orange.opacity(0.3), lineWidth: 1)
+                            .strokeBorder(isBlocked ? Brand.dustyRose.opacity(0.3) : Brand.primary.opacity(0.3), lineWidth: 1)
                     )
             )
             .padding(.horizontal, Brand.screenPadding)
