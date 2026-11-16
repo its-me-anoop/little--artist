@@ -50,7 +50,7 @@ struct OpenChildGalleryIntent: OpenIntent {
 /// Opens the app straight into the capture flow, optionally for one child.
 struct CaptureArtworkIntent: AppIntent {
     static let title: LocalizedStringResource = "Capture Artwork"
-    static let description = IntentDescription("Open Little Artist ready to save a new masterpiece.")
+    static let description = IntentDescription("Open Little Artist ready to save a new masterpiece.", searchKeywords: ["drawing", "painting", "photo", "scan", "save", "craft"])
     static let openAppWhenRun = true
 
     @Parameter(title: "Child")
@@ -87,7 +87,7 @@ struct ViewMilestonesIntent: AppIntent {
 /// Shows the most recent artwork in a Siri snippet, without opening the app.
 struct ShowLatestArtworkIntent: AppIntent {
     static let title: LocalizedStringResource = "Show Latest Artwork"
-    static let description = IntentDescription("Shows the most recent artwork, optionally for one child.")
+    static let description = IntentDescription("Shows the most recent artwork, optionally for one child.", searchKeywords: ["latest", "newest", "recent", "drawing"])
 
     @Parameter(title: "Child")
     var child: ChildEntity?
@@ -120,7 +120,7 @@ struct ShowLatestArtworkIntent: AppIntent {
 /// Surfaces artwork made on today's date in earlier years.
 struct OnThisDayIntent: AppIntent {
     static let title: LocalizedStringResource = "On This Day"
-    static let description = IntentDescription("Shows artwork made on this day in earlier years.")
+    static let description = IntentDescription("Shows artwork made on this day in earlier years.", searchKeywords: ["memories", "anniversary", "years ago"])
 
     @MainActor
     func perform() async throws -> some IntentResult & ProvidesDialog & ShowsSnippetView {
@@ -143,7 +143,7 @@ struct OnThisDayIntent: AppIntent {
 /// Answers "how many drawings has Mia made" without opening the app.
 struct CountArtworkIntent: AppIntent {
     static let title: LocalizedStringResource = "Count Artwork"
-    static let description = IntentDescription("Hear how many masterpieces you've saved.")
+    static let description = IntentDescription("Hear how many masterpieces you've saved.", searchKeywords: ["how many", "total", "drawings", "count"])
 
     @Parameter(title: "Child")
     var child: ChildEntity?
