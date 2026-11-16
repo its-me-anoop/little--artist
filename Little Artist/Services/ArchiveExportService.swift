@@ -5,7 +5,7 @@
 //  "Your art is always yours." Exports the whole collection — every image,
 //  every voice memo, plus a spreadsheet-friendly index — as a ZIP, or saves
 //  every artwork straight into the Photos library. Free for everyone,
-//  including people whose subscription has ended: no lock-in, ever.
+//  including people whose free trial has ended: no lock-in, ever.
 //
 
 import Foundation
@@ -216,7 +216,7 @@ nonisolated enum ArchiveExportService {
 
 private extension String {
     /// `nil` when the string is empty or only whitespace.
-    var nonEmpty: String? {
+    nonisolated var nonEmpty: String? {
         let trimmed = trimmingCharacters(in: .whitespacesAndNewlines)
         return trimmed.isEmpty ? nil : trimmed
     }

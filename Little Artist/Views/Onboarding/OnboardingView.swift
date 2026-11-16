@@ -26,6 +26,7 @@ struct OnboardingView: View {
     @Query private var children: [Child]
     @State private var currentPage = 0
     @State private var showAddChild = false
+    @State private var showTrialOffer = false
 
     private let selectionFeedback = UISelectionFeedbackGenerator()
     private let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
@@ -94,25 +95,27 @@ struct OnboardingView: View {
         }
     }
 
-    private var titleSection: some View {
+    /// Takes the page being rendered (not `currentPage`) so each page in
+    /// the swipe shows its own text mid-transition.
+    private func titleSection(for page: OnboardingPage) -> some View {
         VStack(spacing: 4) {
-            Text(pages[currentPage].titleTop)
+            Text(page.titleTop)
                 .font(Brand.displayFont)
                 .foregroundStyle(Brand.charcoal)
                 .contentTransition(.numericText())
                 .crayonStyle()
 
-            Text(pages[currentPage].titleHighlight)
+            Text(page.titleHighlight)
                 .font(Brand.displayFont)
-                .foregroundStyle(pages[currentPage].color)
+                .foregroundStyle(page.color)
                 .contentTransition(.numericText())
                 .crayonStyle()
         }
         .animation(.spring(response: 0.5, dampingFraction: 0.7), value: currentPage)
     }
 
-    private var descriptionSection: some View {
-        Text(pages[currentPage].description)
+    private func descriptionSection(for page: OnboardingPage) -> some View {
+        Text(page.description)
             .font(Brand.title3Font)
             .multilineTextAlignment(.center)
             .foregroundStyle(Brand.warmGray)
@@ -191,6 +194,18 @@ struct OnboardingView: View {
         }) {
             AddChildView()
         }
+        .sheet(isPresented: $showTrialOffer, onDismiss: {
+            // Trial started (or lifetime bought): go straight to adding the
+            // first child. Otherwise let them look around; the offer comes
+            // back the first time they try to add something.
+            if StoreKitManager.shared.isPremium && children.isEmpty {
+                showAddChild = true
+            } else {
+                hasCompletedOnboarding = true
+            }
+        }) {
+            PaywallView(reason: .children)
+        }
     }
 
     private var animatedBackground: some View {
@@ -237,12 +252,12 @@ struct OnboardingView: View {
 
                         Spacer().frame(height: 48)
 
-                        titleSection
+                        titleSection(for: page)
                             .multilineTextAlignment(.center)
 
                         Spacer().frame(height: 24)
 
-                        descriptionSection
+                        descriptionSection(for: page)
                             .multilineTextAlignment(.center)
                             .padding(.horizontal, 40)
                             
@@ -302,14 +317,14 @@ struct OnboardingView: View {
 
                 Spacer()
 
-                titleSection
+                titleSection(for: pages[currentPage])
                     .multilineTextAlignment(.leading)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal, 40)
 
                 Spacer().frame(height: 20)
 
-                descriptionSection
+                descriptionSection(for: pages[currentPage])
                     .multilineTextAlignment(.leading)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal, 40)
@@ -332,10 +347,12 @@ struct OnboardingView: View {
 
     @MainActor
     private func completeOnboarding() {
-        if children.isEmpty {
+        if !children.isEmpty {
+            hasCompletedOnboarding = true
+        } else if StoreKitManager.shared.isPremium {
             showAddChild = true
         } else {
-            hasCompletedOnboarding = true
+            showTrialOffer = true
         }
     }
 }

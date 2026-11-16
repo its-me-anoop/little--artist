@@ -18,6 +18,11 @@ import SwiftData
 /// delete all associated artworks.
 @Model
 final class Child {
+    /// Stable identifier used by Siri, Shortcuts and Spotlight. Rows that
+    /// existed before this field was added are given unique values at
+    /// launch by ``IdentifierBackfill``.
+    var uuid: UUID = UUID()
+
     /// The child's display name.
     var name: String = ""
 

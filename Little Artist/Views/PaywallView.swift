@@ -2,87 +2,58 @@
 //  PaywallView.swift
 //  Little Artist
 //
-//  Shown when users hit free tier limits.
-//  Integrates with StoreKitManager for real purchases.
+//  Offers the free 30-day trial (before it has been used) and the one-time
+//  lifetime unlock. Discloses the trial length, what locks afterwards and
+//  the price before anything is bought, as App Review Guideline 3.1.1
+//  requires. There are no subscriptions.
 //
 
 import SwiftUI
-import StoreKit
 
-/// A modal paywall shown when a free tier limit is reached.
+/// Modal sheet for starting the free trial or buying lifetime access.
 struct PaywallView: View {
     @Environment(\.dismiss) private var dismiss
 
-    /// Describes which limit was hit.
-    let reason: LimitReason
+    /// Why the paywall was shown.
+    var reason: LimitReason = .upgrade
 
     private var store: StoreKitManager { StoreKitManager.shared }
-
-    /// Dynamically calculated savings text based on live product prices.
-    private var savingsText: String {
-        guard let monthly = store.monthlyProduct,
-              let yearly = store.yearlyProduct else {
-            return "Best value"
-        }
-        let annualMonthly = NSDecimalNumber(decimal: monthly.price * 12).doubleValue
-        let yearlyPrice = NSDecimalNumber(decimal: yearly.price).doubleValue
-        guard annualMonthly > 0 else { return "Best value" }
-        let savings = ((annualMonthly - yearlyPrice) / annualMonthly * 100).rounded(.down)
-        return "Best value — save \(Int(savings))%"
-    }
 
     enum LimitReason: Identifiable {
         var id: Self { self }
         case children
         case artworks
+        case upgrade
+    }
 
-        var title: String {
-            "Unlock Premium Features"
-        }
+    // MARK: - Copy
 
-        var message: String {
-            switch self {
-            case .children:
-                return "Add unlimited child profiles, AI captions, voice memos, and more with Little Artist Premium."
-            case .artworks:
-                return "Save unlimited artworks and unlock on-device AI captions, voice memos, and PDF export with Little Artist Premium."
-            }
-        }
-
-        var icon: String {
-            "sparkles"
+    private var headline: String {
+        switch store.state {
+        case .notStarted: String(localized: "Try everything free for 30 days")
+        case .trial: String(localized: "Keep every masterpiece, forever")
+        case .expired: String(localized: "Your free month has ended")
+        case .lifetime: String(localized: "You own Little Artist")
         }
     }
 
-    /// The purchase plans offered on the paywall.
-    enum Plan {
-        case monthly
-        case yearly
-        case lifetime
-    }
-
-    /// The currently selected plan.
-    @State private var selectedPlan: Plan = .yearly
-
-    /// The free trial on the yearly plan, when configured and eligible.
-    private var yearlyTrial: Product.SubscriptionOffer? {
-        store.freeTrial(for: store.yearlyProduct)
-    }
-
-    /// The free trial attached to whichever plan is selected.
-    private var selectedTrial: Product.SubscriptionOffer? {
-        switch selectedPlan {
-        case .yearly: return yearlyTrial
-        case .monthly: return store.freeTrial(for: store.monthlyProduct)
-        case .lifetime: return nil
+    private var message: String {
+        switch store.state {
+        case .notStarted:
+            String(localized: "Unlimited children and artwork for a month, free. Afterwards, pay once to keep adding. Nothing is ever charged automatically.")
+        case .trial(let days, _):
+            days == 1
+                ? String(localized: "Your free trial ends tomorrow. Pay once and Little Artist is yours for life.")
+                : String(localized: "\(days) days left in your free trial. Pay once and Little Artist is yours for life.")
+        case .expired:
+            String(localized: "Your artwork is safe and always viewable. Unlock once to keep adding new pieces and children.")
+        case .lifetime:
+            String(localized: "Thank you for supporting an independent developer.")
         }
     }
 
-    /// Yearly price expressed per month, e.g. "£2.49/mo".
-    private var yearlyPerMonthText: String? {
-        guard let yearly = store.yearlyProduct else { return nil }
-        let monthly = yearly.price / 12
-        return monthly.formatted(yearly.priceFormatStyle) + "/mo"
+    private var lifetimePrice: String {
+        store.lifetimePrice ?? String(localized: "a one-time price")
     }
 
     // MARK: - Body
@@ -90,40 +61,22 @@ struct PaywallView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: Brand.sectionSpacing) {
-                // MARK: Header
                 header
-
-                // MARK: Hero
                 heroSection
-
-                // MARK: Benefits
                 benefitCards
-
-                // MARK: Subscription Tiers
-                subscriptionTiers
-
-                // MARK: CTA
-                ctaButton
-
-                // MARK: Loading / Error States
+                ctaSection
                 statusSection
-
-                // MARK: Legal
                 legalSection
-
-                // MARK: Restore
                 restoreButton
             }
             .padding(.vertical, Brand.screenPadding)
         }
+        .scrollBounceBehavior(.basedOnSize)
         .background(BrandAppBackground())
-        .task(id: store.isPremium) {
-            if store.isPremium {
-                dismiss()
-            }
-        }
-        .onChange(of: store.isPremium) { _, isPremium in
-            if isPremium { dismiss() }
+        .task { await store.loadProducts() }
+        .onChange(of: store.state) { old, new in
+            // Close once the user gains access from this sheet.
+            if !old.hasFullAccess && new.hasFullAccess || new == .lifetime { dismiss() }
         }
     }
 
@@ -131,287 +84,105 @@ struct PaywallView: View {
 
     private var header: some View {
         HStack {
+            Spacer()
             Button {
                 dismiss()
             } label: {
-                Image(systemName: "xmark.circle.fill")
-                    .font(.system(size: 28))
-                    .foregroundStyle(Brand.warmGray.opacity(0.6))
-            }
-
-            Spacer()
-
-            HStack(spacing: 6) {
-                Image(systemName: "sparkles")
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundStyle(Brand.primary)
-
-                Text("Little Artist Premium")
+                Image(systemName: "xmark")
                     .font(Brand.headlineFont)
-                    .foregroundStyle(Brand.primary)
+                    .frame(width: 32, height: 32)
             }
-
-            Spacer()
-
-            // Invisible spacer to balance close button
-            Color.clear
-                .frame(width: 28, height: 28)
+            .buttonStyle(.glass)
+            .buttonBorderShape(.circle)
+            .accessibilityLabel("Close")
         }
         .padding(.horizontal, Brand.screenPadding)
     }
 
-    // MARK: - Hero Section
-
     private var heroSection: some View {
-        VStack(spacing: 8) {
-            Text("Unlock Your Full Studio")
+        VStack(spacing: 10) {
+            Image("LaunchFox")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 88, height: 88)
+                .accessibilityHidden(true)
+
+            Text(headline)
                 .font(Brand.title1Font)
                 .foregroundStyle(Brand.charcoal)
                 .multilineTextAlignment(.center)
 
-            Text(reason.message)
+            Text(message)
                 .font(Brand.bodyFont)
                 .foregroundStyle(Brand.warmGray)
                 .multilineTextAlignment(.center)
-                .padding(.horizontal, Brand.screenPadding)
         }
+        .padding(.horizontal, Brand.formPadding)
     }
 
-    // MARK: - Benefit Cards
+    // MARK: - Benefits
 
     private var benefitCards: some View {
         VStack(spacing: 12) {
-            benefitCard(
-                icon: "person.3",
-                tint: Brand.primary,
-                title: "Unlimited Child Profiles",
-                description: "Track every little artist in the family"
-            )
-            benefitCard(
-                icon: "square.grid.2x2",
-                tint: Brand.sky,
-                title: "Unlimited Artworks",
-                description: "Never run out of space for masterpieces"
-            )
-            benefitCard(
-                icon: "doc.text",
-                tint: Brand.lavender,
-                title: "Portfolios & Photo Books",
-                description: "Keepsake PDFs and print-ready 8×8 photo books"
-            )
-            // Emphasized card for Voice Memo & AI
-            benefitCard(
-                icon: "mic.fill",
-                tint: Brand.primary,
-                title: "Voice Memo & AI",
-                description: "Record stories and get AI-powered captions",
-                emphasized: true
-            )
+            benefitCard(icon: "infinity", tint: Brand.primary,
+                        title: "Unlimited children and artwork",
+                        description: "Every little artist gets their own gallery")
+            benefitCard(icon: "apple.intelligence", tint: Brand.lavender,
+                        title: "Apple Intelligence captions",
+                        description: "Playful titles written on your iPhone, privately")
+            benefitCard(icon: "mic.fill", tint: Brand.sky,
+                        title: "Voice memos and Siri",
+                        description: "Keep their words, and just ask Siri to save art")
+            benefitCard(icon: "icloud.fill", tint: Brand.sage,
+                        title: "Private iCloud sync",
+                        description: "On all your devices. No accounts, no ads")
         }
         .padding(.horizontal, Brand.screenPadding)
     }
 
-    // MARK: - Subscription Tiers
+    // MARK: - Call to Action
 
-    private var subscriptionTiers: some View {
-        VStack(spacing: 12) {
-            // Yearly tier — highlighted with savings badge
-            Button {
-                selectedPlan = .yearly
-                HapticService.selection()
-            } label: {
-                VStack(spacing: 0) {
-                    // Best Value badge
-                    Text(savingsText)
-                        .font(Brand.caption2Font)
-                        .fontWeight(.semibold)
-                        .foregroundStyle(.white)
-                        .padding(.horizontal, 14)
-                        .padding(.vertical, 5)
-                        .background(Brand.lavender, in: Capsule())
-                        .offset(y: -2)
-
-                    VStack(spacing: 4) {
-                        Text("Yearly")
-                            .font(Brand.headlineFont)
-                            .foregroundStyle(Brand.charcoal)
-
-                        Text(store.yearlyProduct?.displayPrice ?? "$24.99")
-                            .font(Brand.title2Font)
-                            .foregroundStyle(Brand.primary)
-
-                        Text(yearlyPerMonthText.map { "per year · just \($0)" } ?? "per year")
-                            .font(Brand.caption2Font)
-                            .foregroundStyle(Brand.warmGray)
-
-                        if let yearlyTrial {
-                            Label(
-                                "\(StoreKitManager.trialLengthLabel(yearlyTrial)) free trial",
-                                systemImage: "gift.fill"
-                            )
-                            .font(Brand.caption2Font.weight(.semibold))
-                            .foregroundStyle(Brand.primary)
-                            .padding(.top, 4)
-                        }
-                    }
-                    .padding(.vertical, Brand.buttonPadding)
-                    .frame(maxWidth: .infinity)
+    @ViewBuilder
+    private var ctaSection: some View {
+        VStack(spacing: 10) {
+            if store.state.canStartTrial {
+                primaryButton(String(localized: "Start 30-Day Free Trial")) {
+                    Task { await store.startTrial() }
                 }
-                .background(Brand.surface)
-                .clipShape(RoundedRectangle(cornerRadius: Brand.radiusCard, style: .continuous))
-                .overlay(
-                    RoundedRectangle(cornerRadius: Brand.radiusCard, style: .continuous)
-                        .strokeBorder(
-                            selectedPlan == .yearly ? Brand.lavender : Brand.softTan,
-                            lineWidth: selectedPlan == .yearly ? 2.5 : 1
-                        )
-                )
-                .brandCardShadow()
-            }
-            .buttonStyle(.plain)
-
-            // Monthly and Lifetime — side by side
-            HStack(spacing: 12) {
-                compactTierCard(
-                    plan: .monthly,
-                    name: "Monthly",
-                    price: store.monthlyProduct?.displayPrice ?? "$4.99",
-                    detail: "per month"
-                )
-
-                compactTierCard(
-                    plan: .lifetime,
-                    name: "Lifetime",
-                    price: store.lifetimeProduct?.displayPrice ?? "$79.99",
-                    detail: "pay once, forever"
-                )
-            }
-        }
-        .padding(.horizontal, Brand.screenPadding)
-    }
-
-    /// A compact selectable tier card for the monthly and lifetime plans.
-    private func compactTierCard(
-        plan: Plan,
-        name: String,
-        price: String,
-        detail: String
-    ) -> some View {
-        Button {
-            selectedPlan = plan
-            HapticService.selection()
-        } label: {
-            VStack(spacing: 4) {
-                Text(name)
-                    .font(Brand.headlineFont)
-                    .foregroundStyle(Brand.charcoal)
-
-                Text(price)
-                    .font(Brand.title2Font)
-                    .foregroundStyle(selectedPlan == plan ? Brand.primary : Brand.charcoal)
-
-                Text(detail)
+                Text("Free for 30 days, then \(lifetimePrice) once for lifetime access, only if you choose to buy it.")
+                    .font(Brand.caption2Font)
+                    .foregroundStyle(Brand.warmGray)
+                    .multilineTextAlignment(.center)
+                secondaryButton(String(localized: "Buy Lifetime Now · \(lifetimePrice)")) {
+                    Task { await store.buyLifetime() }
+                }
+            } else if store.state != .lifetime {
+                primaryButton(String(localized: "Unlock Lifetime · \(lifetimePrice)")) {
+                    Task { await store.buyLifetime() }
+                }
+                Text("One payment. No subscription.")
                     .font(Brand.caption2Font)
                     .foregroundStyle(Brand.warmGray)
             }
-            .padding(.vertical, Brand.buttonPadding)
-            .frame(maxWidth: .infinity)
-            .background(Brand.surface)
-            .clipShape(RoundedRectangle(cornerRadius: Brand.radiusCard, style: .continuous))
-            .overlay(
-                RoundedRectangle(cornerRadius: Brand.radiusCard, style: .continuous)
-                    .strokeBorder(
-                        selectedPlan == plan ? Brand.primary : Brand.softTan,
-                        lineWidth: selectedPlan == plan ? 2.5 : 1
-                    )
-            )
-            .brandCardShadow()
-        }
-        .buttonStyle(.plain)
-    }
-
-    // MARK: - CTA Button
-
-    /// The product matching the currently selected plan, if loaded.
-    private var selectedProduct: Product? {
-        switch selectedPlan {
-        case .monthly: return store.monthlyProduct
-        case .yearly: return store.yearlyProduct
-        case .lifetime: return store.lifetimeProduct
-        }
-    }
-
-    private var ctaButton: some View {
-        VStack(spacing: 10) {
-            Button {
-                Task {
-                    if let product = selectedProduct {
-                        await store.purchase(product)
-                    }
-                }
-            } label: {
-                Text(ctaTitle)
-                    .font(Brand.headlineFont)
-                    .foregroundStyle(.white)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, Brand.buttonPadding)
-                    .background(Brand.primary)
-                    .clipShape(Capsule())
-                    .brandFABShadow()
-            }
-            .disabled(store.isPurchasing || store.products.isEmpty)
-
-            Text(ctaFootnote)
-                .font(Brand.caption2Font)
-                .foregroundStyle(Brand.warmGray)
-                .multilineTextAlignment(.center)
 
             // The promise competitors break: art is never held hostage.
-            Label("Your art stays yours. View and export it free, even if you cancel.", systemImage: "lock.open.fill")
+            Label("Your art stays yours. View and export it free, always.", systemImage: "lock.open.fill")
                 .font(Brand.caption2Font.weight(.medium))
                 .foregroundStyle(Brand.sage)
                 .multilineTextAlignment(.center)
                 .padding(.top, 2)
         }
+        .disabled(store.isPurchasing)
         .padding(.horizontal, Brand.screenPadding)
     }
 
-    private var ctaTitle: String {
-        if selectedPlan == .lifetime { return "Unlock Forever" }
-        if let selectedTrial {
-            return "Start \(StoreKitManager.trialLengthLabel(selectedTrial)) Free Trial"
-        }
-        return "Subscribe Now"
-    }
-
-    /// Clear pre-purchase disclosure of what is charged and when.
-    private var ctaFootnote: String {
-        if selectedPlan == .lifetime {
-            return "One payment · No subscription"
-        }
-        if let selectedTrial, let product = selectedProduct {
-            let unit = selectedPlan == .yearly ? "year" : "month"
-            return "Free for \(StoreKitManager.trialDurationText(selectedTrial)), then \(product.displayPrice)/\(unit). Cancel anytime."
-        }
-        return "Cancel anytime · No hidden fees"
-    }
-
-    // MARK: - Status Section
-
     @ViewBuilder
     private var statusSection: some View {
-        if store.products.isEmpty {
-            ProgressView()
-                .tint(Brand.primary)
-                .padding(.vertical, 8)
-        }
-
         if store.isPurchasing {
-            ProgressView("Processing...")
+            ProgressView("Processing…")
                 .font(Brand.captionFont)
                 .tint(Brand.primary)
         }
-
         if let error = store.errorMessage {
             Text(error)
                 .font(Brand.captionFont)
@@ -421,36 +192,39 @@ struct PaywallView: View {
         }
     }
 
-    // MARK: - Legal Section
-
     private var legalSection: some View {
         VStack(spacing: 6) {
-            Text("Subscriptions automatically renew unless cancelled at least 24 hours before the end of the current period. Manage subscriptions in your Apple Account subscriptions settings. Lifetime is a one-time purchase and never renews.")
-                .font(Brand.caption2Font)
-                .foregroundStyle(Brand.warmGray)
+            Text("The 30-day trial and the lifetime unlock are one-time in-app purchases. Nothing renews and nothing is charged automatically.")
                 .multilineTextAlignment(.center)
-
             HStack(spacing: 16) {
                 Link("Privacy Policy", destination: URL(string: "https://www.flutterly.co.uk/projects/artling/privacy-policy")!)
                 Link("Terms of Use", destination: URL(string: "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/")!)
             }
-            .font(Brand.caption2Font)
-            .foregroundStyle(Brand.warmGray)
         }
+        .font(Brand.caption2Font)
+        .foregroundStyle(Brand.warmGray)
         .padding(.horizontal, Brand.formPadding)
     }
 
-    // MARK: - Restore Button
-
     private var restoreButton: some View {
-        Button {
-            Task { await store.restorePurchases() }
-        } label: {
-            Text("Restore Purchases")
-                .font(Brand.captionFont)
-                .foregroundStyle(Brand.warmGray)
+        Button("Restore Purchases") {
+            Task { await store.restore() }
         }
+        .font(Brand.captionFont)
+        .foregroundStyle(Brand.warmGray)
         .padding(.bottom, 8)
+    }
+
+    // MARK: - Buttons
+
+    private func primaryButton(_ title: String, action: @escaping () -> Void) -> some View {
+        Button(title, action: action)
+            .buttonStyle(.brandPrimary)
+    }
+
+    private func secondaryButton(_ title: String, action: @escaping () -> Void) -> some View {
+        Button(title, action: action)
+            .buttonStyle(.brandSecondary)
     }
 
     // MARK: - Benefit Card Helper
@@ -465,7 +239,7 @@ struct PaywallView: View {
         HStack(spacing: 14) {
             // Icon in tinted circle
             Image(systemName: icon)
-                .font(.system(size: emphasized ? 18 : 16, weight: .semibold))
+                .font(Brand.headlineFont)
                 .foregroundStyle(tint)
                 .frame(width: emphasized ? 44 : 40, height: emphasized ? 44 : 40)
                 .background(tint.opacity(0.12), in: Circle())
@@ -495,10 +269,6 @@ struct PaywallView: View {
 
 // MARK: - Preview
 
-#Preview("Children Limit") {
-    PaywallView(reason: .children)
-}
-
-#Preview("Artwork Limit") {
+#Preview {
     PaywallView(reason: .artworks)
 }

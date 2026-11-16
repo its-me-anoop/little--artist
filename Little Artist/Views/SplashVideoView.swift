@@ -49,9 +49,29 @@ struct SplashVideoView: View {
         .onAppear {
             setupPlayer()
         }
+        // Never strand the user on the splash: if the video can't load or
+        // play (e.g. low storage), continue after a short grace period.
+        .task {
+            try? await Task.sleep(for: .seconds(Self.maximumDuration))
+            finish()
+        }
         .onDisappear {
             player?.pause()
             player = nil
+        }
+    }
+
+    /// Longest the splash may stay on screen, whatever the video does.
+    static let maximumDuration: Double = 5
+
+    /// Fades out and hands over to the app. Safe to call more than once.
+    private func finish() {
+        guard !isFinished, opacity == 1 else { return }
+        withAnimation(.easeOut(duration: 0.4)) {
+            opacity = 0.0
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+            isFinished = true
         }
     }
 
@@ -71,12 +91,14 @@ struct SplashVideoView: View {
             object: avPlayer.currentItem,
             queue: .main
         ) { _ in
-            withAnimation(.easeOut(duration: 0.4)) {
-                opacity = 0.0
-            }
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
-                isFinished = true
-            }
+            finish()
+        }
+        NotificationCenter.default.addObserver(
+            forName: AVPlayerItem.failedToPlayToEndTimeNotification,
+            object: avPlayer.currentItem,
+            queue: .main
+        ) { _ in
+            finish()
         }
 
         avPlayer.play()

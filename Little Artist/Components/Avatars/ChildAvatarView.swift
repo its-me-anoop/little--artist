@@ -21,21 +21,7 @@ struct ChildAvatarView: View {
     var body: some View {
         VStack(spacing: 6) {
             ZStack {
-                if let imageData = child.avatarImageData, let uiImage = UIImage(data: imageData) {
-                    Image(uiImage: uiImage)
-                        .resizable()
-                        .scaledToFill()
-                        .frame(width: 60, height: 60)
-                        .clipShape(Circle())
-                } else {
-                    Circle()
-                        .fill(Color(hex: child.avatarColor))
-                        .frame(width: 60, height: 60)
-
-                    Text(String(child.name.prefix(1)).uppercased())
-                        .font(.system(size: 26, weight: .bold, design: .rounded))
-                        .foregroundStyle(.white)
-                }
+                AvatarCircleView(child: child, size: Brand.avatarSize)
             }
             .overlay {
                 Circle()

@@ -224,3 +224,106 @@ struct PhotoBookPDFTests {
         #expect(bounds.size == CGSize(width: 612, height: 792))
     }
 }
+
+// MARK: - ImageProcessingService Tests
+
+import UIKit
+
+struct ImageProcessingServiceTests {
+
+    private func solidImage(width: CGFloat, height: CGFloat) -> UIImage {
+        let format = UIGraphicsImageRendererFormat.default()
+        format.scale = 1
+        return UIGraphicsImageRenderer(size: CGSize(width: width, height: height), format: format)
+            .image { context in
+                UIColor.orange.setFill()
+                context.fill(CGRect(x: 0, y: 0, width: width, height: height))
+            }
+    }
+
+    @Test("Avatars are downscaled to at most 512px on the longest edge")
+    func avatarDownscaled() throws {
+        let data = try #require(ImageProcessingService.processAvatar(image: solidImage(width: 3000, height: 2000)))
+        let decoded = try #require(UIImage(data: data))
+        let longest = max(decoded.size.width * decoded.scale, decoded.size.height * decoded.scale)
+        #expect(longest == 512)
+    }
+
+    @Test("Main images are capped in pixels, not points times screen scale")
+    func mainImagePixelCap() throws {
+        let output = ImageProcessingService.processForStorage(image: solidImage(width: 4000, height: 1000))
+        let decoded = try #require(UIImage(data: output.imageData))
+        #expect(decoded.size.width * decoded.scale == 2048)
+    }
+
+    @Test("Non-image data is rejected for avatars")
+    func avatarRejectsGarbage() {
+        #expect(ImageProcessingService.processAvatar(data: Data([0x00, 0x01])) == nil)
+    }
+}
+
+// MARK: - Milestone Tiers
+
+struct MilestoneTiersTests {
+
+    @Test("Next tier follows the fixed targets", arguments: [(0, 10), (10, 25), (99, 100), (499, 500)])
+    func fixedTargets(count: Int, expected: Int) {
+        #expect(MilestoneTiers.nextTier(after: count) == expected)
+    }
+
+    @Test("Beyond 500, tiers continue every 500 and stay above the count", arguments: [(500, 1000), (1200, 1500), (1500, 2000)])
+    func openEndedTiers(count: Int, expected: Int) {
+        #expect(MilestoneTiers.nextTier(after: count) == expected)
+    }
+}
+
+// MARK: - Serial Task Queue
+
+/// Records how many operations overlap.
+private actor OverlapProbe {
+    private(set) var running = 0
+    private(set) var maxRunning = 0
+    private(set) var order: [Int] = []
+
+    func begin(_ id: Int) { running += 1; maxRunning = max(maxRunning, running); order.append(id) }
+    func end() { running -= 1 }
+}
+
+struct SerialTaskQueueTests {
+
+    @Test("Operations never overlap and run in submission order")
+    func serializes() async throws {
+        let queue = SerialTaskQueue()
+        let probe = OverlapProbe()
+
+        try await withThrowingTaskGroup(of: Void.self) { group in
+            for id in 0..<5 {
+                // Submit in order; each operation suspends mid-way.
+                _ = await Task.yield()
+                group.addTask {
+                    _ = try await queue.run {
+                        await probe.begin(id)
+                        try await Task.sleep(for: .milliseconds(20))
+                        await probe.end()
+                        return id
+                    }
+                }
+            }
+            try await group.waitForAll()
+        }
+
+        #expect(await probe.maxRunning == 1)
+    }
+
+    @Test("A failing operation doesn't block the next one")
+    func failureDoesNotJam() async throws {
+        struct Boom: Error {}
+        let queue = SerialTaskQueue()
+
+        await #expect(throws: Boom.self) {
+            try await queue.run { () async throws -> Int in throw Boom() }
+        }
+        let value = try await queue.run { 42 }
+        #expect(value == 42)
+    }
+}

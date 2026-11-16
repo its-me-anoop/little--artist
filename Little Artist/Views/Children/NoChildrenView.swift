@@ -53,24 +53,16 @@ struct NoChildrenView: View {
                             .foregroundStyle(Brand.charcoal)
                             .multilineTextAlignment(.center)
 
-                        Text("Use Create to add a child\nand start capturing their artwork.")
+                        Text("Tap the + button to add a child\nand start capturing their artwork.")
                             .font(Brand.bodyFont)
                             .foregroundStyle(Brand.warmGray)
                             .multilineTextAlignment(.center)
                             .lineSpacing(3)
 
-                        Button {
+                        Button("Add Child") {
                             onAddChild()
-                        } label: {
-                            Text("Add Child")
-                                .font(Brand.headlineFont)
-                                .foregroundStyle(.white)
-                                .padding(.horizontal, Brand.buttonPadding)
-                                .padding(.vertical, 14)
-                                .background(Brand.primary.gradient)
-                                .clipShape(Capsule())
-                                .shadow(color: Brand.primary.opacity(0.35), radius: 8, x: 0, y: 4)
                         }
+                        .buttonStyle(.brandPrimaryCompact)
                         .padding(.top, 4)
                     }
                     .frame(maxWidth: .infinity)

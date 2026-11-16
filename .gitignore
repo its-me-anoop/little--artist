@@ -15,3 +15,9 @@ DerivedData/
 # CocoaPods (if ever added)
 Pods/
 Podfile.lock
+
+# Local tooling caches
+.codex-derived/
+.claude/worktrees/
+*.xcarchive
+Little Artist.xcodeproj/Artling.xcodeproj/

@@ -49,12 +49,30 @@ enum ImageProcessingService {
         return processForStorage(image: image)
     }
 
+    /// Maximum longest-edge dimension for child avatar photos. Avatars are
+    /// shown at most ~140pt, so this keeps them sharp at 3x while keeping
+    /// iCloud sync small.
+    static let avatarMaxDimension: CGFloat = 512
+
+    /// Downscales and compresses a child avatar photo.
+    static func processAvatar(image: UIImage) -> Data? {
+        resized(image, maxDimension: avatarMaxDimension).jpegData(compressionQuality: 0.8)
+    }
+
+    /// Downscales and compresses raw avatar data (photo picker, Image
+    /// Playground). Returns `nil` if the data isn't an image.
+    static func processAvatar(data: Data) -> Data? {
+        guard let image = UIImage(data: data) else { return nil }
+        return processAvatar(image: image)
+    }
+
     // MARK: - Private
 
     /// Resizes an image so its longest edge is at most `maxDimension`.
     /// Returns the original image if it's already smaller.
-    private static func resized(_ image: UIImage, maxDimension: CGFloat) -> UIImage {
-        let size = image.size
+    static func resized(_ image: UIImage, maxDimension: CGFloat) -> UIImage {
+        // Work in pixels so the limit means the same on every device.
+        let size = CGSize(width: image.size.width * image.scale, height: image.size.height * image.scale)
         let longest = max(size.width, size.height)
 
         guard longest > maxDimension else { return image }
@@ -65,7 +83,11 @@ enum ImageProcessingService {
             height: (size.height * scale).rounded(.down)
         )
 
-        let renderer = UIGraphicsImageRenderer(size: newSize)
+        // Render at 1x: `size` is in pixels here, and the default format
+        // would multiply it by the screen scale (3x on most iPhones).
+        let format = UIGraphicsImageRendererFormat.default()
+        format.scale = 1
+        let renderer = UIGraphicsImageRenderer(size: newSize, format: format)
         return renderer.image { _ in
             image.draw(in: CGRect(origin: .zero, size: newSize))
         }

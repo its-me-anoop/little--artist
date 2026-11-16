@@ -150,49 +150,35 @@ struct ColorHexTests {
 
 struct PremiumManagerTests {
 
-    @Test("canAddChild returns true when under limit")
-    func canAddChildUnderLimit() {
-        #expect(PremiumManager.canAddChild(currentCount: 0) == true)
-    }
-
-    @Test("canAddChild returns false when at limit")
-    func canAddChildAtLimit() {
-        // Ensure we're testing free tier (isPremium defaults to false)
-        UserDefaults.standard.removeObject(forKey: "isPremium")
-        #expect(PremiumManager.canAddChild(currentCount: 1) == false)
-        #expect(PremiumManager.canAddChild(currentCount: 5) == false)
-    }
-
-    @Test("canAddArtwork returns true when under limit")
-    func canAddArtworkUnderLimit() {
-        #expect(PremiumManager.canAddArtwork(currentCount: 0) == true)
-        #expect(PremiumManager.canAddArtwork(currentCount: 39) == true)
-    }
-
-    @Test("canAddArtwork returns false when at limit")
-    func canAddArtworkAtLimit() {
-        UserDefaults.standard.removeObject(forKey: "isPremium")
-        #expect(PremiumManager.canAddArtwork(currentCount: 40) == false)
-        #expect(PremiumManager.canAddArtwork(currentCount: 100) == false)
-    }
-
-    @Test("Free tier limits are correct")
-    func freeTierLimitsAreCorrect() {
-        #expect(PremiumManager.freeChildLimit == 1)
-        #expect(PremiumManager.freeArtworkLimit == 40)
-    }
-
-    @Test("Premium user bypasses limits")
-    func premiumUserBypassesLimits() {
+    @Test("There are no count limits once access is unlocked")
+    func unlimitedWithAccess() {
         PremiumManager._overrideIsPremium = true
+        defer { PremiumManager._overrideIsPremium = nil }
 
-        let canAddChild = PremiumManager.canAddChild(currentCount: 100)
-        let canAddArtwork = PremiumManager.canAddArtwork(currentCount: 1000)
+        #expect(PremiumManager.canAddChild(currentCount: 100))
+        #expect(PremiumManager.canAddArtwork(currentCount: 10_000))
+    }
 
-        PremiumManager._overrideIsPremium = nil
+    @Test("Creating content is locked without access, whatever the count")
+    func lockedWithoutAccess() {
+        PremiumManager._overrideIsPremium = false
+        defer { PremiumManager._overrideIsPremium = nil }
 
-        #expect(canAddChild == true)
-        #expect(canAddArtwork == true)
+        #expect(PremiumManager.canAddChild(currentCount: 0) == false)
+        #expect(PremiumManager.canAddArtwork(currentCount: 0) == false)
+    }
+
+    @Test("Access is read from the cached store state")
+    func readsCachedState() {
+        let defaults = UserDefaults.standard
+        let previous = defaults.data(forKey: UserDefaultsAccessCache.key)
+        defer { defaults.set(previous, forKey: UserDefaultsAccessCache.key) }
+
+        UserDefaultsAccessCache().save(.lifetime)
+        #expect(PremiumManager.accessState == .lifetime)
+
+        UserDefaultsAccessCache().save(.expired)
+        #expect(PremiumManager.accessState == .expired)
     }
 }
 
@@ -224,6 +210,30 @@ struct ArtworkRepositoryTests {
 
         #expect(child.name == "Noah James")
         #expect(child.avatarColor == "7EB8DA")
+    }
+
+    @Test("updateChild can remove the avatar photo")
+    func updateChildRemovesAvatar() throws {
+        let context = try makeInMemoryContext()
+        let child = ArtworkRepository.shared.createChild(
+            name: "Remy", avatarColor: "7EB8DA", avatarImageData: Data([0x01]), in: context
+        )
+
+        ArtworkRepository.shared.updateChild(child, removeAvatar: true, in: context)
+
+        #expect(child.avatarImageData == nil)
+    }
+
+    @Test("updateChild without new avatar data keeps the existing photo")
+    func updateChildKeepsAvatar() throws {
+        let context = try makeInMemoryContext()
+        let child = ArtworkRepository.shared.createChild(
+            name: "Kai", avatarColor: "7EB8DA", avatarImageData: Data([0x01]), in: context
+        )
+
+        ArtworkRepository.shared.updateChild(child, name: "Kai B", in: context)
+
+        #expect(child.avatarImageData == Data([0x01]))
     }
 
     @Test("deleteChild cascades to artworks")
@@ -303,6 +313,24 @@ struct ArtworkRepositoryTests {
 
         ArtworkRepository.shared.deleteArtwork(artwork, in: context)
         #expect(try context.fetchCount(FetchDescriptor<Artwork>()) == 0)
+    }
+
+    @Test("updateArtwork can remove a voice memo, even without access")
+    func updateArtworkRemovesVoiceNote() throws {
+        let context = try makeInMemoryContext()
+        let child = ArtworkRepository.shared.createChild(
+            name: "Ola", avatarColor: "D4928A", in: context
+        )
+        PremiumManager._overrideIsPremium = true
+        let artwork = ArtworkRepository.shared.createArtwork(
+            title: "Song", voiceNoteData: Data([0x0A]), child: child, in: context
+        )
+        PremiumManager._overrideIsPremium = false
+        defer { PremiumManager._overrideIsPremium = nil }
+
+        ArtworkRepository.shared.updateArtwork(artwork, removeVoiceNote: true, in: context)
+
+        #expect(artwork.voiceNoteData == nil)
     }
 }
 
@@ -516,23 +544,27 @@ struct AIEngineLadderTests {
     }
 }
 
-// MARK: - StoreKitManager Tests
+// MARK: - Product Catalog Tests
 
-@MainActor
-struct StoreKitProductTests {
+struct ProductCatalogTests {
 
-    @Test("All three premium products are configured")
-    func allProductsConfigured() {
-        #expect(StoreKitManager.ProductID.all.count == 3)
-        #expect(StoreKitManager.ProductID.all.contains(StoreKitManager.ProductID.monthlyPremium))
-        #expect(StoreKitManager.ProductID.all.contains(StoreKitManager.ProductID.yearlyPremium))
-        #expect(StoreKitManager.ProductID.all.contains(StoreKitManager.ProductID.lifetimePremium))
+    @Test("The paywall sells the free trial and the existing lifetime unlock")
+    func purchasableProducts() {
+        #expect(ProductCatalog.purchasable == [ProductCatalog.trial, ProductCatalog.lifetime])
+        #expect(ProductCatalog.lifetime == "com.flutterly.littleartist.premium.lifetime")
     }
 
-    @Test("Product identifiers use the app's bundle prefix")
-    func productIdentifiersUseBundlePrefix() {
-        for id in StoreKitManager.ProductID.all {
-            #expect(id.hasPrefix("com.flutterly.littleartist.premium."))
+    @Test("Retired subscriptions are grandfathered, and lifetime is not listed as retired")
+    func legacyProducts() {
+        #expect(ProductCatalog.legacyProducts.contains("com.flutterly.littleartist.premium.monthly"))
+        #expect(ProductCatalog.legacyProducts.contains("com.flutterly.littleartist.premium.yearly"))
+        #expect(!ProductCatalog.legacyProducts.contains(ProductCatalog.lifetime))
+    }
+
+    @Test("Product identifiers use the app's prefix")
+    func productIdentifiersUsePrefix() {
+        for id in ProductCatalog.purchasable + ProductCatalog.legacyProducts {
+            #expect(id.hasPrefix("com.flutterly.littleartist."))
         }
     }
 }

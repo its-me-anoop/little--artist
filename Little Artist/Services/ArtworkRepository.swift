@@ -23,6 +23,10 @@ final class ArtworkRepository {
     /// Intents that need data access outside the SwiftUI environment.
     var modelContainer: ModelContainer?
 
+    /// Keeps Spotlight / Siri in step with writes. Set at launch; nil in
+    /// unit tests unless a test injects a spy.
+    var indexer: (any ContentIndexing)?
+
     private init() {}
 
     /// Whether voice notes may be attached (premium feature).
@@ -47,27 +51,39 @@ final class ArtworkRepository {
         )
         modelContext.insert(child)
         try? modelContext.save()
+        indexer?.index(child: child)
         return child
     }
 
-    /// Updates an existing child profile.
+    /// Updates an existing child profile. `nil` arguments leave the field
+    /// unchanged; pass `removeAvatar: true` to clear the photo.
     func updateChild(
         _ child: Child,
         name: String? = nil,
         avatarColor: String? = nil,
         avatarImageData: Data? = nil,
+        removeAvatar: Bool = false,
         in modelContext: ModelContext
     ) {
         if let name { child.name = name }
         if let avatarColor { child.avatarColor = avatarColor }
-        if let avatarImageData { child.avatarImageData = avatarImageData }
+        if removeAvatar {
+            child.avatarImageData = nil
+        } else if let avatarImageData {
+            child.avatarImageData = avatarImageData
+        }
         try? modelContext.save()
+        indexer?.index(child: child)
     }
 
     /// Deletes a child and all their artworks (cascade).
     func deleteChild(_ child: Child, in modelContext: ModelContext) {
+        let artworkIDs = (child.artworks ?? []).map(\.uuid)
+        let childID = child.uuid
         modelContext.delete(child)
         try? modelContext.save()
+        indexer?.remove(artworkIDs: artworkIDs)
+        indexer?.remove(childIDs: [childID])
     }
 
     // MARK: - Artworks
@@ -99,16 +115,21 @@ final class ArtworkRepository {
         )
         modelContext.insert(artwork)
         try? modelContext.save()
+        indexer?.index(artwork: artwork)
+        indexer?.index(child: child) // artwork count changed
         return artwork
     }
 
-    /// Updates an existing artwork.
+    /// Updates an existing artwork. `nil` arguments leave the field
+    /// unchanged; pass `removeVoiceNote: true` to delete the voice memo
+    /// (always allowed, since it only removes the family's own data).
     func updateArtwork(
         _ artwork: Artwork,
         title: String? = nil,
         caption: String? = nil,
         imageData: Data? = nil,
         voiceNoteData: Data? = nil,
+        removeVoiceNote: Bool = false,
         isFavorited: Bool? = nil,
         createdAt: Date? = nil,
         tags: [Tag]? = nil,
@@ -117,18 +138,25 @@ final class ArtworkRepository {
         if let title { artwork.title = title }
         if let caption { artwork.caption = caption }
         if let imageData { artwork.imageData = imageData }
-        if let voiceNoteData, canUsePremiumArtworkFeatures {
+        if removeVoiceNote {
+            artwork.voiceNoteData = nil
+        } else if let voiceNoteData, canUsePremiumArtworkFeatures {
             artwork.voiceNoteData = voiceNoteData
         }
         if let isFavorited { artwork.isFavorited = isFavorited }
         if let createdAt { artwork.createdAt = createdAt }
         if let tags { artwork.tags = tags }
         try? modelContext.save()
+        indexer?.index(artwork: artwork)
     }
 
     /// Deletes an artwork.
     func deleteArtwork(_ artwork: Artwork, in modelContext: ModelContext) {
+        let artworkID = artwork.uuid
+        let child = artwork.child
         modelContext.delete(artwork)
         try? modelContext.save()
+        indexer?.remove(artworkIDs: [artworkID])
+        if let child { indexer?.index(child: child) }
     }
 }

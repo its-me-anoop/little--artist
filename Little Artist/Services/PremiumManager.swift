@@ -2,46 +2,41 @@
 //  PremiumManager.swift
 //  Little Artist
 //
-//  Manages premium subscription status and free tier limits.
-//  Uses StoreKitManager for live subscription state, with
-//  UserDefaults cache as fallback for synchronous checks.
+//  Synchronous access checks for code that cannot observe
+//  ``StoreKitManager`` (repositories, intents, button handlers).
+//
+//  There are no count limits any more: during the 30-day free trial and
+//  after the one-time lifetime purchase everything is unlimited. Before the
+//  trial starts, or after it ends without a purchase, creating new content
+//  is locked but existing artwork stays viewable, editable and exportable.
 //
 
-import SwiftUI
+import Foundation
 
-/// Centralized free tier limits and premium status.
-///
-/// Free tier is volume-capped, never time-limited: one child profile and
-/// enough artworks to cover a school term, so families can prove the app's
-/// value before paying. Unlimited children is the premium anchor.
+/// Centralized, synchronous premium checks.
 enum PremiumManager {
-    /// Maximum number of children on the free tier.
-    static let freeChildLimit = 1
 
-    /// Maximum number of artworks on the free tier.
-    static let freeArtworkLimit = 40
-
-    /// Override for testing. Set to non-nil to bypass UserDefaults.
+    /// Override for testing. Set to non-nil to bypass the cached state.
     #if DEBUG
     static var _overrideIsPremium: Bool?
     #endif
 
-    /// Whether the user has unlocked premium.
-    /// Reads from UserDefaults cache (set by StoreKitManager).
+    /// The last known access state, as cached by ``StoreKitManager``.
+    static var accessState: AccessState {
+        UserDefaultsAccessCache().load(now: .now) ?? .notStarted
+    }
+
+    /// Whether every feature is unlocked (trial running or lifetime owned).
     static var isPremium: Bool {
         #if DEBUG
         if let override = _overrideIsPremium { return override }
         #endif
-        return UserDefaults.standard.bool(forKey: "isPremium")
+        return accessState.hasFullAccess
     }
 
-    /// Check if the user can add another child.
-    static func canAddChild(currentCount: Int) -> Bool {
-        isPremium || currentCount < freeChildLimit
-    }
+    /// Whether a child can be added. Children are unlimited with access.
+    static func canAddChild(currentCount _: Int = 0) -> Bool { isPremium }
 
-    /// Check if the user can add more artwork.
-    static func canAddArtwork(currentCount: Int) -> Bool {
-        isPremium || currentCount < freeArtworkLimit
-    }
+    /// Whether artwork can be added. Artwork is unlimited with access.
+    static func canAddArtwork(currentCount _: Int = 0) -> Bool { isPremium }
 }

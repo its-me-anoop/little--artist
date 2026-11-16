@@ -37,7 +37,7 @@ struct AddChildView: View {
             .scrollIndicators(.hidden)
             .background(onboardingBackground)
             .navigationTitle("New Little Artist")
-            .navigationBarTitleDisplayMode(.large)
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Cancel") { dismiss() }
@@ -45,7 +45,7 @@ struct AddChildView: View {
             }
             .fullScreenCover(isPresented: $showCamera) {
                 CameraPicker { image in
-                    if let data = image.jpegData(compressionQuality: 0.8) {
+                    if let data = ImageProcessingService.processAvatar(image: image) {
                         avatarImageData = data
                     }
                 }
@@ -53,14 +53,14 @@ struct AddChildView: View {
             }
             .imagePlaygroundSheetCompat(isPresented: $showImagePlayground) { url in
                 if let data = try? Data(contentsOf: url) {
-                    avatarImageData = data
+                    avatarImageData = ImageProcessingService.processAvatar(data: data)
                 }
             }
             .onChange(of: photoPickerItem) { _, newItem in
                 if let newItem {
                     Task {
                         if let data = try? await newItem.loadTransferable(type: Data.self) {
-                            avatarImageData = data
+                            avatarImageData = ImageProcessingService.processAvatar(data: data)
                         }
                         photoPickerItem = nil
                     }
@@ -145,23 +145,10 @@ struct AddChildView: View {
     }
 
     private var addButton: some View {
-        Button {
+        Button("Add Child") {
             saveChild()
-        } label: {
-            Text("Add Child")
-                .font(Brand.title2Font.bold())
-                .foregroundStyle(.white)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 20)
-                .background((isNameValid ? Brand.primary : Brand.disabled).gradient)
-                .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 24, style: .continuous)
-                        .stroke(Brand.glassStrokeSoft, lineWidth: 3)
-                )
-                .shadow(color: (isNameValid ? Brand.primary : Brand.disabled).opacity(0.35), radius: 10, x: 0, y: 5)
-                .crayonStyle()
         }
+        .buttonStyle(.brandPrimary)
         .disabled(!isNameValid)
         .padding(.horizontal, 28)
     }

@@ -120,17 +120,10 @@ struct EditChildView: View {
                     .padding(.horizontal, 32)
 
                     // Save button
-                    Button {
+                    Button("Save Changes") {
                         saveChanges()
-                    } label: {
-                        Text("Save Changes")
-                            .font(Brand.headlineFont)
-                            .foregroundStyle(.white)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 18)
-                            .background(name.trimmingCharacters(in: .whitespaces).isEmpty ? Brand.disabled : Brand.primary)
-                            .clipShape(Capsule())
                     }
+                    .buttonStyle(.brandPrimary)
                     .disabled(name.trimmingCharacters(in: .whitespaces).isEmpty)
                     .padding(.horizontal, 32)
                 }
@@ -145,7 +138,7 @@ struct EditChildView: View {
             }
             .fullScreenCover(isPresented: $showCamera) {
                 CameraPicker { image in
-                    if let data = image.jpegData(compressionQuality: 0.8) {
+                    if let data = ImageProcessingService.processAvatar(image: image) {
                         avatarImageData = data
                     }
                 }
@@ -153,14 +146,14 @@ struct EditChildView: View {
             }
             .imagePlaygroundSheetCompat(isPresented: $showImagePlayground) { url in
                 if let data = try? Data(contentsOf: url) {
-                    avatarImageData = data
+                    avatarImageData = ImageProcessingService.processAvatar(data: data)
                 }
             }
             .onChange(of: photoPickerItem) { _, newItem in
                 if let newItem {
                     Task {
                         if let data = try? await newItem.loadTransferable(type: Data.self) {
-                            avatarImageData = data
+                            avatarImageData = ImageProcessingService.processAvatar(data: data)
                         }
                         photoPickerItem = nil
                     }
@@ -263,15 +256,24 @@ struct EditChildView: View {
             name: trimmedName,
             avatarColor: selectedColor,
             avatarImageData: avatarImageData,
+            removeAvatar: avatarImageData == nil,
             in: modelContext
         )
         dismiss()
     }
 
     private func deleteChild() {
-        ArtworkRepository.shared.deleteChild(child, in: modelContext)
+        // Close the sheet first, then delete once nothing on screen reads
+        // the child or its (cascade-deleted) artwork.
+        let child = child
+        let context = modelContext
         onDelete?()
         dismiss()
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(450))
+            guard child.isLive else { return }
+            ArtworkRepository.shared.deleteChild(child, in: context)
+        }
     }
 }
 

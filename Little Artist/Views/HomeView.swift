@@ -54,21 +54,7 @@ struct HomeView: View {
     /// Scans `allArtworks` for "On This Day" matches. O(n) in the number of
     /// artworks; called from `.task(id:)` not on every body eval.
     private func rebuildMemoriesArtworks() -> [MemoryEntry] {
-        let calendar = Calendar.current
-        let today = calendar.dateComponents([.month, .day], from: Date.now)
-        guard let todayMonth = today.month, let todayDay = today.day else { return [] }
-        let currentYear = calendar.component(.year, from: Date.now)
-
-        var results: [MemoryEntry] = []
-        for artwork in allArtworks {
-            let components = calendar.dateComponents([.year, .month, .day], from: artwork.createdAt)
-            guard components.month == todayMonth, components.day == todayDay else { continue }
-            let yearsAgo = currentYear - (components.year ?? currentYear)
-            if yearsAgo >= 1 {
-                results.append(MemoryEntry(artwork: artwork, yearsAgo: yearsAgo))
-            }
-        }
-        return results.sorted { $0.yearsAgo < $1.yearsAgo }
+        LibraryQuery.onThisDay(in: allArtworks)
     }
 
     /// Artworks filtered by the currently selected child. Sorting is already
@@ -231,8 +217,14 @@ struct HomeView: View {
         let padding = Brand.Adaptive.screenPadding(for: sizeClass)
 
         return VStack(spacing: 12) {
-            // Row 1: Featured artwork + memory/secondary card
-            HStack(spacing: 12) {
+            // Memory Lane spans the full width so the bento row below
+            // starts level on both sides.
+            if hasMemory {
+                memoryCard(memoriesArtworks[0].artwork)
+            }
+
+            // Row 1: Featured artwork + secondary card
+            HStack(alignment: .top, spacing: 12) {
                 // Featured artwork (largest card)
                 if let featured = featuredArtwork {
                     NavigationLink(value: featured) {
@@ -244,27 +236,20 @@ struct HomeView: View {
                     .buttonStyle(.plain)
                 }
 
-                // Right column: Memory card or secondary artwork
-                VStack(spacing: 12) {
-                    if hasMemory {
-                        memoryCard(memoriesArtworks[0].artwork)
+                if let second = secondaryArtworks.first {
+                    NavigationLink(value: second) {
+                        BentoArtworkCardView(
+                            artwork: second,
+                            rotation: 2
+                        )
                     }
-
-                    if let second = secondaryArtworks.first {
-                        NavigationLink(value: second) {
-                            BentoArtworkCardView(
-                                artwork: second,
-                                rotation: hasMemory ? 1.5 : 2
-                            )
-                        }
-                        .buttonStyle(.plain)
-                    }
+                    .buttonStyle(.plain)
                 }
             }
 
             // Row 2: Two smaller cards
             if secondaryArtworks.count > 1 {
-                HStack(spacing: 12) {
+                HStack(alignment: .top, spacing: 12) {
                     ForEach(Array(secondaryArtworks.dropFirst().enumerated()), id: \.element.persistentModelID) { index, artwork in
                         NavigationLink(value: artwork) {
                             BentoArtworkCardView(
@@ -280,7 +265,7 @@ struct HomeView: View {
         .padding(.horizontal, padding)
     }
 
-    // MARK: - Earlier This Month Section
+    // MARK: - Earlier Pieces Section
 
     private var earlierThisMonthSection: some View {
         let padding = Brand.Adaptive.screenPadding(for: sizeClass)
@@ -288,7 +273,7 @@ struct HomeView: View {
         let columns = Array(repeating: GridItem(.flexible(), spacing: 12), count: columnCount)
 
         return VStack(alignment: .leading, spacing: 12) {
-            Text("Earlier this Month")
+            Text("Earlier Pieces")
                 .font(Brand.title2Font)
                 .foregroundStyle(Brand.charcoal)
                 .padding(.horizontal, padding)
@@ -345,7 +330,6 @@ struct HomeView: View {
                             }
                         }
                     }
-                    .padding(.bottom, 100) // Space for FAB
                 }
                 .scrollIndicators(.hidden)
             }
@@ -421,6 +405,7 @@ struct HomeView: View {
                         } label: {
                             Image(systemName: "rectangle.split.2x1")
                         }
+                        .accessibilityLabel("Compare artwork over time")
                     }
                 }
             }
@@ -433,8 +418,12 @@ struct HomeView: View {
             .sheet(item: paywallPresented) { reason in
                 PaywallView(reason: reason)
             }
-            .onChange(of: selectedChildID) { _, _ in
-                // Child filter changed — UI updates via filteredArtworks
+            // Fall back to "All Children" if the selected child is deleted,
+            // otherwise the gallery filters on a stale ID and shows nothing.
+            .onChange(of: children.map(\.persistentModelID)) { _, ids in
+                if let selectedChildID, !ids.contains(selectedChildID) {
+                    self.selectedChildID = nil
+                }
             }
             .onChange(of: store.isPremium) { _, isPremium in
                 guard isPremium else { return }
@@ -449,16 +438,6 @@ struct HomeView: View {
                 memoriesArtworks = rebuildMemoriesArtworks()
             }
     }
-}
-
-// MARK: - Memory Entry
-
-/// A single "On This Day" memory entry — one artwork plus how many years ago
-/// it was created.
-struct MemoryEntry: Identifiable {
-    let artwork: Artwork
-    let yearsAgo: Int
-    var id: PersistentIdentifier { artwork.persistentModelID }
 }
 
 // MARK: - Previews

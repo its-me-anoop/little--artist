@@ -2,13 +2,15 @@
 //  Comment.swift
 //  Little Artist
 //
-//  SwiftData model representing a family member's comment on an artwork.
+//  SwiftData model for a note the parent writes about an artwork. Kept
+//  under its original name so the CloudKit schema stays compatible.
 //
 
 import Foundation
 import SwiftData
 
-/// A family member's comment on an artwork.
+/// A dated note about an artwork. `authorName` and `authorAvatarData` are
+/// legacy fields from the multi-user design and are no longer shown.
 ///
 /// Attributes carry defaults as required for CloudKit-backed SwiftData.
 @Model final class Comment {

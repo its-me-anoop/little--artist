@@ -140,13 +140,15 @@ enum AppleIntelligenceService {
                     generated = try await respond(
                         model: SystemLanguageModel.default,
                         instructions: suggestionInstructions,
-                        prompt: prompt
+                        prompt: prompt,
+                        isAvailable: { SystemLanguageModel.default.availability == .available }
                     )
                 case .privateCloudCompute:
                     generated = try await respond(
                         model: PrivateCloudComputeLanguageModel(),
                         instructions: suggestionInstructions,
-                        prompt: prompt
+                        prompt: prompt,
+                        isAvailable: { PrivateCloudComputeLanguageModel().availability == .available }
                     )
                 case .fallback:
                     continue
@@ -203,13 +205,15 @@ enum AppleIntelligenceService {
                     screening = try await respond(
                         model: SystemLanguageModel.default,
                         instructions: screeningInstructions,
-                        prompt: prompt
+                        prompt: prompt,
+                        isAvailable: { SystemLanguageModel.default.availability == .available }
                     )
                 case .privateCloudCompute:
                     screening = try await respond(
                         model: PrivateCloudComputeLanguageModel(),
                         instructions: screeningInstructions,
-                        prompt: prompt
+                        prompt: prompt,
+                        isAvailable: { PrivateCloudComputeLanguageModel().availability == .available }
                     )
                 case .fallback:
                     continue
@@ -251,21 +255,36 @@ enum AppleIntelligenceService {
     /// Runs a guided-generation request against any language model.
     /// One fresh session per request — these are stateless use cases.
     /// The schema is enforced at decode time, so it is omitted from the
-    /// prompt (`includeSchemaInPrompt: false`) for a faster first token;
-    /// a response-token cap bounds tail latency.
-    private static func respond<Output: Generable>(
+    /// prompt (`includeSchemaInPrompt: false`) for a faster first token.
+    private static func respond<Output: Generable & Sendable>(
         model: some LanguageModel,
         instructions: String,
-        prompt: Prompt
+        prompt: Prompt,
+        isAvailable: @escaping @Sendable () -> Bool
     ) async throws -> Output {
-        let session = LanguageModelSession(model: model, instructions: instructions)
-        return try await session.respond(
-            to: prompt,
-            generating: Output.self,
-            includeSchemaInPrompt: false,
-            options: GenerationOptions(temperature: 0.8, maximumResponseTokens: 120)
-        ).content
+        // One request at a time: concurrent screening + suggestion
+        // requests trapped inside FoundationModels on iOS 27.3.
+        try await SerialTaskQueue.languageModel.run {
+            // Availability can change between the ladder check and now
+            // (model assets unloaded, Apple Intelligence turned off).
+            guard isAvailable() else {
+                throw ModelUnavailable()
+            }
+            let session = LanguageModelSession(model: model, instructions: instructions)
+            return try await session.respond(
+                to: prompt,
+                generating: Output.self,
+                includeSchemaInPrompt: false,
+                // Generous cap: a tight cap can cut guided generation off
+                // mid-structure. Outputs here are ~40 tokens anyway.
+                options: GenerationOptions(temperature: 0.8, maximumResponseTokens: 400)
+            ).content
+        }
     }
+
+    /// Thrown when a model stops being available just before a request;
+    /// callers fall through to the next engine.
+    private struct ModelUnavailable: Error {}
 
     /// Decodes, orientation-normalizes, and downsamples an image so the
     /// longest edge is at most `maxDimension` points before attaching it

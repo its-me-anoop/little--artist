@@ -49,7 +49,11 @@ struct AddArtworkView: View {
     @State private var showPhotoPicker = false
     @State private var showBatchPicker = false
     @State private var showAddChild = false
-    @State private var selectedMedium = "Painting"
+    /// Empty until the parent picks one or AI detects it, so pieces aren't
+    /// all silently tagged "Painting".
+    @State private var selectedMedium = ""
+    @State private var showVoiceRecorder = false
+    @State private var validationTask: Task<Void, Never>?
     @State private var showDatePicker = false
 
     // MARK: - Init
@@ -171,12 +175,8 @@ struct AddArtworkView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button {
+                    Button("Cancel") {
                         dismiss()
-                    } label: {
-                        Image(systemName: "xmark")
-                            .font(.body.weight(.medium))
-                            .foregroundStyle(Brand.charcoal)
                     }
                 }
             }
@@ -409,6 +409,16 @@ struct AddArtworkView: View {
 
             // Medium picker
             Menu {
+                Button {
+                    selectedMedium = ""
+                } label: {
+                    if selectedMedium.isEmpty {
+                        Label("Not specified", systemImage: "checkmark")
+                    } else {
+                        Text("Not specified")
+                    }
+                }
+                Divider()
                 ForEach(AchievementService.mediumTags, id: \.self) { medium in
                     Button {
                         selectedMedium = medium
@@ -422,9 +432,9 @@ struct AddArtworkView: View {
                 }
             } label: {
                 HStack {
-                    Text(selectedMedium)
+                    Text(selectedMedium.isEmpty ? String(localized: "Medium (optional)") : selectedMedium)
                         .font(Brand.bodyFont)
-                        .foregroundStyle(Brand.charcoal)
+                        .foregroundStyle(selectedMedium.isEmpty ? Brand.warmGray : Brand.charcoal)
                     Spacer()
                     Image(systemName: "chevron.down")
                         .font(.caption.weight(.semibold))
@@ -445,27 +455,33 @@ struct AddArtworkView: View {
     private var actionButtonsSection: some View {
         VStack(spacing: 16) {
             HStack(spacing: 16) {
-                // Voice memo (premium only)
+                // Voice memo (needs the trial or lifetime unlock)
                 if PremiumManager.isPremium {
-                    VStack(spacing: 8) {
-                        ZStack {
-                            Circle()
-                                .fill(Brand.sky.opacity(0.2))
-                                .frame(width: 48, height: 48)
-                            Image(systemName: "mic.fill")
-                                .font(.system(size: 20))
-                                .foregroundStyle(Brand.sky)
+                    Button {
+                        withAnimation(.snappy) { showVoiceRecorder.toggle() }
+                    } label: {
+                        VStack(spacing: 8) {
+                            ZStack {
+                                Circle()
+                                    .fill(Brand.sky.opacity(0.2))
+                                    .frame(width: 48, height: 48)
+                                Image(systemName: "mic.fill")
+                                    .font(.title3)
+                                    .foregroundStyle(Brand.sky)
+                            }
+                            Text("Record Story")
+                                .font(Brand.captionFont)
+                                .foregroundStyle(Brand.charcoal)
                         }
-                        Text("Record Story")
-                            .font(Brand.captionFont)
-                            .foregroundStyle(Brand.charcoal)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 14)
+                        .background(
+                            RoundedRectangle(cornerRadius: Brand.radiusCard)
+                                .fill(Brand.surface)
+                        )
                     }
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 14)
-                    .background(
-                        RoundedRectangle(cornerRadius: Brand.radiusCard)
-                            .fill(Brand.surface)
-                    )
+                    .buttonStyle(.plain)
+                    .accessibilityHint("Record your child telling the story of this piece")
                 }
 
                 // Magic Caption
@@ -500,9 +516,10 @@ struct AddArtworkView: View {
                 }
             }
 
-            // Inline voice memo recorder (premium only)
-            if PremiumManager.isPremium {
+            // Inline voice memo recorder (needs the trial or lifetime unlock)
+            if PremiumManager.isPremium, showVoiceRecorder || voiceNoteData != nil {
                 VoiceMemoRecorderView(voiceNoteData: $voiceNoteData)
+                    .transition(.opacity.combined(with: .move(edge: .top)))
             }
         }
     }
@@ -532,17 +549,10 @@ struct AddArtworkView: View {
     // MARK: - Save Button
 
     private var saveButton: some View {
-        Button {
+        Button("Save to Gallery") {
             saveArtwork()
-        } label: {
-            Text("Save to Gallery")
-                .font(.headline)
-                .foregroundStyle(.white)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, Brand.buttonPadding)
-                .background(isSaveDisabled ? Brand.disabled : Brand.primary)
-                .clipShape(Capsule())
         }
+        .buttonStyle(.brandPrimary)
         .disabled(isSaveDisabled)
         .padding(.horizontal, Brand.screenPadding)
         .padding(.top, 12)
@@ -621,10 +631,10 @@ struct AddArtworkView: View {
             .padding(.horizontal, 14)
             .background(
                 RoundedRectangle(cornerRadius: Brand.radiusField)
-                    .fill(isBlocked ? Brand.dustyRose.opacity(0.08) : Color.orange.opacity(0.08))
+                    .fill(isBlocked ? Brand.dustyRose.opacity(0.08) : Brand.primary.opacity(0.08))
                     .overlay(
                         RoundedRectangle(cornerRadius: Brand.radiusField)
-                            .strokeBorder(isBlocked ? Brand.dustyRose.opacity(0.3) : Color.orange.opacity(0.3), lineWidth: 1)
+                            .strokeBorder(isBlocked ? Brand.dustyRose.opacity(0.3) : Brand.primary.opacity(0.3), lineWidth: 1)
                     )
             )
             .padding(.horizontal, Brand.screenPadding)
@@ -706,13 +716,15 @@ struct AddArtworkView: View {
     // MARK: - Image Validation
 
     private func validateCapturedImage(_ imageData: Data) {
+        // A newer photo supersedes any check still running for an older one.
+        validationTask?.cancel()
+        validationResult = nil
         isValidatingImage = true
-        Task {
+        validationTask = Task {
             let result = await AISuggestionService.validateArtworkOnDevice(imageData: imageData)
-            await MainActor.run {
-                validationResult = result
-                isValidatingImage = false
-            }
+            guard !Task.isCancelled, capturedImageData == imageData else { return }
+            validationResult = result
+            isValidatingImage = false
         }
     }
 
@@ -755,6 +767,14 @@ struct AddArtworkView: View {
                 childName: childName
             )
             await MainActor.run {
+                isGeneratingSuggestions = false
+                // The fallback is placeholder text, not a suggestion — don't
+                // present it as if Apple Intelligence wrote it.
+                guard result.engine != .fallback else {
+                    suggestionEngine = nil
+                    suggestionErrorMessage = String(localized: "Couldn't suggest a caption right now. Apple Intelligence may still be getting ready — try again in a moment.")
+                    return
+                }
                 if title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                     title = result.suggestion.title
                 }

@@ -3,7 +3,7 @@
 //  Little Artist
 //
 //  Scrollable artwork detail page with hero image, smart analysis,
-//  action buttons, family comments, and full-screen zoom overlay.
+//  action buttons, notes, and full-screen zoom overlay.
 //  Supports AI-powered caption improvement via AISuggestionService.
 //
 //  Created by Codex on 15/02/2026.
@@ -43,6 +43,7 @@ struct ArtworkDetailView: View {
     @State private var imageScale: CGFloat = 1.0
     @State private var imageOffset: CGSize = .zero
     @State private var lastScale: CGFloat = 1.0
+    @State private var lastOffset: CGSize = .zero
 
     // MARK: - Computed
 
@@ -66,6 +67,16 @@ struct ArtworkDetailView: View {
     // MARK: - Body
 
     var body: some View {
+        if artwork.isLive {
+            liveBody
+        } else {
+            // Deleted elsewhere (e.g. on another device via iCloud) while
+            // open: leave rather than read a deleted model and crash.
+            Color.clear.onAppear { leave() }
+        }
+    }
+
+    private var liveBody: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: Brand.sectionSpacing) {
                 heroArtworkSection
@@ -73,7 +84,7 @@ struct ArtworkDetailView: View {
                 smartAnalysisSection
                 actionButtonsSection
                 voiceMemoSection
-                familyLoveSection
+                notesSection
             }
             .padding(Brand.Adaptive.screenPadding(for: sizeClass))
         }
@@ -90,6 +101,23 @@ struct ArtworkDetailView: View {
                     Image(systemName: artwork.isFavorited ? "heart.fill" : "heart")
                         .foregroundStyle(artwork.isFavorited ? Brand.dustyRose : Brand.charcoal)
                 }
+                .accessibilityLabel(artwork.isFavorited ? "Remove from Favorites" : "Add to Favorites")
+            }
+
+            ToolbarItem(placement: .topBarTrailing) {
+                Menu {
+                    Button("Edit", systemImage: "pencil") {
+                        showEditSheet = true
+                    }
+                    Divider()
+                    Button("Delete Artwork", systemImage: "trash", role: .destructive) {
+                        showDeleteConfirmation = true
+                    }
+                } label: {
+                    Image(systemName: "ellipsis")
+                        .foregroundStyle(Brand.charcoal)
+                }
+                .accessibilityLabel("More")
             }
         }
         .fullScreenCover(isPresented: $showFullScreenZoom) {
@@ -105,24 +133,11 @@ struct ArtworkDetailView: View {
                     .scrollDismissesKeyboard(.interactively)
 
                     // Save button pinned at bottom
-                    Button {
+                    Button("Save Changes") {
                         saveEdits()
-                    } label: {
-                        Text("Save Changes")
-                            .font(Brand.title2Font.bold())
-                            .foregroundStyle(.white)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 20)
-                            .background(Brand.primary.gradient)
-                            .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 24, style: .continuous)
-                                    .stroke(Brand.glassStrokeSoft, lineWidth: 3)
-                            )
-                            .shadow(color: Brand.primary.opacity(0.35), radius: 10, x: 0, y: 5)
-                            .crayonStyle()
                     }
-                    .padding(.horizontal, 28)
+                    .buttonStyle(.brandPrimary)
+                    .padding(.horizontal, Brand.screenPadding)
                     .padding(.bottom, 16)
                     .background(Color(.systemBackground).opacity(0.01))
                 }
@@ -197,6 +212,7 @@ struct ArtworkDetailView: View {
                     .background(.ultraThinMaterial)
                     .clipShape(Circle())
             }
+            .accessibilityLabel("Zoom")
             .padding(16)
         }
     }
@@ -321,6 +337,9 @@ struct ArtworkDetailView: View {
             Button { prepareShareItems() } label: {
                 Label("Share Masterpiece", systemImage: "wand.and.stars")
                     .font(Brand.subheadlineFont.weight(.semibold))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
+                    .padding(.horizontal, 12)
                     .foregroundStyle(.white)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, Brand.buttonPadding)
@@ -334,6 +353,9 @@ struct ArtworkDetailView: View {
             Button { startEditing() } label: {
                 Label("Edit Entry", systemImage: "pencil")
                     .font(Brand.subheadlineFont.weight(.semibold))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
+                    .padding(.horizontal, 12)
                     .foregroundStyle(Brand.charcoal)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, Brand.buttonPadding)
@@ -361,24 +383,33 @@ struct ArtworkDetailView: View {
         }
     }
 
-    // MARK: - 5. Family Love Section
+    // MARK: - 5. Notes Section
 
-    private var familyLoveSection: some View {
+    /// Notes in the order they were written.
+    private var sortedNotes: [Comment] {
+        (artwork.comments ?? []).sorted { $0.createdAt < $1.createdAt }
+    }
+
+    private var notesSection: some View {
         VStack(alignment: .leading, spacing: 14) {
-            Text("Family Love")
+            Text("Notes")
                 .font(Brand.headlineFont)
                 .foregroundStyle(Brand.charcoal)
 
-            // Existing comments
-            if let comments = artwork.comments, !comments.isEmpty {
-                ForEach(comments) { comment in
-                    FamilyCommentView(comment: comment)
-                }
+            ForEach(sortedNotes) { note in
+                ArtworkNoteView(note: note)
+                    .contextMenu {
+                        Button("Delete Note", systemImage: "trash", role: .destructive) {
+                            modelContext.delete(note)
+                            try? modelContext.save()
+                        }
+                    }
             }
 
-            // Add comment input
+            // Add note input
             HStack(spacing: 10) {
-                TextField("Add a comment...", text: $newCommentText)
+                TextField("Add a note about this piece…", text: $newCommentText, axis: .vertical)
+                    .lineLimit(1...4)
                     .font(Brand.bodyFont)
                     .padding(.horizontal, 16)
                     .padding(.vertical, 10)
@@ -418,7 +449,7 @@ struct ArtworkDetailView: View {
                         withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) {
                             if imageScale > 1.0 {
                                 imageScale = 1.0
-                                imageOffset = .zero
+                                imageOffset = .zero; lastOffset = .zero
                             } else {
                                 imageScale = 2.5
                             }
@@ -432,7 +463,7 @@ struct ArtworkDetailView: View {
                     Spacer()
                     Button {
                         imageScale = 1.0
-                        imageOffset = .zero
+                        imageOffset = .zero; lastOffset = .zero
                         lastScale = 1.0
                         showFullScreenZoom = false
                     } label: {
@@ -443,6 +474,7 @@ struct ArtworkDetailView: View {
                             .background(.ultraThinMaterial)
                             .clipShape(Circle())
                     }
+                    .accessibilityLabel("Close")
                     .padding()
                 }
                 Spacer()
@@ -463,25 +495,31 @@ struct ArtworkDetailView: View {
                 withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) {
                     if imageScale < 1.0 {
                         imageScale = 1.0
-                        imageOffset = .zero
+                        imageOffset = .zero; lastOffset = .zero
                     }
                     lastScale = imageScale
                 }
             }
     }
 
-    /// Drag-to-pan while zoomed, springs back on release.
+    /// Drag-to-pan while zoomed; keeps its position between drags.
     private var panGesture: some Gesture {
         DragGesture()
             .onChanged { value in
                 guard imageScale > 1.0 else { return }
-                imageOffset = value.translation
+                // Accumulate from where the last drag ended so the image
+                // stays where the user left it.
+                imageOffset = CGSize(
+                    width: lastOffset.width + value.translation.width,
+                    height: lastOffset.height + value.translation.height
+                )
             }
             .onEnded { _ in
                 withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) {
                     if imageScale <= 1.0 {
-                        imageOffset = .zero
+                        imageOffset = .zero; lastOffset = .zero
                     }
+                    lastOffset = imageOffset
                 }
             }
     }
@@ -517,7 +555,7 @@ struct ArtworkDetailView: View {
 
         let comment = Comment(
             text: trimmed,
-            authorName: "Me",
+            authorName: "",
             artwork: artwork
         )
         modelContext.insert(comment)
@@ -620,7 +658,7 @@ struct ArtworkDetailView: View {
             )
             .padding(.horizontal, 20)
 
-            // Voice memo card (premium only)
+            // Voice memo card (recording needs the trial or lifetime unlock)
             if PremiumManager.isPremium {
                 VStack(spacing: 12) {
                     Label("Voice Memo", systemImage: "mic.fill")
@@ -770,6 +808,7 @@ struct ArtworkDetailView: View {
             title: editTitle.trimmingCharacters(in: .whitespacesAndNewlines),
             caption: editCaption.trimmingCharacters(in: .whitespacesAndNewlines),
             voiceNoteData: editVoiceNoteData,
+            removeVoiceNote: editVoiceNoteData == nil,
             createdAt: anchoredDate,
             tags: editTags,
             in: modelContext
@@ -797,7 +836,19 @@ struct ArtworkDetailView: View {
 
     private func deleteArtwork() {
         HapticService.warning()
-        ArtworkRepository.shared.deleteArtwork(artwork, in: modelContext)
+        // Navigate away first, then delete once this screen (and the card
+        // it was opened from) no longer render the artwork.
+        let artwork = artwork
+        let context = modelContext
+        leave()
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(450))
+            guard artwork.isLive else { return }
+            ArtworkRepository.shared.deleteArtwork(artwork, in: context)
+        }
+    }
+
+    private func leave() {
         if let onDelete {
             onDelete()
         } else {
@@ -864,12 +915,17 @@ struct ArtworkDetailView: View {
             )
 
             await MainActor.run {
+                isGeneratingSuggestions = false
+                guard result.engine != .fallback else {
+                    suggestionEngine = nil
+                    suggestionErrorMessage = String(localized: "Couldn't improve the caption right now. Try again in a moment.")
+                    return
+                }
                 editTitle = result.suggestion.title
                 editCaption = result.suggestion.caption
                 withAnimation(.snappy) {
                     suggestionEngine = result.engine
                 }
-                isGeneratingSuggestions = false
             }
         }
     }

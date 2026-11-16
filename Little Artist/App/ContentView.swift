@@ -3,7 +3,8 @@
 //  Little Artist
 //
 //  Root view displayed after onboarding. Provides the main 4-tab navigation
-//  shell (Gallery, Timeline, Milestones, Settings) with a floating action button.
+//  shell (Gallery, Timeline, Milestones, Settings) with a floating capture
+//  button on the Gallery root.
 //
 //  Created by Anoop Jose on 13/02/2026.
 //
@@ -22,16 +23,15 @@ struct ContentView: View {
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.modelContext) private var modelContext
 
-    @AppStorage("hasSeenFirstArtworkUpsell") private var hasSeenUpsell = false
-
     @State private var selectedTab: AppTab = .gallery
     @State private var selectedChildID: PersistentIdentifier?
     @State private var showCreateSheet = false
     @State private var showAddChild = false
-    @State private var showPremiumUpsell = false
     @State private var showSlideshow = false
     @State private var paywallReason: PaywallView.LimitReason?
     @State private var artworkCountBeforeSheet = 0
+    /// Artwork opened from Siri, Shortcuts or Spotlight.
+    @State private var routedArtwork: Artwork?
 
     private var store: StoreKitManager { StoreKitManager.shared }
     private var celebration: CelebrationCenter { CelebrationCenter.shared }
@@ -42,7 +42,7 @@ struct ContentView: View {
     private var isIdleForReviewPrompt: Bool {
         celebration.current == nil
             && !showCreateSheet && !showAddChild && !showSlideshow
-            && !showPremiumUpsell && paywallReason == nil
+            && paywallReason == nil
     }
 
     /// Artworks in chronological order for exhibition mode, so the
@@ -56,13 +56,6 @@ struct ContentView: View {
         return children.first { $0.persistentModelID == selectedChildID }
     }
 
-    private var premiumUpsellPresented: Binding<Bool> {
-        Binding(
-            get: { showPremiumUpsell && !store.isPremium },
-            set: { showPremiumUpsell = $0 }
-        )
-    }
-
     private var paywallPresented: Binding<PaywallView.LimitReason?> {
         Binding(
             get: { store.isPremium ? nil : paywallReason },
@@ -70,20 +63,48 @@ struct ContentView: View {
         )
     }
 
+    /// Opens capture, or the add-child sheet when there are no children
+    /// yet. Both need an active trial or the lifetime unlock.
     private func presentCreateFlow() {
+        guard store.isPremium else {
+            paywallReason = children.isEmpty ? .children : .artworks
+            return
+        }
         if children.isEmpty {
             showAddChild = true
-        } else if PremiumManager.canAddArtwork(currentCount: allArtworks.count) {
+        } else {
             artworkCountBeforeSheet = allArtworks.count
             showCreateSheet = true
-        } else {
-            paywallReason = .artworks
         }
+    }
+
+    /// Floating capture button shown on the Gallery root.
+    private var addArtworkButton: some View {
+        Button {
+            presentCreateFlow()
+        } label: {
+            Image(systemName: "plus")
+                .font(.title2.bold())
+                .foregroundStyle(.white)
+                .frame(width: Brand.fabSize, height: Brand.fabSize)
+                .background(Brand.primary)
+                .clipShape(Circle())
+                .brandFABShadow()
+        }
+        .accessibilityLabel("Add artwork")
+        .padding(.trailing, Brand.screenPadding)
+        .padding(.bottom, 12)
     }
 
     private var galleryRoot: some View {
         NavigationStack {
             HomeView(selectedChildID: $selectedChildID)
+                // Only on the Gallery root: pushed screens and other tabs
+                // keep their bottom controls clear. The inset also stops
+                // the last cards from sitting under the button.
+                .safeAreaInset(edge: .bottom, alignment: .trailing) {
+                    addArtworkButton
+                }
                 .toolbar {
                     if !allArtworks.isEmpty {
                         ToolbarItem(placement: .topBarTrailing) {
@@ -102,52 +123,35 @@ struct ContentView: View {
                         } label: {
                             Image(systemName: "magnifyingglass")
                         }
+                        .accessibilityLabel("Search")
                     }
                 }
         }
     }
 
     var body: some View {
-        ZStack(alignment: .bottomTrailing) {
-            TabView(selection: $selectedTab) {
-                Tab("Gallery", systemImage: "photo.on.rectangle.angled", value: .gallery) {
-                    galleryRoot
-                }
+        TabView(selection: $selectedTab) {
+            Tab("Gallery", systemImage: "photo.on.rectangle.angled", value: .gallery) {
+                galleryRoot
+            }
 
-                Tab("Timeline", systemImage: "book.pages", value: .timeline) {
-                    NavigationStack {
-                        TimelineView()
-                    }
-                }
-
-                Tab("Milestones", systemImage: "medal", value: .milestones) {
-                    NavigationStack {
-                        MilestonesView()
-                    }
-                }
-
-                Tab("Settings", systemImage: "slider.horizontal.3", value: .settings) {
-                    NavigationStack {
-                        SettingsView()
-                    }
+            Tab("Timeline", systemImage: "book.pages", value: .timeline) {
+                NavigationStack {
+                    TimelineView()
                 }
             }
 
-            // Floating Action Button
-            Button {
-                presentCreateFlow()
-            } label: {
-                Image(systemName: "plus")
-                    .font(.title2.bold())
-                    .foregroundStyle(.white)
-                    .frame(width: Brand.fabSize, height: Brand.fabSize)
-                    .background(Brand.primary)
-                    .clipShape(Circle())
-                    .brandFABShadow()
+            Tab("Milestones", systemImage: "medal", value: .milestones) {
+                NavigationStack {
+                    MilestonesView()
+                }
             }
-            .accessibilityLabel("Add artwork")
-            .padding(.trailing, Brand.screenPadding)
-            .padding(.bottom, 80)
+
+            Tab("Settings", systemImage: "slider.horizontal.3", value: .settings) {
+                NavigationStack {
+                    SettingsView()
+                }
+            }
         }
         .sheet(isPresented: $showAddChild) {
             AddChildView()
@@ -156,14 +160,6 @@ struct ContentView: View {
             let savedCount = allArtworks.count - artworkCountBeforeSheet
             if savedCount > 0 {
                 reviewPrompt.record(.artworkSaved(count: savedCount))
-            }
-            if artworkCountBeforeSheet == 0
-                && allArtworks.count > artworkCountBeforeSheet
-                && !store.isPremium
-                && !hasSeenUpsell
-            {
-                hasSeenUpsell = true
-                showPremiumUpsell = true
             }
         }) {
             // Honor the current child filter — attribute the new artwork to
@@ -174,11 +170,18 @@ struct ContentView: View {
                     .adaptiveSheetSizing(sizeClass: sizeClass)
             }
         }
-        .sheet(isPresented: premiumUpsellPresented) {
-            PremiumUpsellView()
-        }
         .sheet(item: paywallPresented) { reason in
             PaywallView(reason: reason)
+        }
+        .sheet(item: $routedArtwork) { artwork in
+            NavigationStack {
+                ArtworkDetailView(artwork: artwork, onDelete: { routedArtwork = nil })
+                    .toolbar {
+                        ToolbarItem(placement: .cancellationAction) {
+                            Button("Done") { routedArtwork = nil }
+                        }
+                    }
+            }
         }
         .fullScreenCover(isPresented: $showSlideshow) {
             ArtworkSlideshowView(artworks: slideshowArtworks)
@@ -196,7 +199,6 @@ struct ContentView: View {
         .onChange(of: store.isPremium) { _, isPremium in
             guard isPremium else { return }
             paywallReason = nil
-            showPremiumUpsell = false
         }
         .task(id: reviewPrompt.shouldRequestReview && isIdleForReviewPrompt) {
             guard reviewPrompt.shouldRequestReview, isIdleForReviewPrompt else { return }
@@ -225,13 +227,21 @@ struct ContentView: View {
     private func handleQuickAction(_ action: QuickActionRouter.Action) {
         QuickActionRouter.shared.pendingAction = nil
         switch action {
-        case .captureArtwork:
+        case .captureArtwork(let childID):
             selectedTab = .gallery
+            if let childID, let child = children.first(where: { $0.uuid == childID }) {
+                selectedChildID = child.persistentModelID
+            }
             presentCreateFlow()
         case .showMilestones:
             selectedTab = .milestones
         case .showTimeline:
             selectedTab = .timeline
+        case .openArtwork(let id):
+            routedArtwork = allArtworks.first { $0.uuid == id }
+        case .openChild(let id):
+            selectedTab = .gallery
+            selectedChildID = children.first { $0.uuid == id }?.persistentModelID
         }
     }
 }

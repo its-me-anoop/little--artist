@@ -25,13 +25,15 @@ struct TimelineView: View {
     @State private var selectedChildID: PersistentIdentifier?
     @State private var showAddChild = false
     @State private var editingChild: Child?
+    @State private var showPaywall = false
 
     @Environment(\.modelContext) private var modelContext
 
     // MARK: - Computed Properties
 
     private var selectedChild: Child? {
-        guard let selectedChildID else { return children.first }
+        // nil means "All children".
+        guard let selectedChildID else { return nil }
         return children.first { $0.persistentModelID == selectedChildID }
     }
 
@@ -109,50 +111,65 @@ struct TimelineView: View {
     // MARK: - Body
 
     var body: some View {
-        NavigationStack {
-            ScrollView {
-                VStack(spacing: Brand.sectionSpacing) {
-                    // MARK: Child Slider
-                    if !children.isEmpty {
-                        ChildSliderView(
-                            children: children,
-                            selectedChild: selectedChildBinding,
-                            onAddChild: { showAddChild = true },
-                            onEditChild: { child in editingChild = child }
-                        )
-                    }
-
-                    // MARK: Profile Hero
-                    if let child = selectedChild {
-                        profileHero(for: child)
-                    }
-
-                    // MARK: Milestones
-                    if !achievements.isEmpty {
-                        MilestoneCarouselView(
-                            achievements: achievements,
-                            onViewAll: nil
-                        )
-                    }
-
-                    // MARK: Art Timeline
-                    if groupedArtworks.isEmpty {
-                        emptyState
-                    } else {
-                        timelineContent
-                    }
+        ScrollView {
+            VStack(spacing: Brand.sectionSpacing) {
+                // MARK: Child Slider
+                if !children.isEmpty {
+                    ChildSliderView(
+                        children: children,
+                        selectedChild: selectedChildBinding,
+                        onAddChild: {
+                            // Adding children needs the trial or lifetime unlock.
+                            if StoreKitManager.shared.isPremium {
+                                showAddChild = true
+                            } else {
+                                showPaywall = true
+                            }
+                        },
+                        onEditChild: { child in editingChild = child }
+                    )
                 }
-                .padding(.bottom, Brand.sectionSpacing)
+
+                // MARK: Profile Hero
+                if let child = selectedChild {
+                    profileHero(for: child)
+                }
+
+                // MARK: Milestones
+                if !achievements.isEmpty {
+                    MilestoneCarouselView(
+                        achievements: achievements,
+                        onViewAll: nil
+                    )
+                }
+
+                // MARK: Art Timeline
+                if groupedArtworks.isEmpty {
+                    emptyState
+                } else {
+                    timelineContent
+                }
             }
-            .background(BrandAppBackground())
-            .navigationTitle("Timeline")
-            .navigationDestination(for: Artwork.self) { artwork in
-                ArtworkDetailView(artwork: artwork)
-            }
+            .padding(.bottom, Brand.sectionSpacing)
         }
-        .onAppear {
-            if selectedChildID == nil, let first = children.first {
-                selectedChildID = first.persistentModelID
+        .background(BrandAppBackground())
+        .navigationTitle("Timeline")
+        .navigationDestination(for: Artwork.self) { artwork in
+            ArtworkDetailView(artwork: artwork)
+        }
+        .sheet(isPresented: $showAddChild) {
+            AddChildView()
+        }
+        .sheet(item: $editingChild) { child in
+            EditChildView(child: child)
+        }
+        .sheet(isPresented: $showPaywall) {
+            PaywallView(reason: .children)
+        }
+        // Fall back to "All" if the selected child is deleted.
+        .onChange(of: children.map(\.persistentModelID)) { _, ids in
+            if let selectedChildID, !ids.contains(selectedChildID) {
+                self.selectedChildID = nil
             }
         }
     }
@@ -183,22 +200,7 @@ struct TimelineView: View {
                     .offset(x: -8, y: 8)
 
                 // Avatar
-                if let imageData = child.avatarImageData, let uiImage = UIImage(data: imageData) {
-                    Image(uiImage: uiImage)
-                        .resizable()
-                        .scaledToFill()
-                        .frame(width: 140, height: 140)
-                        .clipShape(Circle())
-                } else {
-                    Circle()
-                        .fill(Color(hex: child.avatarColor))
-                        .frame(width: 140, height: 140)
-                        .overlay {
-                            Text(String(child.name.prefix(1)).uppercased())
-                                .font(.system(size: 56, weight: .bold, design: .rounded))
-                                .foregroundStyle(.white)
-                        }
-                }
+                AvatarCircleView(child: child, size: 140)
 
                 // Paint palette badge
                 Circle()
@@ -352,43 +354,30 @@ struct TimelineView: View {
 
     // MARK: - Voice Memo Card
 
+    @ViewBuilder
     private func voiceMemoCard(for artwork: Artwork) -> some View {
-        HStack(spacing: 12) {
-            Image(systemName: "play.fill")
-                .font(.system(size: 12, weight: .semibold))
-                .foregroundStyle(Brand.primary)
-                .frame(width: 32, height: 32)
-                .background(Brand.primaryTint, in: Circle())
-
-            // Waveform bars
-            HStack(spacing: 3) {
-                ForEach(0..<8, id: \.self) { bar in
-                    RoundedRectangle(cornerRadius: 1.5)
-                        .fill(Brand.primary.opacity(0.5))
-                        .frame(width: 3, height: waveformBarHeight(for: bar))
+        if let audio = artwork.voiceNoteData {
+            VStack(alignment: .leading, spacing: 8) {
+                HStack {
+                    Text(artwork.title.isEmpty ? String(localized: "Voice Story") : artwork.title)
+                        .font(Brand.captionFont)
+                        .foregroundStyle(Brand.charcoal)
+                        .lineLimit(1)
+                    Spacer()
+                    Text(artwork.createdAt.formatted(date: .abbreviated, time: .omitted))
+                        .font(Brand.caption2Font)
+                        .foregroundStyle(Brand.warmGray)
                 }
+                VoiceMemoPlayerView(audioData: audio)
             }
-
-            VStack(alignment: .leading, spacing: 2) {
-                Text(artwork.title.isEmpty ? "Voice Story" : artwork.title)
-                    .font(Brand.captionFont)
-                    .foregroundStyle(Brand.charcoal)
-                    .lineLimit(1)
-
-                Text(artwork.createdAt.formatted(.dateTime.month(.abbreviated).day()))
-                    .font(Brand.caption2Font)
-                    .foregroundStyle(Brand.warmGray)
-            }
-
-            Spacer()
+            .padding(12)
+            .background(Brand.glass)
+            .clipShape(RoundedRectangle(cornerRadius: Brand.radiusCard, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: Brand.radiusCard, style: .continuous)
+                    .strokeBorder(Brand.glassStroke, lineWidth: 1)
+            )
         }
-        .padding(12)
-        .background(Brand.glass)
-        .clipShape(RoundedRectangle(cornerRadius: Brand.radiusCard, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: Brand.radiusCard, style: .continuous)
-                .strokeBorder(Brand.glassStroke, lineWidth: 1)
-        )
     }
 
     // MARK: - Helpers
