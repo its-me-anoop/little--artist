@@ -50,6 +50,15 @@ struct ArtworkSlideshowView: View {
                 showControls.toggle()
             }
         }
+        .gesture(
+            DragGesture(minimumDistance: 30).onEnded { value in
+                // Swipe down closes, like other full-screen photo viewers.
+                if value.translation.height > 120,
+                   abs(value.translation.width) < value.translation.height {
+                    dismiss()
+                }
+            }
+        )
         .task(id: advanceTaskKey) {
             guard isPlaying, artworks.count > 1 else { return }
             try? await Task.sleep(for: .seconds(Self.slideSeconds))
@@ -109,9 +118,14 @@ struct ArtworkSlideshowView: View {
 
                     Text(slideCaption(for: artwork))
                         .font(Brand.captionFont)
-                        .foregroundStyle(Brand.cream.opacity(0.75))
+                        .foregroundStyle(Brand.cream.opacity(0.9))
                 }
                 .padding(.horizontal, Brand.formPadding)
+                .padding(.vertical, 14)
+                .background(
+                    Capsule().fill(Brand.charcoal.opacity(0.55))
+                )
+                .padding(.horizontal, Brand.screenPadding)
                 .padding(.bottom, 30)
             }
         }

@@ -189,3 +189,32 @@ struct PersistentModelLivenessTests {
         #expect(!artwork.isLive)
     }
 }
+
+// MARK: - Card Date Label Tests
+
+struct CardDateLabelTests {
+
+    private let calendar: Calendar = {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(identifier: "UTC")!
+        return calendar
+    }()
+    private let locale = Locale(identifier: "en_US")
+
+    private func date(_ year: Int, _ month: Int, _ day: Int) -> Date {
+        calendar.date(from: DateComponents(year: year, month: month, day: day, hour: 12))!
+    }
+
+    @Test("Dates in the current year leave the year out")
+    func currentYearOmitsYear() {
+        let label = date(2026, 11, 15).cardLabel(relativeTo: date(2026, 12, 1), calendar: calendar, locale: locale)
+        #expect(label == "Nov 15")
+    }
+
+    @Test("Dates from an earlier year include the year")
+    func earlierYearIncludesYear() {
+        let label = date(2025, 11, 15).cardLabel(relativeTo: date(2026, 12, 1), calendar: calendar, locale: locale)
+        #expect(label.contains("2025"))
+        #expect(label.contains("Nov"))
+    }
+}

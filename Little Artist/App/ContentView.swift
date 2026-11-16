@@ -4,7 +4,7 @@
 //
 //  Root view displayed after onboarding. Provides the main 4-tab navigation
 //  shell (Gallery, Timeline, Milestones, Settings) with a floating capture
-//  button on the browsing tabs.
+//  button on the Gallery root.
 //
 //  Created by Anoop Jose on 13/02/2026.
 //
@@ -78,9 +78,33 @@ struct ContentView: View {
         }
     }
 
+    /// Floating capture button shown on the Gallery root.
+    private var addArtworkButton: some View {
+        Button {
+            presentCreateFlow()
+        } label: {
+            Image(systemName: "plus")
+                .font(.title2.bold())
+                .foregroundStyle(.white)
+                .frame(width: Brand.fabSize, height: Brand.fabSize)
+                .background(Brand.primary)
+                .clipShape(Circle())
+                .brandFABShadow()
+        }
+        .accessibilityLabel("Add artwork")
+        .padding(.trailing, Brand.screenPadding)
+        .padding(.bottom, 12)
+    }
+
     private var galleryRoot: some View {
         NavigationStack {
             HomeView(selectedChildID: $selectedChildID)
+                // Only on the Gallery root: pushed screens and other tabs
+                // keep their bottom controls clear. The inset also stops
+                // the last cards from sitting under the button.
+                .safeAreaInset(edge: .bottom, alignment: .trailing) {
+                    addArtworkButton
+                }
                 .toolbar {
                     if !allArtworks.isEmpty {
                         ToolbarItem(placement: .topBarTrailing) {
@@ -99,52 +123,35 @@ struct ContentView: View {
                         } label: {
                             Image(systemName: "magnifyingglass")
                         }
+                        .accessibilityLabel("Search")
                     }
                 }
         }
     }
 
     var body: some View {
-        ZStack(alignment: .bottomTrailing) {
-            TabView(selection: $selectedTab) {
-                Tab("Gallery", systemImage: "photo.on.rectangle.angled", value: .gallery) {
-                    galleryRoot
-                }
+        TabView(selection: $selectedTab) {
+            Tab("Gallery", systemImage: "photo.on.rectangle.angled", value: .gallery) {
+                galleryRoot
+            }
 
-                Tab("Timeline", systemImage: "book.pages", value: .timeline) {
-                    NavigationStack {
-                        TimelineView()
-                    }
-                }
-
-                Tab("Milestones", systemImage: "medal", value: .milestones) {
-                    NavigationStack {
-                        MilestonesView()
-                    }
-                }
-
-                Tab("Settings", systemImage: "slider.horizontal.3", value: .settings) {
-                    NavigationStack {
-                        SettingsView()
-                    }
+            Tab("Timeline", systemImage: "book.pages", value: .timeline) {
+                NavigationStack {
+                    TimelineView()
                 }
             }
 
-            // Floating Action Button
-            Button {
-                presentCreateFlow()
-            } label: {
-                Image(systemName: "plus")
-                    .font(.title2.bold())
-                    .foregroundStyle(.white)
-                    .frame(width: Brand.fabSize, height: Brand.fabSize)
-                    .background(Brand.primary)
-                    .clipShape(Circle())
-                    .brandFABShadow()
+            Tab("Milestones", systemImage: "medal", value: .milestones) {
+                NavigationStack {
+                    MilestonesView()
+                }
             }
-            .accessibilityLabel("Add artwork")
-            .padding(.trailing, Brand.screenPadding)
-            .padding(.bottom, 80)
+
+            Tab("Settings", systemImage: "slider.horizontal.3", value: .settings) {
+                NavigationStack {
+                    SettingsView()
+                }
+            }
         }
         .sheet(isPresented: $showAddChild) {
             AddChildView()

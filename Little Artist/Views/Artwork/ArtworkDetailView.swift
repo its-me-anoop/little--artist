@@ -337,6 +337,9 @@ struct ArtworkDetailView: View {
             Button { prepareShareItems() } label: {
                 Label("Share Masterpiece", systemImage: "wand.and.stars")
                     .font(Brand.subheadlineFont.weight(.semibold))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
+                    .padding(.horizontal, 12)
                     .foregroundStyle(.white)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, Brand.buttonPadding)
@@ -350,6 +353,9 @@ struct ArtworkDetailView: View {
             Button { startEditing() } label: {
                 Label("Edit Entry", systemImage: "pencil")
                     .font(Brand.subheadlineFont.weight(.semibold))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
+                    .padding(.horizontal, 12)
                     .foregroundStyle(Brand.charcoal)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, Brand.buttonPadding)

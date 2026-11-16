@@ -35,9 +35,7 @@ struct BentoArtworkCardView: View {
     }
 
     private var dateText: String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "MMM d"
-        return formatter.string(from: artwork.createdAt)
+        artwork.createdAt.cardLabel()
     }
 
     // MARK: - Body

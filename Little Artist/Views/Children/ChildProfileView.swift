@@ -345,7 +345,7 @@ struct ChildProfileView: View {
                     .foregroundStyle(Brand.charcoal)
                     .lineLimit(1)
 
-                Text(artwork.createdAt.formatted(.dateTime.month(.abbreviated).day()))
+                Text(artwork.createdAt.cardLabel())
                     .font(Brand.caption2Font)
                     .foregroundStyle(Brand.warmGray)
             }

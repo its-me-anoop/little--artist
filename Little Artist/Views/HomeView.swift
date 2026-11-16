@@ -217,8 +217,14 @@ struct HomeView: View {
         let padding = Brand.Adaptive.screenPadding(for: sizeClass)
 
         return VStack(spacing: 12) {
-            // Row 1: Featured artwork + memory/secondary card
-            HStack(spacing: 12) {
+            // Memory Lane spans the full width so the bento row below
+            // starts level on both sides.
+            if hasMemory {
+                memoryCard(memoriesArtworks[0].artwork)
+            }
+
+            // Row 1: Featured artwork + secondary card
+            HStack(alignment: .top, spacing: 12) {
                 // Featured artwork (largest card)
                 if let featured = featuredArtwork {
                     NavigationLink(value: featured) {
@@ -230,27 +236,20 @@ struct HomeView: View {
                     .buttonStyle(.plain)
                 }
 
-                // Right column: Memory card or secondary artwork
-                VStack(spacing: 12) {
-                    if hasMemory {
-                        memoryCard(memoriesArtworks[0].artwork)
+                if let second = secondaryArtworks.first {
+                    NavigationLink(value: second) {
+                        BentoArtworkCardView(
+                            artwork: second,
+                            rotation: 2
+                        )
                     }
-
-                    if let second = secondaryArtworks.first {
-                        NavigationLink(value: second) {
-                            BentoArtworkCardView(
-                                artwork: second,
-                                rotation: hasMemory ? 1.5 : 2
-                            )
-                        }
-                        .buttonStyle(.plain)
-                    }
+                    .buttonStyle(.plain)
                 }
             }
 
             // Row 2: Two smaller cards
             if secondaryArtworks.count > 1 {
-                HStack(spacing: 12) {
+                HStack(alignment: .top, spacing: 12) {
                     ForEach(Array(secondaryArtworks.dropFirst().enumerated()), id: \.element.persistentModelID) { index, artwork in
                         NavigationLink(value: artwork) {
                             BentoArtworkCardView(
@@ -331,7 +330,6 @@ struct HomeView: View {
                             }
                         }
                     }
-                    .padding(.bottom, 100) // Space for FAB
                 }
                 .scrollIndicators(.hidden)
             }
