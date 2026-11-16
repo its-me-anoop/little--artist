@@ -140,13 +140,15 @@ enum AppleIntelligenceService {
                     generated = try await respond(
                         model: SystemLanguageModel.default,
                         instructions: suggestionInstructions,
-                        prompt: prompt
+                        prompt: prompt,
+                        isAvailable: { SystemLanguageModel.default.availability == .available }
                     )
                 case .privateCloudCompute:
                     generated = try await respond(
                         model: PrivateCloudComputeLanguageModel(),
                         instructions: suggestionInstructions,
-                        prompt: prompt
+                        prompt: prompt,
+                        isAvailable: { PrivateCloudComputeLanguageModel().availability == .available }
                     )
                 case .fallback:
                     continue
@@ -203,13 +205,15 @@ enum AppleIntelligenceService {
                     screening = try await respond(
                         model: SystemLanguageModel.default,
                         instructions: screeningInstructions,
-                        prompt: prompt
+                        prompt: prompt,
+                        isAvailable: { SystemLanguageModel.default.availability == .available }
                     )
                 case .privateCloudCompute:
                     screening = try await respond(
                         model: PrivateCloudComputeLanguageModel(),
                         instructions: screeningInstructions,
-                        prompt: prompt
+                        prompt: prompt,
+                        isAvailable: { PrivateCloudComputeLanguageModel().availability == .available }
                     )
                 case .fallback:
                     continue
@@ -255,14 +259,15 @@ enum AppleIntelligenceService {
     private static func respond<Output: Generable & Sendable>(
         model: some LanguageModel,
         instructions: String,
-        prompt: Prompt
+        prompt: Prompt,
+        isAvailable: @escaping @Sendable () -> Bool
     ) async throws -> Output {
         // One request at a time: concurrent screening + suggestion
         // requests trapped inside FoundationModels on iOS 27.3.
         try await SerialTaskQueue.languageModel.run {
             // Availability can change between the ladder check and now
             // (model assets unloaded, Apple Intelligence turned off).
-            guard model.availability == .available else {
+            guard isAvailable() else {
                 throw ModelUnavailable()
             }
             let session = LanguageModelSession(model: model, instructions: instructions)
