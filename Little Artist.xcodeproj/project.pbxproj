@@ -54,7 +54,7 @@
 		6B5FAE122F3FD7E3006B1D0D /* Little ArtistTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Little ArtistTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		6B5FAE1C2F3FD7E3006B1D0D /* Little ArtistUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Little ArtistUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA1000012F90000000000000 /* Little Artist Widget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "Little Artist Widget.appex"; sourceTree = BUILT_PRODUCTS_DIR; };
-		AA1000312F90000000000000 /* Skills.skillsbundle */ = {isa = PBXFileReference; lastKnownFileType = wrapper.skillsbundle; name = Skills.skillsbundle; path = "Little Artist/Skills.skillsbundle"; sourceTree = "<group>"; };
+		AA1000312F90000000000000 /* Skills.skillsbundle */ = {isa = PBXFileReference; lastKnownFileType = wrapper.skillsbundle; name = Skills.skillsbundle; path = SiriSkills/Skills.skillsbundle; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -62,7 +62,6 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
-				Skills.skillsbundle,
 			);
 			target = 6B5FAE002F3FD7E1006B1D0D /* Little Artist */;
 		};
