@@ -67,6 +67,16 @@ struct ArtworkDetailView: View {
     // MARK: - Body
 
     var body: some View {
+        if artwork.isLive {
+            liveBody
+        } else {
+            // Deleted elsewhere (e.g. on another device via iCloud) while
+            // open: leave rather than read a deleted model and crash.
+            Color.clear.onAppear { leave() }
+        }
+    }
+
+    private var liveBody: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: Brand.sectionSpacing) {
                 heroArtworkSection
@@ -820,7 +830,19 @@ struct ArtworkDetailView: View {
 
     private func deleteArtwork() {
         HapticService.warning()
-        ArtworkRepository.shared.deleteArtwork(artwork, in: modelContext)
+        // Navigate away first, then delete once this screen (and the card
+        // it was opened from) no longer render the artwork.
+        let artwork = artwork
+        let context = modelContext
+        leave()
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(450))
+            guard artwork.isLive else { return }
+            ArtworkRepository.shared.deleteArtwork(artwork, in: context)
+        }
+    }
+
+    private func leave() {
         if let onDelete {
             onDelete()
         } else {

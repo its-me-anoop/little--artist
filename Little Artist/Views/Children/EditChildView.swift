@@ -263,9 +263,17 @@ struct EditChildView: View {
     }
 
     private func deleteChild() {
-        ArtworkRepository.shared.deleteChild(child, in: modelContext)
+        // Close the sheet first, then delete once nothing on screen reads
+        // the child or its (cascade-deleted) artwork.
+        let child = child
+        let context = modelContext
         onDelete?()
         dismiss()
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(450))
+            guard child.isLive else { return }
+            ArtworkRepository.shared.deleteChild(child, in: context)
+        }
     }
 }
 

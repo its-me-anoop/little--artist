@@ -27,6 +27,16 @@ struct ArtworkThumbnailView: View {
     }
 
     var body: some View {
+        // The artwork may have been deleted (here, by a cascade, or by an
+        // iCloud merge) while this view still holds it; reading its
+        // properties then would crash.
+        if artwork.isLive {
+            liveBody
+        }
+    }
+
+    @ViewBuilder
+    private var liveBody: some View {
         VStack(alignment: .leading, spacing: 0) {
             // Artwork image — flexible width, fixed aspect ratio
             if let data = artwork.thumbnailData ?? artwork.imageData, let uiImage = UIImage(data: data) {

@@ -43,6 +43,16 @@ struct BentoArtworkCardView: View {
     // MARK: - Body
 
     var body: some View {
+        // The artwork may have been deleted (here, by a cascade, or by an
+        // iCloud merge) while this view still holds it; reading its
+        // properties then would crash.
+        if artwork.isLive {
+            liveBody
+        }
+    }
+
+    @ViewBuilder
+    private var liveBody: some View {
         VStack(alignment: .leading, spacing: 6) {
             // MARK: Image Area
             ZStack(alignment: .bottomLeading) {

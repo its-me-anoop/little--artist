@@ -14,6 +14,16 @@ struct MemoryCardView: View {
     var cardWidth: CGFloat = 160
 
     var body: some View {
+        // The artwork may have been deleted (here, by a cascade, or by an
+        // iCloud merge) while this view still holds it; reading its
+        // properties then would crash.
+        if artwork.isLive {
+            liveBody
+        }
+    }
+
+    @ViewBuilder
+    private var liveBody: some View {
         VStack(alignment: .leading, spacing: 8) {
             // Artwork thumbnail
             if let imageData = artwork.thumbnailData ?? artwork.imageData, let uiImage = UIImage(data: imageData) {

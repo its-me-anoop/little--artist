@@ -276,3 +276,54 @@ struct MilestoneTiersTests {
         #expect(MilestoneTiers.nextTier(after: count) == expected)
     }
 }
+
+// MARK: - Serial Task Queue
+
+/// Records how many operations overlap.
+private actor OverlapProbe {
+    private(set) var running = 0
+    private(set) var maxRunning = 0
+    private(set) var order: [Int] = []
+
+    func begin(_ id: Int) { running += 1; maxRunning = max(maxRunning, running); order.append(id) }
+    func end() { running -= 1 }
+}
+
+struct SerialTaskQueueTests {
+
+    @Test("Operations never overlap and run in submission order")
+    func serializes() async throws {
+        let queue = SerialTaskQueue()
+        let probe = OverlapProbe()
+
+        try await withThrowingTaskGroup(of: Void.self) { group in
+            for id in 0..<5 {
+                // Submit in order; each operation suspends mid-way.
+                _ = await Task.yield()
+                group.addTask {
+                    _ = try await queue.run {
+                        await probe.begin(id)
+                        try await Task.sleep(for: .milliseconds(20))
+                        await probe.end()
+                        return id
+                    }
+                }
+            }
+            try await group.waitForAll()
+        }
+
+        #expect(await probe.maxRunning == 1)
+    }
+
+    @Test("A failing operation doesn't block the next one")
+    func failureDoesNotJam() async throws {
+        struct Boom: Error {}
+        let queue = SerialTaskQueue()
+
+        await #expect(throws: Boom.self) {
+            try await queue.run { () async throws -> Int in throw Boom() }
+        }
+        let value = try await queue.run { 42 }
+        #expect(value == 42)
+    }
+}

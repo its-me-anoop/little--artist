@@ -152,3 +152,40 @@ struct RepositoryIndexingTests {
         #expect(spy.removedChildren == [childID])
     }
 }
+
+// MARK: - Deleted Model Safety
+
+@MainActor
+struct PersistentModelLivenessTests {
+
+    private func makeContext() throws -> ModelContext {
+        let schema = Schema([Child.self, Artwork.self, Tag.self, Comment.self, Achievement.self])
+        let config = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true, cloudKitDatabase: .none)
+        return ModelContext(try ModelContainer(for: schema, configurations: [config]))
+    }
+
+    @Test("An inserted artwork is live; after deletion it is not")
+    func deletedArtworkIsNotLive() throws {
+        let context = try makeContext()
+        let artwork = Artwork(title: "Sun")
+        context.insert(artwork)
+        try context.save()
+        #expect(artwork.isLive)
+
+        context.delete(artwork)
+        try context.save()
+        #expect(!artwork.isLive)
+    }
+
+    @Test("Deleting a child makes its cascaded artwork not live")
+    func cascadeDeletedArtworkIsNotLive() throws {
+        let context = try makeContext()
+        let child = ArtworkRepository.shared.createChild(name: "Ivy", avatarColor: "A8C5A0", in: context)
+        let artwork = ArtworkRepository.shared.createArtwork(title: "Moon", child: child, in: context)
+
+        ArtworkRepository.shared.deleteChild(child, in: context)
+
+        #expect(!child.isLive)
+        #expect(!artwork.isLive)
+    }
+}
