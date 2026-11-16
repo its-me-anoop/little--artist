@@ -12,7 +12,7 @@ import Foundation
 // MARK: - Product Catalog
 
 /// In-app purchase identifiers configured in App Store Connect.
-enum ProductCatalog {
+nonisolated enum ProductCatalog {
     /// $0 non-consumable named "30-Day Free Trial" (App Review Guideline 3.1.1).
     /// Its purchase date marks the start of the trial and is restored with
     /// the user's Apple Account, so reinstalling cannot restart the trial.
@@ -39,7 +39,7 @@ enum ProductCatalog {
 // MARK: - Purchase Record
 
 /// A verified purchase, abstracted away from StoreKit's `Transaction`.
-struct PurchaseRecord: Equatable, Sendable {
+nonisolated struct PurchaseRecord: Equatable, Sendable {
     let productID: String
     let purchaseDate: Date
     /// `true` when Apple refunded or revoked the purchase.
@@ -51,7 +51,7 @@ struct PurchaseRecord: Equatable, Sendable {
 /// Actions that need an active trial or the lifetime unlock. Viewing,
 /// editing, sharing and exporting existing artwork are always free so
 /// families never lose access to their memories.
-enum GatedFeature: CaseIterable, Sendable {
+nonisolated enum GatedFeature: CaseIterable, Sendable {
     case addArtwork
     case addChild
     case aiSuggestions
@@ -61,7 +61,7 @@ enum GatedFeature: CaseIterable, Sendable {
 // MARK: - Access State
 
 /// What the user is entitled to right now.
-enum AccessState: Equatable, Sendable {
+nonisolated enum AccessState: Equatable, Sendable {
     /// The free trial has never been started.
     case notStarted
     /// The free trial is running.
@@ -89,7 +89,7 @@ enum AccessState: Equatable, Sendable {
 // MARK: - Access Policy
 
 /// Derives an ``AccessState`` from a purchase history.
-enum AccessPolicy {
+nonisolated enum AccessPolicy {
 
     static func evaluate(purchases: [PurchaseRecord], now: Date) -> AccessState {
         let valid = purchases.filter { !$0.isRevoked }

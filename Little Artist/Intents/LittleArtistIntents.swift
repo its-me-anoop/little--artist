@@ -18,7 +18,7 @@ struct OpenArtworkIntent: OpenIntent {
     static let title: LocalizedStringResource = "Open Artwork"
     static let description = IntentDescription("Shows a piece of artwork in Little Artist.")
 
-    @Parameter(title: "Artwork")
+    @Parameter(title: "Artwork", description: "The piece of artwork to open.")
     var target: ArtworkEntity
 
     @MainActor
@@ -35,7 +35,7 @@ struct OpenChildGalleryIntent: OpenIntent {
     static let title: LocalizedStringResource = "Open Child's Gallery"
     static let description = IntentDescription("Shows all artwork by one child.")
 
-    @Parameter(title: "Child")
+    @Parameter(title: "Child", description: "The child whose gallery to open.")
     var target: ChildEntity
 
     @MainActor
@@ -53,7 +53,7 @@ struct CaptureArtworkIntent: AppIntent {
     static let description = IntentDescription("Open Little Artist ready to save a new masterpiece.", searchKeywords: ["drawing", "painting", "photo", "scan", "save", "craft"])
     static let openAppWhenRun = true
 
-    @Parameter(title: "Child")
+    @Parameter(title: "Child", description: "The child who made the artwork. Leave empty to choose in the app.")
     var child: ChildEntity?
 
     static var parameterSummary: some ParameterSummary {
@@ -89,7 +89,7 @@ struct ShowLatestArtworkIntent: AppIntent {
     static let title: LocalizedStringResource = "Show Latest Artwork"
     static let description = IntentDescription("Shows the most recent artwork, optionally for one child.", searchKeywords: ["latest", "newest", "recent", "drawing"])
 
-    @Parameter(title: "Child")
+    @Parameter(title: "Child", description: "Only look at artwork by this child. Leave empty for everyone.")
     var child: ChildEntity?
 
     static var parameterSummary: some ParameterSummary {
@@ -145,7 +145,7 @@ struct CountArtworkIntent: AppIntent {
     static let title: LocalizedStringResource = "Count Artwork"
     static let description = IntentDescription("Hear how many masterpieces you've saved.", searchKeywords: ["how many", "total", "drawings", "count"])
 
-    @Parameter(title: "Child")
+    @Parameter(title: "Child", description: "Only count artwork by this child. Leave empty for everyone.")
     var child: ChildEntity?
 
     static var parameterSummary: some ParameterSummary {
@@ -174,10 +174,10 @@ struct FavoriteArtworkIntent: AppIntent {
     static let title: LocalizedStringResource = "Favorite Artwork"
     static let description = IntentDescription("Adds a piece of artwork to Favorites, or removes it.")
 
-    @Parameter(title: "Artwork")
+    @Parameter(title: "Artwork", description: "The piece of artwork to add to or remove from Favorites.")
     var artwork: ArtworkEntity
 
-    @Parameter(title: "Favorite", default: true)
+    @Parameter(title: "Favorite", description: "On to add to Favorites, off to remove.", default: true)
     var isFavorite: Bool
 
     static var parameterSummary: some ParameterSummary {
